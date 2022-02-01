@@ -32,7 +32,7 @@ def main():
 
     while viewer.is_available():
         if zed.grab() == sl.ERROR_CODE.SUCCESS:
-            zed.retrieve_measure(point_cloud, sl.MEASURE.XYZ,sl.MEM.CPU, res) # for color: sl.MEASURE.XYZRGBA
+            zed.retrieve_measure(point_cloud, sl.MEASURE.XYZ,sl.MEM.GPU, res) # for color: sl.MEASURE.XYZRGBA
             viewer.updateData(point_cloud)
 
     viewer.exit()
