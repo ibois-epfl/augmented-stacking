@@ -7,54 +7,45 @@ import pyzed.sl as sl
 
 def main():
 
-    print("Running Augmented Stacking depth capture ... Press 'Esc' to quit")
+    print("Running Augmented Stacking depth capture GL viewer... Press 'Esc' to quit")
 
-    ##################################################
-    ##                ZED params                    ##
-    ##################################################
-
-    # Create a Camera object
+    # Set ZED params
+    init = sl.InitParameters(camera_resolution=sl.RESOLUTION.HD720, # HD720 | 1280*720
+                             camera_fps=30, # available framerates: 15, 30, 60 fps
+                             depth_mode=sl.DEPTH_MODE.PERFORMANCE, # for higher res sl.DEPTH_MODE.PERFORMANCE
+                             coordinate_units=sl.UNIT.METER,
+                             coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP)
+    
+    # Open ZED
     zed = sl.Camera()
+    status = zed.open(init)
+    if status != sl.ERROR_CODE.SUCCESS:
+        print(repr(status))
+        exit()
 
-    # Create a InitParameters object and set configuration parameters
-    init_params = sl.InitParameters()
-    init_params.depth_mode = sl.DEPTH_MODE.PERFORMANCE  # Use PERFORMANCE depth mode
-    init_params.coordinate_units = sl.UNIT.METER  # Use meter units (for depth measurements)
-    init_params.camera_resolution = sl.RESOLUTION.HD720
-
-    # Open the camera
-    err = zed.open(init_params)
-    if err != sl.ERROR_CODE.SUCCESS:
-        exit(1)
-
-    # Create and set RuntimeParameters after opening the camera
-    runtime_parameters = sl.RuntimeParameters()
-    runtime_parameters.sensing_mode = sl.SENSING_MODE.STANDARD  # Use STANDARD sensing mode
-    # Setting the depth confidence parameters
-    runtime_parameters.confidence_threshold = 100 # original: 100
-    runtime_parameters.textureness_confidence_threshold = 100
-
-
-    # Set ZED resolution
-    res = sl.Resolution()
-    res.width = 720
-    res.height = 404
-
+    # Retrieve ZED camera model
     camera_model = zed.get_camera_information().camera_model
     
-    # Create OpenGL viewer
+    # Create OpenGL viewer an launch it
     viewer = gl.GLViewer()
-    viewer.init(len(sys.argv), sys.argv, camera_model, res)
+    viewer.init(len(sys.argv), sys.argv, camera_model, zed.get_camera_information().camera_resolution)
 
-    point_cloud = sl.Mat(res.width, res.height, sl.MAT_TYPE.F32_C4, sl.MEM.CPU)
+    # Set point cloud object params from ZED frame
+    point_cloud = sl.Mat(zed.get_camera_information().camera_resolution.width, 
+                         zed.get_camera_information().camera_resolution.height,
+                         sl.MAT_TYPE.F32_C4,
+                         sl.MEM.CPU)
 
+    # Feed point cloud to OpenGL viewer and refresh
     while viewer.is_available():
         if zed.grab() == sl.ERROR_CODE.SUCCESS:
-            zed.retrieve_measure(point_cloud, sl.MEASURE.XYZ,sl.MEM.CPU, res) # for color: sl.MEASURE.XYZRGBA
+            zed.retrieve_measure(point_cloud, sl.MEASURE.XYZ,sl.MEM.CPU, zed.get_camera_information().camera_resolution) # for color: sl.MEASURE.XYZRGBA
             viewer.updateData(point_cloud)
 
+    # When "Esc" is pressed, we close viewer and zed
     viewer.exit()
     zed.close()
+
 
 if __name__ == "__main__":
     main()
