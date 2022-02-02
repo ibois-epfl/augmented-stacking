@@ -98,7 +98,6 @@ class Shader:
     def get_program_id(self):
         return self.program_id
 
-
 class Simple3DObject:
     def __init__(self, _is_static, pts_size = 3, clr_size = 3):
         self.is_init = False
