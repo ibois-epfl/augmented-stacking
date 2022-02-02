@@ -3,6 +3,7 @@
 import sys
 import ogl_viewer.viewer as gl
 import pyzed.sl as sl
+import numpy as np
 
 
 def main():
@@ -12,9 +13,10 @@ def main():
     # Set ZED params
     init = sl.InitParameters(camera_resolution=sl.RESOLUTION.HD720, # HD720 | 1280*720
                              camera_fps=30, # available framerates: 15, 30, 60 fps
-                             depth_mode=sl.DEPTH_MODE.PERFORMANCE, # for higher res sl.DEPTH_MODE.PERFORMANCE
+                             depth_mode=sl.DEPTH_MODE.QUALITY, # posible mods: sl.DEPTH_MODE.PERFORMANCE/.QUALITY/.ULTRA
                              coordinate_units=sl.UNIT.METER,
-                             coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP)
+                             coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP, # sl.COORDINATE_SYSTEM.LEFT_HANDED_Y_UP
+                             sdk_verbose = True) # Enable verbose logging
     
     # Open ZED
     zed = sl.Camera()
@@ -28,7 +30,11 @@ def main():
     
     # Create OpenGL viewer an launch it
     viewer = gl.GLViewer()
+    
     viewer.init(len(sys.argv), sys.argv, camera_model, zed.get_camera_information().camera_resolution)
+    
+    viewer.bckgrnd_clr = [0,0,0]
+    viewer.camera.horizontalFOV = 80
 
     # Set point cloud object params from ZED frame
     point_cloud = sl.Mat(zed.get_camera_information().camera_resolution.width, 
@@ -40,7 +46,9 @@ def main():
     while viewer.is_available():
         if zed.grab() == sl.ERROR_CODE.SUCCESS:
             zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA,sl.MEM.CPU, zed.get_camera_information().camera_resolution) # for color: sl.MEASURE.XYZRGBA
+
             viewer.updateData(point_cloud)
+
 
     # When "Esc" is pressed, we close viewer and zed
     viewer.exit()
