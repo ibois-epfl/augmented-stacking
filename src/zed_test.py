@@ -39,7 +39,7 @@ def main():
     # Feed point cloud to OpenGL viewer and refresh
     while viewer.is_available():
         if zed.grab() == sl.ERROR_CODE.SUCCESS:
-            zed.retrieve_measure(point_cloud, sl.MEASURE.XYZ,sl.MEM.CPU, zed.get_camera_information().camera_resolution) # for color: sl.MEASURE.XYZRGBA
+            zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA,sl.MEM.CPU, zed.get_camera_information().camera_resolution) # for color: sl.MEASURE.XYZRGBA
             viewer.updateData(point_cloud)
 
     # When "Esc" is pressed, we close viewer and zed
