@@ -18,7 +18,7 @@ def main():
                              coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP, # sl.COORDINATE_SYSTEM.LEFT_HANDED_Y_UP
                              sdk_verbose = True, # Enable verbose logging
                              depth_minimum_distance=0.3, # Enable capture from 30 cm
-                             depth_maximum_distance=4.0 # Enable capture up to 3m
+                             depth_maximum_distance=3.0 # Enable capture up to 3m
                              ) 
     
     # Open ZED
