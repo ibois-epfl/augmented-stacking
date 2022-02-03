@@ -8,7 +8,7 @@ Development code for an dry-stone and -timber stacking technique in AR. Develope
 
 ## 2022.02.04 - Installation of set-up + point cloud grabber
 
-![screen_pcd_grabber](./img/Screenshot from 2022-02-03 18-47-26.png)
+![screen_pcd_grabber](./img/grabber.png)
 
 Installation of preliminary set-up one (rgbd + projector + metal frame + cables)
 
