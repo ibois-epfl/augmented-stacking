@@ -20,11 +20,9 @@ Also tested the pcd grabber and viewer with ZED sdk.
 
 ## 2022.02.04 - First draft of calibration between rgbd camera and projector
 
-![calib1](./img/IMG_20220204_101414.jpg =250x250)
+<img src="./img/IMG_20220204_101414.jpg" width="500" height="600">
 
-![calib2](./img/IMG_20220204_122843.jpg =250x250)
-
-<img src="./img/IMG_20220204_122843.jpg" width="100" height="100">
+<img src="./img/IMG_20220204_122843.jpg" width="500" height="600">
 
 First functioning draft of the calibration process between the projector and the rgbd camera is done. 
 
