@@ -9,7 +9,7 @@ Development code for an dry-stone and -timber stacking technique in AR. Develope
 
 ## 2022.02.03 - Installation of set-up + point cloud grabber
 
-![screen_pcd_grabber](./img/grabber.png)
+<img src="./img/grabber.png" width="400" height="400">
 
 Installation of preliminary set-up one (rgbd + projector + metal frame + cables)
 
@@ -20,9 +20,9 @@ Also tested the pcd grabber and viewer with ZED sdk.
 
 ## 2022.02.04 - First draft of calibration between rgbd camera and projector
 
-<img src="./img/IMG_20220204_101414.jpg" width="500" height="600">
+<img src="./img/IMG_20220204_101414.jpg" width="400" height="400">
 
-<img src="./img/IMG_20220204_122843.jpg" width="500" height="600">
+<img src="./img/IMG_20220204_122843.jpg" width="400" height="400">
 
 First functioning draft of the calibration process between the projector and the rgbd camera is done. 
 
