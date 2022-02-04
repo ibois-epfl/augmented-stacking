@@ -54,6 +54,16 @@ def main():
             zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA,sl.MEM.CPU, zed.get_camera_information().camera_resolution) # for color: sl.MEASURE.XYZRGBA
             viewer.updateData(point_cloud)
 
+            point_cloud_np = point_cloud.get_data()
+
+            print(point_cloud_np)
+
+            
+            break
+
+
+
+
     # When "Esc" is pressed, we close viewer and zed
     viewer.exit()
     zed.close()
