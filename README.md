@@ -24,6 +24,8 @@ Also tested the pcd grabber and viewer with ZED sdk.
 
 ![calib2](./img/IMG_20220204_122843.jpg =250x250)
 
+<img src="./img/IMG_20220204_122843.jpg" width="100" height="100">
+
 First functioning draft of the calibration process between the projector and the rgbd camera is done. 
 
 To do list for the next steps:
