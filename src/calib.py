@@ -6,6 +6,7 @@ import pyzed.sl as sl
 import numpy as np
 import progressbar
 
+# test
 
 NUMBER_OF_AVERAGE_FRAMES = 64
 #       YYYYYY            XXXXXXXX
