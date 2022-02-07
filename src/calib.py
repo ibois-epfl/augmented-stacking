@@ -3,8 +3,10 @@
 
 '''
 This Code will calibrate the ZED camera:
+
 1. By acquiring first the Z Cordinates of the Empty scene 
 2. By measuring different positions of a given circular object (ex: CD) move on a specific grid.
+
 '''
 
 
@@ -18,23 +20,36 @@ import tifffile
 import scipy.ndimage
 import matplotlib.pyplot as plt
 import os.path
+import os
 import skimage.measure
 
 
 
-
+# Number of frames we use for the background acquisition
 NUMBER_OF_AVERAGE_FRAMES = 64
+
+# Region of Interest can change if the camera moves
 ROI = [slice(200, 500), slice(400, 900)]
 
+# Z threshold when comparing new image to background
 CALIB_Z_THERSHOLD_M = 0.08
+
+# Radius threshold for filtering noise 
 RADIUS_PERI_THRESHOLD_PX = 10
+
+# Radius tolerance when comparing the radius given from the area and the perimeter
 RADIUS_TOLERANCE = 0.25
 
+# Number of measured points for calibration
 NUMBER_OF_CALIB_PTS = 9
 
+# Visualize acquisition 
+
+VISUALIZE = False
 
 
-def get_Image(zed,point_cloud,medianFrames=1, components=[2]):
+
+def get_image(zed,point_cloud,medianFrames=1, components=[2]):
 
     """
     This function is giving an average value of the components, X, Y or Z 
@@ -53,26 +68,25 @@ def get_Image(zed,point_cloud,medianFrames=1, components=[2]):
     """
 
 
-    stack_of_Images = []
+    stack_of_images = []
     for n in progressbar.progressbar(range(medianFrames)):
         if zed.grab() == sl.ERROR_CODE.SUCCESS:
-            zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA,sl.MEM.CPU, zed.get_camera_information().camera_resolution) # for color: sl.MEASURE.XYZRGBA
+            zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA,sl.MEM.CPU, zed.get_camera_information().camera_resolution)
             point_cloud_np = point_cloud.get_data()
-            stack_of_Images.append(point_cloud_np[:,:,components])      
+            stack_of_images.append(point_cloud_np[:,:,components])      
         else:
             print(":(")
             return None
-    stack_of_Images = np.array(stack)
-    stack[not np.isfinite] = np.nan
-    median = np.nanmedian(stack, axis=0)
+    stack_of_images = np.array(stack_of_images)
+    stack_of_images[not np.isfinite] = np.nan
+    median = np.nanmedian(stack_of_images, axis=0)
 
-return median[:,:,components]
+    return median[:,:,components]
 
 def pause():
     programPause = raw_input("Press the <ENTER> key to continue...")
 
 def get_Disk_Postion(imageZoffset):
-
 
     """
     This function is giving us the coordinates of the center of a circular object, a CD for instance.
@@ -86,35 +100,34 @@ def get_Disk_Postion(imageZoffset):
       The X,Y,Z coordinates of the center of the CD.
     """
 
-    for n in progressbar.progressbar(range(medianFrames)):
-        # Segmentation of objects wich appeared into the scene with a Z-difference of at least : CALIB_Z_THERSHOLD_M 
-        binaryCalib = imageZoffset[ROI] > CALIB_Z_THERSHOLD_M 
-        objects = scipy.ndimage.label(binaryCalib)[0]
-
-        # Acquisition of properties
-        properties = skimage.measure.regionprops(objects)
-
-        # Circularity Test
-        circlesBool = []
-        print("Starting Circularity Test ...")
-        for label in range(objects.max()):
-
-            # Perimeter and Area acquisition
-            peri = properties[label].perimeter
-            area = properties[label].area
-
-            # Calculation of the radius
-            rPeri = peri/2/np.pi
-            rArea = (area/np.pi)**0.5
-        
-            # Circularity test
-            isCircle = np.isclose(rPeri, rArea, atol=rArea*RADIUS_TOLERANCE) and rPeri > RADIUS_PERI_THRESHOLD_PX
-            circlesBool.append(isCircle)
-            print(f"rPeri {rPeri:.2f} -- rArea {rArea:.2f} -- {isCircle}")
-        circlesBool = np.array(circlesBool)
-
-        # Detection of a circular object
     
+    # Segmentation of objects wich appeared into the scene with a Z-difference of at least : CALIB_Z_THERSHOLD_M 
+    binaryCalib = imageZoffset[ROI] > CALIB_Z_THERSHOLD_M 
+    objects = scipy.ndimage.label(binaryCalib)[0]
+
+    # Acquisition of properties
+    properties = skimage.measure.regionprops(objects)
+
+    # Circularity Test
+    circlesBool = []
+    print("Starting Circularity Test ...")
+    for label in range(objects.max()):
+
+        # Perimeter and Area acquisition
+        peri = properties[label].perimeter
+        area = properties[label].area
+
+        # Calculation of the radius
+        rPeri = peri/2/np.pi
+        rArea = (area/np.pi)**0.5
+    
+        # Circularity test
+        isCircle = np.isclose(rPeri, rArea, atol=rArea*RADIUS_TOLERANCE) and rPeri > RADIUS_PERI_THRESHOLD_PX
+        circlesBool.append(isCircle)
+        print(f"rPeri {rPeri:.2f} -- rArea {rArea:.2f} -- {isCircle}")
+    circlesBool = np.array(circlesBool)
+
+    # Detection of a circular object
     if circlesBool.sum() == 1:
         print("A suitable disk has been detected.")
         label = np.where(circlesBool)[0][0]
@@ -126,9 +139,8 @@ def get_Disk_Postion(imageZoffset):
         # Formating the Px coords in the good format for map_coordinates
         coordsPx = np.array([[centroidPx[0]], [centroidPx[1]]])
         for d in range(3):
-            D_position = scipy.ndimage.map_coordinates(image[ROI[0], ROI[1], d], coordsPx)[0]
+            D_position = scipy.ndimage.map_coordinates(imageZoffset[ROI[0], ROI[1], d], coordsPx)[0]
             coordsXYZm.append(D_position)
-    
     elif circlesBool.sum() == 0:
         print("No suitable objects found")
         return None
@@ -175,15 +187,11 @@ def main():
                          sl.MEM.CPU)
 
 
-
-    
-    
     ###########################################################################################################################################
     ### 1. Acquiring Background - Empty the scene
     ###########################################################################################################################################
 
     # Check if the empty background image exists
-
     if not os.path.exists('Background.tiff'):
         print(f"Background.tiff not found, acquiring {NUMBER_OF_AVERAGE_FRAMES} frames.")
         print("Make sure the scene is Empty.")
@@ -191,9 +199,8 @@ def main():
 
         # Background average depth 
         print("Background acquisition ...")
-        zMedian = get_Image(zed,point_cloud,medianFrames=NUMBER_OF_AVERAGE_FRAMES, components=[2])
+        zMedian = get_image(zed,point_cloud,medianFrames=NUMBER_OF_AVERAGE_FRAMES, components=[2])
         tifffile.imsave("Background.tiff", zMedian)
-
     else:
         print("Loading previous Background.tiff")
         background = tifffile.imread('Background.tiff')
@@ -204,24 +211,22 @@ def main():
     ###########################################################################################################################################
 
     # The CD has to be at a minimum height of calibZThresholdM in meters
-    print("Acquiring Positions ...)
+    print("Acquiring Positions ...")
     Stack_coordsXYZm = []
     for i in range(NUMBER_OF_CALIB_PTS):
         print(f"Put the CD into the Scene. On position {i+1}.")
         pause()
         print("Acquiring image ...")
-        newImageXYZ = get_Image(zed,point_cloud,medianFrames=32, components=[0,1,2])
+        newImageXYZ = get_image(zed,point_cloud,medianFrames=32, components=[0,1,2])
         newImageZoffset = newImageXYZ[:,:,2]-background
-
-        ## Visualize Offset Image
-        # plt.imshow(newImage, vmin=-0.2 , vmax=0.2, cmap='coolwarm')
-        # plt.show()
-    
         tifffile.imsave(f"Image_position_{i+1}.tiff", newImageXYZ)
-        
-        ## Visualize Offset Image ROI
-        # plt.imshow(newImage[ROI], vmin=-0.2 , vmax=0.2, cmap='coolwarm')
-        # plt.show()
+        if VISUALIZE:
+            ## Visualize Offset Image
+            plt.imshow(newImageXYZ, vmin=-0.2 , vmax=0.2, cmap='coolwarm')
+            plt.show()
+            ## Visualize Offset Image ROI
+            plt.imshow(newImageXYZ[ROI], vmin=-0.2 , vmax=0.2, cmap='coolwarm')
+            plt.show()
         print("Acquiring position ...")
         coordsXYZm = get_Disk_Postion(newImageZoffset)
         Stack_coordsXYZm.append(coordsXYZm)
