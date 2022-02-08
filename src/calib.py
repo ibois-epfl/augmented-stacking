@@ -84,7 +84,7 @@ def get_image(zed,point_cloud,medianFrames=1, components=[2]):
     return median[:,:,components]
 
 def pause():
-    programPause = raw_input("Press the <ENTER> key to continue...")
+    programPause = input("Press the <ENTER> key to continue...")
 
 def get_Disk_Postion(imageZoffset):
 
