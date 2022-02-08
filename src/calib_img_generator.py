@@ -18,9 +18,10 @@ from datetime import date
 from pathlib import Path
 
 def draw_grid(nb_lines_X=3,nb_lines_Y=3,line_width=4):
-
+    X =[]
+    Y =[]
     # Initialize black image
-    shape=(720,1080,3)
+    shape=(1080,1920,3)
     Img = np.zeros(shape,dtype=np.uint8)
 
     # Calculate space between lines
@@ -30,12 +31,16 @@ def draw_grid(nb_lines_X=3,nb_lines_Y=3,line_width=4):
     # Draw the lines
     for i in range(1,nb_lines_X+1):
         Img[i*X_space:i*X_space+line_width+1,:,1]=255
+        X.append(i*X_space+line_width//2)
     for i in range(1,nb_lines_Y+1):
         Img[:,i*Y_space:i*Y_space+line_width+1,1]=255
-    return Img
+        Y.append(i*Y_space+line_width//2)
+    Pts = np.array([X,Y])
+    return Img,Pts
 
 def main(nb_lines_X,nb_lines_Y,line_width):
-    grid = draw_grid(nb_lines_X=nb_lines_X,nb_lines_Y=nb_lines_Y,line_width=line_width)
+    grid,Pts = draw_grid(nb_lines_X=nb_lines_X,nb_lines_Y=nb_lines_Y,line_width=line_width)
+    np.save("Pixel_pts",Pts)
     imgPath="calibration_grid.png"
     plt.imsave(imgPath,grid)
 
