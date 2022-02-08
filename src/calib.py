@@ -41,15 +41,17 @@ RADIUS_PERI_THRESHOLD_PX = 10
 RADIUS_TOLERANCE = 0.25
 
 # Number of measured points for calibration
-NUMBER_OF_CALIB_PTS = 9
+#startPoint = 0
+startPoint = 99
+NUMBER_OF_CALIB_PTS = 100
 
 # Visualize acquisition 
 
-VISUALIZE = False
+VISUALIZE = True
 
 
 
-def get_image(zed,point_cloud,medianFrames=1, components=[2]):
+def get_image(zed, point_cloud, medianFrames=1, components=[2]):
 
     """
     This function is giving an average value of the components, X, Y or Z 
@@ -73,7 +75,7 @@ def get_image(zed,point_cloud,medianFrames=1, components=[2]):
         if zed.grab() == sl.ERROR_CODE.SUCCESS:
             zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA,sl.MEM.CPU, zed.get_camera_information().camera_resolution)
             point_cloud_np = point_cloud.get_data()
-            stack_of_images.append(point_cloud_np[:,:,components])      
+            stack_of_images.append(point_cloud_np)      
         else:
             print(":(")
             return None
@@ -84,9 +86,9 @@ def get_image(zed,point_cloud,medianFrames=1, components=[2]):
     return median[:,:,components]
 
 def pause():
-    programPause = raw_input("Press the <ENTER> key to continue...")
+    programPause = input("Press the <ENTER> key to continue...")
 
-def get_Disk_Postion(imageZoffset):
+def get_Disk_Postion(imageZoffset, newImageXYZ):
 
     """
     This function is giving us the coordinates of the center of a circular object, a CD for instance.
@@ -139,7 +141,10 @@ def get_Disk_Postion(imageZoffset):
         # Formating the Px coords in the good format for map_coordinates
         coordsPx = np.array([[centroidPx[0]], [centroidPx[1]]])
         for d in range(3):
-            D_position = scipy.ndimage.map_coordinates(imageZoffset[ROI[0], ROI[1], d], coordsPx)[0]
+            #print(f"{newImageXYZ[ROI[0], ROI[1], d][int(coordsPx[0]//1), int(coordsPx[1]//1)]}")
+            # unsophisitcated D_position
+            D_position = newImageXYZ[ROI[0], ROI[1], d][int(coordsPx[0]//1), int(coordsPx[1]//1)]
+            #D_position = scipy.ndimage.map_coordinates(newImageXYZ[ROI[0], ROI[1], d], coordsPx)[0]
             coordsXYZm.append(D_position)
     elif circlesBool.sum() == 0:
         print("No suitable objects found")
@@ -177,7 +182,7 @@ def main():
     print("POP: ZED camera opened, serial number: {0}".format(camera_info.serial_number))
 
 
-    ###########################################################################################################################################
+    ######################reboo#####################################################################################################################
     ### Setting point cloud params 
     ###########################################################################################################################################
     
@@ -199,11 +204,12 @@ def main():
 
         # Background average depth 
         print("Background acquisition ...")
-        zMedian = get_image(zed,point_cloud,medianFrames=NUMBER_OF_AVERAGE_FRAMES, components=[2])
-        tifffile.imsave("Background.tiff", zMedian)
+        background = get_image(zed,point_cloud,medianFrames=NUMBER_OF_AVERAGE_FRAMES, components=[2])
+        tifffile.imwrite("Background.tiff", background[:,:,0])
     else:
         print("Loading previous Background.tiff")
         background = tifffile.imread('Background.tiff')
+        print(f"I loaded a background image with shape: {background.shape}")
 
         
     ###########################################################################################################################################
@@ -213,22 +219,24 @@ def main():
     # The CD has to be at a minimum height of calibZThresholdM in meters
     print("Acquiring Positions ...")
     Stack_coordsXYZm = []
-    for i in range(NUMBER_OF_CALIB_PTS):
+    for i in range(startPoint, NUMBER_OF_CALIB_PTS):
         print(f"Put the CD into the Scene. On position {i+1}.")
         pause()
         print("Acquiring image ...")
         newImageXYZ = get_image(zed,point_cloud,medianFrames=32, components=[0,1,2])
         newImageZoffset = newImageXYZ[:,:,2]-background
-        tifffile.imsave(f"Image_position_{i+1}.tiff", newImageXYZ)
+        tifffile.imwrite(f"Image_position_Z_{i+1}.tiff", newImageXYZ[:,:,2][ROI]-background[ROI])
+        tifffile.imwrite(f"Image_position_all_{i+1}.tiff", newImageXYZ)
         if VISUALIZE:
-            ## Visualize Offset Image
-            plt.imshow(newImageXYZ, vmin=-0.2 , vmax=0.2, cmap='coolwarm')
-            plt.show()
+            ### Visualize Offset Image
+            #plt.imshow(newImageXYZ, vmin=-0.2 , vmax=0.2, cmap='coolwarm')
+            #plt.show()
             ## Visualize Offset Image ROI
-            plt.imshow(newImageXYZ[ROI], vmin=-0.2 , vmax=0.2, cmap='coolwarm')
+            plt.imshow(newImageXYZ[:,:,2][ROI]-background[ROI], vmin=-0.2 , vmax=0.2, cmap='coolwarm')
             plt.show()
         print("Acquiring position ...")
-        coordsXYZm = get_Disk_Postion(newImageZoffset)
+        coordsXYZm = get_Disk_Postion(newImageZoffset, newImageXYZ)
+        np.save(f"Image_position_{i+1}.np", np.array(coordsXYZm))
         Stack_coordsXYZm.append(coordsXYZm)
 
     # Closing camera

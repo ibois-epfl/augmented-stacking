@@ -1,0 +1,156 @@
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mnew file mode 100644[m
+[1mindex 00000000..c270a2a1[m
+[1m--- /dev/null[m
+[1m+++ b/.gitignore[m
+[36m@@ -0,0 +1,2 @@[m
+[32m+[m[32m# Exclude virtual environment[m
+[32m+[m[32m/venv[m
+[1mdiff --git a/src/Pixel_pts.npy b/src/Pixel_pts.npy[m
+[1mnew file mode 100644[m
+[1mindex 00000000..09d33697[m
+Binary files /dev/null and b/src/Pixel_pts.npy differ
+[1mdiff --git a/src/__archive/zed_camera_test_v2.py b/src/__archive/zed_camera_test_v2.py[m
+[1mnew file mode 100644[m
+[1mindex 00000000..c3d7e7de[m
+[1m--- /dev/null[m
+[1m+++ b/src/__archive/zed_camera_test_v2.py[m
+[36m@@ -0,0 +1,34 @@[m
+[32m+[m[32m#!/usr/bin/env python[m
+[32m+[m
+[32m+[m[32mimport sys[m
+[32m+[m[32mimport pyzed.sl as sl[m
+[32m+[m[32mimport numpy as np[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef main():[m
+[32m+[m
+[32m+[m[32m    print("Running Augmented Stacking depth capture GL viewer... Press 'Esc' to quit")[m
+[32m+[m
+[32m+[m[32m    # Set ZED params[m
+[32m+[m[32m    init = sl.InitParameters(camera_resolution=sl.RESOLUTION.HD720, # HD720 | 1280*720[m
+[32m+[m[32m                             camera_fps=30, # available framerates: 15, 30, 60 fps[m
+[32m+[m[32m                             depth_mode=sl.DEPTH_MODE.QUALITY, # posible mods: sl.DEPTH_MODE.PERFORMANCE/.QUALITY/.ULTRA[m
+[32m+[m[32m                             coordinate_units=sl.UNIT.METER,[m
+[32m+[m[32m                             coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP, # sl.COORDINATE_SYSTEM.LEFT_HANDED_Y_UP[m
+[32m+[m[32m                             sdk_verbose = True) # Enable verbose logging[m
+[32m+[m[41m    [m
+[32m+[m[32m    # Open ZED[m
+[32m+[m[32m    zed = sl.Camera()[m
+[32m+[m[32m    status = zed.open(init)[m
+[32m+[m[32m    if status != sl.ERROR_CODE.SUCCESS:[m
+[32m+[m[32m        print(repr(status))[m
+[32m+[m[32m        exit()[m
+[32m+[m
+[32m+[m[41m    [m
+[32m+[m
+[32m+[m[32m    zed.close()[m
+[32m+[m
+[32m+[m
+[32m+[m[32mif __name__ == "__main__":[m
+[32m+[m[32m    main()[m
+[32m+[m
+[1mdiff --git a/src/calib.py b/src/calib.py[m
+[1mindex 763fc7bc..8b81d289 100644[m
+[1m--- a/src/calib.py[m
+[1m+++ b/src/calib.py[m
+[36m@@ -182,7 +182,7 @@[m [mdef main():[m
+     print("POP: ZED camera opened, serial number: {0}".format(camera_info.serial_number))[m
+ [m
+ [m
+[31m-    ###########################################################################################################################################[m
+[32m+[m[32m    ######################reboo#####################################################################################################################[m
+     ### Setting point cloud params [m
+     ###########################################################################################################################################[m
+     [m
+[1mdiff --git a/src/calib_img_generator.py b/src/calib_img_generator.py[m
+[1mindex e6f72d6e..9a3a3823 100644[m
+[1m--- a/src/calib_img_generator.py[m
+[1m+++ b/src/calib_img_generator.py[m
+[36m@@ -18,9 +18,10 @@[m [mfrom datetime import date[m
+ from pathlib import Path[m
+ [m
+ def draw_grid(nb_lines_X=3,nb_lines_Y=3,line_width=4):[m
+[31m-[m
+[32m+[m[32m    X =[][m
+[32m+[m[32m    Y =[][m
+     # Initialize black image[m
+[31m-    shape=(720,1080,3)[m
+[32m+[m[32m    shape=(1080,1920,3)[m
+     Img = np.zeros(shape,dtype=np.uint8)[m
+ [m
+     # Calculate space between lines[m
+[36m@@ -30,12 +31,16 @@[m [mdef draw_grid(nb_lines_X=3,nb_lines_Y=3,line_width=4):[m
+     # Draw the lines[m
+     for i in range(1,nb_lines_X+1):[m
+         Img[i*X_space:i*X_space+line_width+1,:,1]=255[m
+[32m+[m[32m        X.append(i*X_space+line_width//2)[m
+     for i in range(1,nb_lines_Y+1):[m
+         Img[:,i*Y_space:i*Y_space+line_width+1,1]=255[m
+[31m-    return Img[m
+[32m+[m[32m        Y.append(i*Y_space+line_width//2)[m
+[32m+[m[32m    Pts = np.array([X,Y])[m
+[32m+[m[32m    return Img,Pts[m
+ [m
+ def main(nb_lines_X,nb_lines_Y,line_width):[m
+[31m-    grid = draw_grid(nb_lines_X=nb_lines_X,nb_lines_Y=nb_lines_Y,line_width=line_width)[m
+[32m+[m[32m    grid,Pts = draw_grid(nb_lines_X=nb_lines_X,nb_lines_Y=nb_lines_Y,line_width=line_width)[m
+[32m+[m[32m    np.save("Pixel_pts",Pts)[m
+     imgPath="calibration_grid.png"[m
+     plt.imsave(imgPath,grid)[m
+ [m
+[1mdiff --git a/src/calibration_grid.png b/src/calibration_grid.png[m
+[1mindex e95ad90d..dca9b57a 100644[m
+Binary files a/src/calibration_grid.png and b/src/calibration_grid.png differ
+[1mdiff --git a/src/test_camera.py b/src/test_camera.py[m
+[1mnew file mode 100644[m
+[1mindex 00000000..a63917b0[m
+[1m--- /dev/null[m
+[1m+++ b/src/test_camera.py[m
+[36m@@ -0,0 +1,46 @@[m
+[32m+[m[32m########################################################################[m
+[32m+[m[32m#[m
+[32m+[m[32m# Copyright (c) 2021, STEREOLABS.[m
+[32m+[m[32m#[m
+[32m+[m[32m# All rights reserved.[m
+[32m+[m[32m#[m
+[32m+[m[32m# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS[m
+[32m+[m[32m# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT[m
+[32m+[m[32m# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR[m
+[32m+[m[32m# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT[m
+[32m+[m[32m# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,[m
+[32m+[m[32m# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT[m
+[32m+[m[32m# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,[m
+[32m+[m[32m# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY[m
+[32m+[m[32m# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT[m
+[32m+[m[32m# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE[m
+[32m+[m[32m# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.[m
+[32m+[m[32m#[m
+[32m+[m[32m########################################################################[m
+[32m+[m
+[32m+[m[32mimport pyzed.sl as sl[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef main():[m
+[32m+[m[32m    # Create a Camera object[m
+[32m+[m[32m    zed = sl.Camera()[m
+[32m+[m
+[32m+[m[32m    # Create a InitParameters object and set configuration parameters[m
+[32m+[m[32m    init_params = sl.InitParameters()[m
+[32m+[m[32m    init_params.sdk_verbose = False[m
+[32m+[m
+[32m+[m[32m    # Open the camera[m
+[32m+[m[32m    err = zed.open(init_params)[m
+[32m+[m[32m    if err != sl.ERROR_CODE.SUCCESS:[m
+[32m+[m[32m        exit(1)[m
+[32m+[m
+[32m+[m[32m    # Get camera information (ZED serial number)[m
+[32m+[m[32m    zed_serial = zed.get_camera_information().serial_number[m
+[32m+[m[32m    print("Hello! This is my serial number: {0}".format(zed_serial))[m
+[32m+[m
+[32m+[m[32m    # Close the camera[m
+[32m+[m[32m    zed.close()[m
+[32m+[m
+[32m+[m[32mif __name__ == "__main__":[m
+[32m+[m[32m    main()[m
+[32m+[m
