@@ -66,6 +66,11 @@ The format of the library is .ply, .obj and pcd format.
 
 -- ANDREA: do the datflow of chulckboard
 
+To sum up the dataflow so far:
+
+![dataflow_v1](./img/stacking_alg_dataf.drawio.png)
+
+
 TODO LIST:
 -- ANDREA:
 --- do the dataflow of the pitcure taken from meeting 
