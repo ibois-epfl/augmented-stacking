@@ -48,7 +48,7 @@ def get_image(zed, point_cloud, medianFrames=1, components=[2]):
 def pause():
     programPause = input("Press the <ENTER> key to continue...")
 
-def get_Disk_Postion(imageZoffset, newImageXYZ,ROI,CALIB_Z_THRESHOLD_M,RADIUS_TOLERANCE,RADIUS_PERI_THRESHOLD_PX):
+def get_Disk_Position(imageZoffset, newImageXYZ,ROI,CALIB_Z_THRESHOLD_M,RADIUS_TOLERANCE,RADIUS_PERI_THRESHOLD_PX):
 
     """
     This function is giving us the coordinates of the center of a circular object, a CD for instance.

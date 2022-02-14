@@ -12,10 +12,8 @@ This Code will calibrate the ZED camera:
 
 
 import sys
-# import ogl_viewer.viewer as gl
-# import pyzed.sl as sl
-# import numpy as np
-# import progressbar
+import pyzed.sl as sl
+import numpy as np
 import tifffile
 import scipy.ndimage
 import matplotlib.pyplot as plt
@@ -46,7 +44,7 @@ RADIUS_TOLERANCE = 0.25
 # Number of measured points for calibration
 startPoint = 0
 #startPoint = 9
-NUMBER_OF_CALIB_PTS = 100
+NUMBER_OF_CALIB_PTS = 9
 
 # Visualize acquisition 
 
@@ -123,8 +121,7 @@ def main():
         print("Acquiring image ...")
         newImageXYZ = get_image(zed,point_cloud,medianFrames=32, components=[0,1,2])
         newImageZoffset = newImageXYZ[:,:,2]-background
-        tifffile.imwrite(f"Image_position_Z_{i+1}.tiff", newImageXYZ[:,:,2][ROI]-background[ROI])
-        tifffile.imwrite(f"Image_position_all_{i+1}.tiff", newImageXYZ)
+        tifffile.imwrite(f"calib_pts/Image_position_Z_{i+1}.tiff", newImageXYZ[:,:,2][ROI]-background[ROI])
         if VISUALIZE:
             ### Visualize Offset Image
             #plt.imshow(newImageXYZ, vmin=-0.2 , vmax=0.2, cmap='coolwarm')
@@ -133,9 +130,16 @@ def main():
             plt.imshow(newImageXYZ[:,:,2][ROI]-background[ROI], vmin=-0.2 , vmax=0.2, cmap='coolwarm')
             plt.show()
         print("Acquiring position ...")
-        coordsXYZm = get_Disk_Postion(newImageZoffset, newImageXYZ,ROI,CALIB_Z_THRESHOLD_M,RADIUS_TOLERANCE,RADIUS_PERI_THRESHOLD_PX)
-        np.save(f"Image_position_{i+1}.np", np.array(coordsXYZm))
+        coordsXYZm = get_Disk_Position(newImageZoffset, newImageXYZ,ROI,CALIB_Z_THRESHOLD_M,RADIUS_TOLERANCE,RADIUS_PERI_THRESHOLD_PX)
+        np.save(f"calib_pts/Image_position_{i+1}.np", np.array(coordsXYZm))
         Stack_coordsXYZm.append(coordsXYZm)
+
+    if i == NUMBER_OF_CALIB_PTS:
+        calibPointsXYZ = []
+        for point in range(1,10):
+            calibPointsXYZ.append(np.load(f"Image_position_{point}.np.npy"))
+        calibPointsXYZ = np.array(calibPointsXYZ)
+        np.save("calib_points_XYZ.npy",calibPointsXYZ)
 
     # Closing camera
     zed.close()

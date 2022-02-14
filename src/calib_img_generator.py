@@ -41,7 +41,6 @@ def draw_grid(nb_lines_X=3,nb_lines_Y=3,line_width=4):
         for j in range (1,nb_lines_X+1):
             Pts[(i-1)+(j-1)*nb_lines_X,0]=i*Y_space+line_width//2
     
-    print (Pts)
     return Img,Pts
 
 def main(nb_lines_X,nb_lines_Y,line_width):

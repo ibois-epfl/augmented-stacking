@@ -21,7 +21,6 @@ GRAPH = False
 
 ### Load projector positions in px
 proj_xy = numpy.load("./Pixel_pts.npy")
-print(proj_xy)
 
 #plt.plot(proj_xy[:,0], proj_xy[:,1], 'x')
 #plt.xlabel("x [px]")
@@ -30,10 +29,8 @@ print(proj_xy)
 #plt.show()
 
 ### Load CORRESPONDING!!! 3D positions of calibration target
-calibPointsXYZ = []
-for point in range(1,10):
-    calibPointsXYZ.append(numpy.load(f"Image_position_{point}.np.npy"))
-calibPointsXYZ = numpy.array(calibPointsXYZ)
+calibPointsXYZ = numpy.load("calib_points_XYZ.npy")
+
 
 print(calibPointsXYZ)
 
