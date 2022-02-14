@@ -2,16 +2,24 @@
 
 
 '''
-This Code will calibrate the ZED camera:
+This Code will give the calibration points of the ZED Camera:
 
 1. By acquiring first the Z Cordinates of the Empty scene 
 2. By measuring different positions of a given circular object (ex: CD) move on a specific grid.
 
+usage: calib.py [-h] [-cpts NB_CALIB_PTS] [-zT CALIB_Z_THRESHOLD] [-rT RADIUS_THRESHOLD_PX] [-s STARTING_POINT] [-v VISUALIZE]
+Create a calibration image.
+optional arguments:
+  -h, --help                                                        Show this help message and exit.
+  -cpts NB_CALIB_PTS, --nbCalibPts NUMBER_OF_CALIB_PTS              Number of Calibration Points.
+  -zT CALIB_Z_THRESHOLD, --calibZThresh CALIB_Z_THRESHOLD_M         Approximate height of the element used for the calibration in meters.
+  -rT RADIUS_THRESHOLD_PX, --rThresh RADIUS_PERI_THRESHOLD_PX       Radius in px of the element used for the calibration.
+  -s STARTING_POINT, --sPoint STARTING_POINT                        Number of the starting point, can be used if one acquisition failed, instead of doing all again start from last point.
+  -v VISUALIZE, --visualize VISUALIZE                               Boolean for visualising each acquired image. 
 '''
 
-
-
 import sys
+from xmlrpc.client import Boolean
 import pyzed.sl as sl
 import numpy as np
 import tifffile
@@ -23,8 +31,7 @@ import skimage.measure
 from Calibration_functions import get_image 
 from Calibration_functions import get_Disk_Position
 from Calibration_functions import pause
-
-
+import argparse
 
 # Number of frames we use for the background acquisition
 NUMBER_OF_AVERAGE_FRAMES = 64
@@ -32,26 +39,10 @@ NUMBER_OF_AVERAGE_FRAMES = 64
 # Region of Interest can change if the camera moves
 ROI = [slice(200, 500), slice(400, 900)]
 
-# Z threshold when comparing new image to background
-CALIB_Z_THRESHOLD_M = 0.08
-
-# Radius threshold for filtering noise 
-RADIUS_PERI_THRESHOLD_PX = 10
-
 # Radius tolerance when comparing the radius given from the area and the perimeter
 RADIUS_TOLERANCE = 0.25
 
-# Number of measured points for calibration
-startPoint = 0
-#startPoint = 9
-NUMBER_OF_CALIB_PTS = 9
-
-# Visualize acquisition 
-
-VISUALIZE = True
-
-
-def main():
+def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
     
     ###########################################################################################################################################
     ### Setting ZED params
@@ -115,7 +106,7 @@ def main():
     # The CD has to be at a minimum height of calibZThresholdM in meters
     print("Acquiring Positions ...")
     Stack_coordsXYZm = []
-    for i in range(startPoint, NUMBER_OF_CALIB_PTS):
+    for i in range(STARTING_POINT-1, NUMBER_OF_CALIB_PTS):
         print(f"Put the CD into the Scene. On position {i+1}.")
         pause()
         print("Acquiring image ...")
@@ -145,6 +136,41 @@ def main():
     zed.close()
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    
+    parser = argparse.ArgumentParser(description="Get the Calibration Points",
+                                   formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument(
+        '-cpts', '--nbCalibPts',
+        help="Number of Calibration points.",
+        type=int,
+        default=9
+    )
+    parser.add_argument(
+        '-zT', '--calibZThresh',
+        help="Approximate height (float) of the element used for the calibration in meters.",
+        type=float,
+        default=0.08
+    )
+    parser.add_argument(
+        '-rT', '--rThresh',
+        help="Radius in px of the element used for the calibration.",
+        type=int,
+        default=10
+    )
+    parser.add_argument(
+        '-s', '--sPoint',
+        help="Number of the starting point, can be used if one acquisition failed, instead of doing all again start from last point.",
+        type=int,
+        default=1
+    )
+    parser.add_argument(
+        '-v', '--visualize',
+        help="Boolean for visualising each acquired image.",
+        type=bool,
+        default=True
+    )
+    args = parser.parse_args()
 
+    
+    main(args.nbCalibPts, args.calibZThresh, args.rThresh,args.sPoint,args.visualize)
