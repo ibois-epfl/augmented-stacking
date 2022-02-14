@@ -12,7 +12,7 @@ import os
 import skimage.measure
 
 # Region of Interest can change if the camera moves
-ROI = [slice(200, 500), slice(400, 900)]
+ROI = [slice(100, 600), slice(400, 1000)]
 
 def main():
     # Set ZED params
@@ -50,18 +50,20 @@ def main():
     ### Acquiring highest point in the ROI
     ###########################################################################################################################################
 
+    
     imXYZ = get_image(zed, point_cloud, medianFrames=16, components=[0,1,2])
-    # This is the Z image acuired
-    plt.imshow(imXYZ[:,:,2][ROI])
-    plt.show()
+    
+    print("Loading previous Background.tiff")
+    background = tifffile.imread('Background.tiff')[:,:,0]
+    print(f"I loaded a background image with shape: {background.shape}")
 
     # This is the 3D position of that maximum value
-    posMax = np.where(imXYZ[:,:,2][ROI] == np.nanmax(imXYZ[:,:,2][ROI]))
+    posMax = np.where(imXYZ[:,:,2][ROI] - background[ROI] == np.nanmax(imXYZ[:,:,2][ROI]- background[ROI]))
     zed.close()
-
+    print(posMax)
     XYZpos = []
     for d in range(3):
-        D_position = scipy.ndimage.map_coordinates(imXYZ[:,:,2][ROI], posMax)[0]
+        D_position = scipy.ndimage.map_coordinates(imXYZ[:,:,d][ROI], posMax,mode="nearest",order = 1)
         XYZpos.append(D_position)
     XYZpos = np.array(XYZpos)
     print(XYZpos)
@@ -71,6 +73,9 @@ def main():
     RHS = np.dot(P, np.array([XYZpos[0], XYZpos[1], XYZpos[2], 1]).T)
     print(f"This pixel should be illumiated: {RHS[0:2]}")
 
-    outputHack = np.zeros((1080, 1920), dtype='<u1')
-    outputHack[int(RHS[1]-5):int(RHS[1]+5), int(RHS[0]-5):int(RHS[0]+5)] = 255
-    tifffile.imsave("urgh.tif", outputHack)
+    outputHack = np.zeros((1080, 1920,3))
+    outputHack[int(RHS[1]-5):int(RHS[1]+5), int(RHS[0]-5):int(RHS[0]+5),1] = 1
+    plt.imsave("Max_point.png", outputHack)
+    
+if __name__ == '__main__':
+    main()

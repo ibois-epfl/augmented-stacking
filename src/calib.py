@@ -37,10 +37,10 @@ import argparse
 NUMBER_OF_AVERAGE_FRAMES = 64
 
 # Region of Interest can change if the camera moves
-ROI = [slice(200, 500), slice(400, 900)]
+ROI = [slice(100, 600), slice(400, 1000)]
 
 # Radius tolerance when comparing the radius given from the area and the perimeter
-RADIUS_TOLERANCE = 0.25
+RADIUS_TOLERANCE = 1
 
 def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
     
@@ -92,10 +92,10 @@ def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTI
         # Background average depth 
         print("Background acquisition ...")
         background = get_image(zed,point_cloud,medianFrames=NUMBER_OF_AVERAGE_FRAMES, components=[2])
-        tifffile.imwrite("Background.tiff", background[:,:,0])
+        tifffile.imwrite("Background.tiff", background)
     else:
         print("Loading previous Background.tiff")
-        background = tifffile.imread('Background.tiff')
+        background = tifffile.imread('Background.tiff')[:,:,0]
         print(f"I loaded a background image with shape: {background.shape}")
 
         
@@ -106,7 +106,8 @@ def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTI
     # The CD has to be at a minimum height of calibZThresholdM in meters
     print("Acquiring Positions ...")
     Stack_coordsXYZm = []
-    for i in range(STARTING_POINT-1, NUMBER_OF_CALIB_PTS):
+    i=STARTING_POINT-1
+    while i < NUMBER_OF_CALIB_PTS:
         print(f"Put the CD into the Scene. On position {i+1}.")
         pause()
         print("Acquiring image ...")
@@ -122,13 +123,22 @@ def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTI
             plt.show()
         print("Acquiring position ...")
         coordsXYZm = get_Disk_Position(newImageZoffset, newImageXYZ,ROI,CALIB_Z_THRESHOLD_M,RADIUS_TOLERANCE,RADIUS_PERI_THRESHOLD_PX)
-        np.save(f"calib_pts/Image_position_{i+1}.np", np.array(coordsXYZm))
-        Stack_coordsXYZm.append(coordsXYZm)
+        if not coordsXYZm == None:
+            if not np.isnan(coordsXYZm[0]):
+                np.save(f"calib_pts/Image_position_{i+1}.np", np.array(coordsXYZm))
+                Stack_coordsXYZm.append(coordsXYZm)
+                i+=1
+            else:
+                print("nan value encountered please try again")
+        else:
+            
+            print(f"New acquisition of point {i+1}")
+            
 
     if i == NUMBER_OF_CALIB_PTS:
         calibPointsXYZ = []
         for point in range(1,10):
-            calibPointsXYZ.append(np.load(f"Image_position_{point}.np.npy"))
+            calibPointsXYZ.append(np.load(f"calib_pts/Image_position_{point}.np.npy"))
         calibPointsXYZ = np.array(calibPointsXYZ)
         np.save("calib_points_XYZ.npy",calibPointsXYZ)
 
