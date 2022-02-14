@@ -28,14 +28,20 @@ def draw_grid(nb_lines_X=3,nb_lines_Y=3,line_width=4):
     X_space = (shape[0] - nb_lines_X*line_width)//(nb_lines_X+1)
     Y_space = (shape[1] - nb_lines_Y*line_width)//(nb_lines_Y+1)
 
+    #Pts coordinate saving
+    Pts=np.empty((nb_lines_Y*nb_lines_X,2))
+
     # Draw the lines
     for i in range(1,nb_lines_X+1):
         Img[i*X_space:i*X_space+line_width+1,:,1]=255
-        X.append(i*X_space+line_width//2)
+        for j in range (1,nb_lines_Y+1):
+            Pts[(i-1)*nb_lines_X+(j-1),1]=i*X_space+line_width//2
     for i in range(1,nb_lines_Y+1):
         Img[:,i*Y_space:i*Y_space+line_width+1,1]=255
-        Y.append(i*Y_space+line_width//2)
-    Pts = np.array([X,Y])
+        for j in range (1,nb_lines_X+1):
+            Pts[(i-1)+(j-1)*nb_lines_X,0]=i*Y_space+line_width//2
+    
+    print (Pts)
     return Img,Pts
 
 def main(nb_lines_X,nb_lines_Y,line_width):

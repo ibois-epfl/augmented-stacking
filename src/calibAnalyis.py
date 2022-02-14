@@ -12,7 +12,6 @@ Note:
 import numpy
 import matplotlib.pyplot as plt
 import scipy.optimize
-import progressbar
 
 ROI = [slice(200, 500), slice(400, 900)]
 
@@ -21,15 +20,9 @@ rotationAngleDegThreshold = 0.00001
 GRAPH = False
 
 ### Load projector positions in px
-proj_xy = numpy.array([[ 479, 268],
-          [ 956, 268],
-          [1433, 268],
-          [ 479, 536],
-          [ 956, 536],
-          [1433, 536],
-          [ 479, 803],
-          [ 956, 803],
-          [1433, 803]])
+proj_xy = numpy.load("./Pixel_pts.npy")
+print(proj_xy)
+
 #plt.plot(proj_xy[:,0], proj_xy[:,1], 'x')
 #plt.xlabel("x [px]")
 #plt.ylabel("y [px]")
