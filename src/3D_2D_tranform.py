@@ -126,7 +126,7 @@ def main():
 
     # Initialisation
     s       = 0.04
-    f       = 2.5
+    f       = 3.2
     u0       = -0.04
     v0       = -0.02
     dX      = 2.2
@@ -144,7 +144,14 @@ def main():
     # Optimisation
     global j
     j=0
-    output = scipy.optimize.minimize(optimise_me, x0, args=(calib_points_XYZ,proj_xy),method='Powell', options={'disp': True})
+    output = scipy.optimize.minimize(optimise_me,
+                                     x0,
+                                     args=(calib_points_XYZ,proj_xy),
+                                     method='Powell',
+                                     options={'disp': True,
+                                              'xtol': 0.00000001,
+                                              'ftol': 0.0000001,
+                                              'maxiter': 1000})
 
 
     # Results

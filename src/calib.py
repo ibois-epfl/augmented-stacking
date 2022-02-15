@@ -95,7 +95,7 @@ def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTI
         tifffile.imwrite("Background.tiff", background)
     else:
         print("Loading previous Background.tiff")
-        background = tifffile.imread('Background.tiff')[:,:,0]
+        background = tifffile.imread('Background.tiff')
         print(f"I loaded a background image with shape: {background.shape}")
 
         
@@ -111,7 +111,9 @@ def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTI
         print(f"Put the CD into the Scene. On position {i+1}.")
         pause()
         print("Acquiring image ...")
-        newImageXYZ = get_image(zed,point_cloud,medianFrames=32, components=[0,1,2])
+        newImageXYZ = get_image(zed,point_cloud,
+                                medianFrames=NUMBER_OF_AVERAGE_FRAMES,
+                                components=[0,1,2])
         newImageZoffset = newImageXYZ[:,:,2]-background
         tifffile.imwrite(f"calib_pts/Image_position_Z_{i+1}.tiff", newImageXYZ[:,:,2][ROI]-background[ROI])
         if VISUALIZE:
@@ -122,7 +124,7 @@ def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTI
             plt.imshow(newImageXYZ[:,:,2][ROI]-background[ROI], vmin=-0.2 , vmax=0.2, cmap='coolwarm')
             plt.show()
         print("Acquiring position ...")
-        coordsXYZm = get_Disk_Position(newImageZoffset, newImageXYZ,ROI,CALIB_Z_THRESHOLD_M,RADIUS_TOLERANCE,RADIUS_PERI_THRESHOLD_PX)
+        coordsXYZm = get_Disk_Position(newImageZoffset,newImageXYZ,ROI,CALIB_Z_THRESHOLD_M,RADIUS_TOLERANCE,RADIUS_PERI_THRESHOLD_PX)
         if not coordsXYZm == None:
             if not np.isnan(coordsXYZm[0]):
                 np.save(f"calib_pts/Image_position_{i+1}.np", np.array(coordsXYZm))
@@ -172,7 +174,7 @@ if __name__ == '__main__':
         '-s', '--sPoint',
         help="Number of the starting point, can be used if one acquisition failed, instead of doing all again start from last point.",
         type=int,
-        default=1
+        default=0
     )
     parser.add_argument(
         '-v', '--visualize',
