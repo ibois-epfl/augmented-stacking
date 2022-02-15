@@ -10,6 +10,7 @@ from Calibration_functions import get_image
 import os.path
 import os
 import skimage.measure
+from Calibration_functions import get_Disk_Position 
 
 # Region of Interest can change if the camera moves
 ROI = [slice(100, 600), slice(400, 1000)]
@@ -51,22 +52,21 @@ def main():
     ###########################################################################################################################################
 
     
-    imXYZ = get_image(zed, point_cloud, medianFrames=16, components=[0,1,2])
-    
+    newImageXYZ = get_image(zed, point_cloud, medianFrames=16, components=[0,1,2])
+    CALIB_Z_THRESHOLD_M = 0.08
+    RADIUS_TOLERANCE = 0.25
+    RADIUS_PERI_THRESHOLD_PX = 10
     print("Loading previous Background.tiff")
     background = tifffile.imread('Background.tiff')[:,:,0]
     print(f"I loaded a background image with shape: {background.shape}")
 
     # This is the 3D position of that maximum value
-    posMax = np.where(imXYZ[:,:,2][ROI] - background[ROI] == np.nanmax(imXYZ[:,:,2][ROI]- background[ROI]))
+    imageZoffset = newImageXYZ[:,:,2] - background
+    XYZpos = get_Disk_Position(imageZoffset, newImageXYZ,ROI,CALIB_Z_THRESHOLD_M,RADIUS_TOLERANCE,RADIUS_PERI_THRESHOLD_PX)
+    
     zed.close()
-    print(posMax)
-    XYZpos = []
-    for d in range(3):
-        D_position = scipy.ndimage.map_coordinates(imXYZ[:,:,d][ROI], posMax,mode="nearest",order = 1)
-        XYZpos.append(D_position)
-    XYZpos = np.array(XYZpos)
     print(XYZpos)
+
     
     # Loading the P matrix transition between 3D and 2D
     P = np.load("3D_2D_matrix.npy")
@@ -74,7 +74,7 @@ def main():
     print(f"This pixel should be illumiated: {RHS[0:2]}")
 
     outputHack = np.zeros((1080, 1920,3))
-    outputHack[int(RHS[1]-5):int(RHS[1]+5), int(RHS[0]-5):int(RHS[0]+5),1] = 1
+    outputHack[int(RHS[0]-5):int(RHS[0]+5), int(RHS[1]-5):int(RHS[1]+5),1] = 1
     plt.imsave("Max_point.png", outputHack)
     
 if __name__ == '__main__':

@@ -91,7 +91,7 @@ def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTI
 
         # Background average depth 
         print("Background acquisition ...")
-        background = get_image(zed,point_cloud,medianFrames=NUMBER_OF_AVERAGE_FRAMES, components=[2])
+        background = get_image(zed,point_cloud,medianFrames=NUMBER_OF_AVERAGE_FRAMES, components=[2])[:,:,0]
         tifffile.imwrite("Background.tiff", background)
     else:
         print("Loading previous Background.tiff")
@@ -106,7 +106,7 @@ def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTI
     # The CD has to be at a minimum height of calibZThresholdM in meters
     print("Acquiring Positions ...")
     Stack_coordsXYZm = []
-    i=STARTING_POINT-1
+    i=STARTING_POINT
     while i < NUMBER_OF_CALIB_PTS:
         print(f"Put the CD into the Scene. On position {i+1}.")
         pause()
@@ -137,7 +137,7 @@ def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTI
 
     if i == NUMBER_OF_CALIB_PTS:
         calibPointsXYZ = []
-        for point in range(1,10):
+        for point in range(1,NUMBER_OF_CALIB_PTS+1):
             calibPointsXYZ.append(np.load(f"calib_pts/Image_position_{point}.np.npy"))
         calibPointsXYZ = np.array(calibPointsXYZ)
         np.save("calib_points_XYZ.npy",calibPointsXYZ)

@@ -21,7 +21,7 @@ import scipy.optimize
 import json
 
 ROI = [slice(200, 500), slice(400, 900)]
-NUMBER_OF_CALIBRATION_PTS = 9
+NUMBER_OF_CALIBRATION_PTS = 20
 
 GRAPH = False
 
@@ -101,6 +101,7 @@ def main():
     
     ### Load projector positions in px
     proj_xy = np.load("./Pixel_pts.npy")
+    print(proj_xy)
 
     ### Load CORRESPONDING!!! 3D positions of calibration target
     # calib_points_XYZ = []
@@ -110,6 +111,7 @@ def main():
     # np.save("calib_points_XYZ.npy",calibPointsXYZ)
 
     calib_points_XYZ = np.load("calib_points_XYZ.npy")
+    print(calib_points_XYZ)
 
     ###########################################################################################################################################
     ### Finding out the parameter of the K matrix
@@ -173,7 +175,7 @@ def main():
     K = np.array([[f*m_x, gamma, u0, 0], [0, f*m_y, v0, 0], [0, 0, 1, 0]])
 
     totalError = 0
-    for i in range(9):
+    for i in range(NUMBER_OF_CALIBRATION_PTS):
         RHS = np.dot(np.dot(K, Rt), np.array([calib_points_XYZ[i,0], calib_points_XYZ[i,1], calib_points_XYZ[i,2], 1]).T)/s
         print(f"Input pixels: {proj_xy[i]}, output match: {RHS[0:2]}")
 
