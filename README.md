@@ -95,5 +95,6 @@ To do list for the next steps:
 * Find out if the distortion of the projector gives us a better precision. (< 74 func error)
 * Try making a live image
 * Cleaning up the code
+* Cover the Object with paint, make it less reflective
 
 
