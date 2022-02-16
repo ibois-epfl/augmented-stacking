@@ -188,13 +188,13 @@ def main():
 
     # Json file saving as a dictionary
     K_dict = {"s": s , "f": f , "u0":u0 , "v0":v0 , "dX":dX , "dY":dY , "dZ":dZ , "m_x":m_x , "m_y":m_y , "gamma":gamma , "r0":r0 , "r1":r1 , "r2":r2 }
-    K_matrix = open("3D_2D_matrix.json", "w")
+    K_matrix = open("3D_2D/3D_2D_matrix.json", "w")
     json.dump(K_dict, K_matrix)
     K_matrix.close()
 
     # numpy 3*4 matrix saving
     P_matrix = np.dot(K,Rt)/s
-    np.save("3D_2D_matrix",P_matrix)
+    np.save("3D_2D/3D_2D_matrix",P_matrix)
     print("Matrix has succesfully been saved")
 
 

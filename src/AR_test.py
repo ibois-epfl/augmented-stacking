@@ -69,7 +69,7 @@ def main():
 
     
     # Loading the P matrix transition between 3D and 2D
-    P = np.load("3D_2D_matrix.npy")
+    P = np.load("3D_2D/3D_2D_matrix.npy")
     RHS = np.dot(P, np.array([XYZpos[0], XYZpos[1], XYZpos[2], 1]).T)
     print(f"This pixel should be illumiated: {RHS[0:2]}")
 

@@ -33,7 +33,7 @@ To do list for the next steps:
 * Find out what this mysterious 4th field is from the output
 * Get head around x=PX
 
-
+---
 ## 2022.02.08 - Meeting for integration stacking algorithm
 
 - QQ meeting stacking alogrithm
@@ -79,3 +79,21 @@ TODO LIST:
 
 -- QIANQING:
 --- preliminary test on deviation feedback between acquired point cloud and computed 3D model
+
+---
+## 2022.02.15 - Calibration Enhencement and fullscreen projections
+
+<img src="./img/Calibration.jpg" width="400" height="400">
+
+<img src="./img/Calibration_object.jpg" width="400" height="400">
+
+New Disk used for Calibration.
+
+A Full screen image was cast on the object, representing a depth map of the objects.
+
+To do list for the next steps:
+* Find out if the distortion of the projector gives us a better precision. (< 74 func error)
+* Try making a live image
+* Cleaning up the code
+
+
