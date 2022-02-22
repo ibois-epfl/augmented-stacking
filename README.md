@@ -118,7 +118,7 @@ The Calibration Object has been fixed, but still got some reflection problem wit
 
 It appears that with a Distortion Correction of -30, we got a lower residual. Now it is at arround 28 against 74 without. So we need to use distortion correction.
 
-img src="./img/Residual_with_correction.png" width="400" height="400">
+<img src="./img/Residual_with_correction.png" width="400" height="400">
 
 
 It appears the Calibration is not that precise in other Z levels, need to see why...
