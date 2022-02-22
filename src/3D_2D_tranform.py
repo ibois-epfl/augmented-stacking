@@ -19,9 +19,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize
 import json
+import argparse
 
 ROI = [slice(200, 500), slice(400, 900)]
-NUMBER_OF_CALIBRATION_PTS = 20
+
 
 GRAPH = False
 
@@ -93,14 +94,16 @@ def optimise_me(x,calib_points_XYZ,proj_xy):
     if j%100 == 0: print(f"{dX} {dY} {dZ}: {np.sqrt(totalError)}")
     return np.sqrt(totalError) 
 
-def main():
 
+def main(PROJECTOR_PIXEL_PTS_PATH,CALIB_PTS_XYZ,SAVE_PATH,number_of_calibration_pts):
+    global NUMBER_OF_CALIBRATION_PTS 
+    NUMBER_OF_CALIBRATION_PTS = number_of_calibration_pts
     ###########################################################################################################################################
     ### Loading Calibration data
     ###########################################################################################################################################
     
     ### Load projector positions in px
-    proj_xy = np.load("./Pixel_pts.npy")
+    proj_xy = np.load(PROJECTOR_PIXEL_PTS_PATH)
     print(proj_xy)
 
     ### Load CORRESPONDING!!! 3D positions of calibration target
@@ -110,7 +113,7 @@ def main():
     # calib_pointsXYZ = np.array(calib_points_XYZ)
     # np.save("calib_points_XYZ.npy",calibPointsXYZ)
 
-    calib_points_XYZ = np.load("calib_points_XYZ.npy")
+    calib_points_XYZ = np.load(CALIB_PTS_XYZ)
     print(calib_points_XYZ)
 
     ###########################################################################################################################################
@@ -188,16 +191,46 @@ def main():
 
     # Json file saving as a dictionary
     K_dict = {"s": s , "f": f , "u0":u0 , "v0":v0 , "dX":dX , "dY":dY , "dZ":dZ , "m_x":m_x , "m_y":m_y , "gamma":gamma , "r0":r0 , "r1":r1 , "r2":r2 }
-    K_matrix = open("3D_2D/3D_2D_matrix.json", "w")
+    K_matrix = open(SAVE_PATH+".json", "w")
     json.dump(K_dict, K_matrix)
     K_matrix.close()
 
     # numpy 3*4 matrix saving
     P_matrix = np.dot(K,Rt)/s
-    np.save("3D_2D/3D_2D_matrix",P_matrix)
+    np.save(SAVE_PATH+".npy",P_matrix)
     print("Matrix has succesfully been saved")
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    
+    parser = argparse.ArgumentParser(description="Get the Calibration Points",
+                                   formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument(
+        '-cpts', '--nbCalibPts',
+        help="Number of Calibration points.",
+        type=int,
+        default=9
+    )
+    parser.add_argument(
+        '-cP', '--calibPoints',
+        help="Path of the calibration points npy file, with all files together.",
+        type=str,
+        default=""
+    )
+    parser.add_argument(
+        '-pP', '--pixelPoints',
+        help="Path of the pixel points position on the grid, npy file generated with the calibration image.",
+        type=str,
+        default=""
+    )
+    parser.add_argument(
+        '-o', '--outputPath',
+        help="Path where the 2D_3D matrix will be saved.",
+        type=str,
+        default=""
+    )
+    args = parser.parse_args()
+
+    
+    main(args.pixelPoints,args.calibPoints,args.outputPath,args.nbCalibPts)
 

@@ -1,0 +1,14 @@
+
+
+
+Meeting 15 02 22 - DR Ed
+
+We managed to cast a full scrren image with the detected object.
+We worked on the precision.
+
+
+TO DO:
+
+- find out if the distortion of the projector help for the calibration, see error rate (arround 74 here)
+- Try making a live depth image/object pointing
+- Cleaning up the code

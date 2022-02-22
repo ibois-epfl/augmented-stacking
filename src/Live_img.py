@@ -6,20 +6,54 @@ if sys.version_info[0] == 2:  # the tkinter library changed it's name from Pytho
 else:
     import tkinter
 
-from PIL import Image, ImageTk
+from PIL import Image
+from PIL import ImageTk
 import Calibration_functions
 import cv2
 import pyzed.sl as sl
 import tifffile
 
-def Draw_ROI(img):
-    h,w = img.shape[:2]
+P = np.load("3D_2D/Distortion_correction_-30_3D_2D_matrix.npy")
+
+def Draw_ROI(imXYZ,img):
+    
+    # Most of the time the ROI is outside the preojectors range, so we will not be able to draw the roi correctly...
     Zone = np.copy(img)
+    h,w = img.shape[:2]
     ROI = Calibration_functions.ROI
-    Zone[ROI[0].start,ROI[1]] = [255,0,0]
-    Zone[ROI[0].stop,ROI[1]] = [255,0,0]
-    Zone[ROI[0],ROI[1].start] = [255,0,0]
-    Zone[ROI[0],ROI[1].stop] = [255,0,0]
+    P11 = ROI[1].start
+    P12 = ROI[1].stop
+    P21 = ROI[0].start
+    P22 = ROI[0].stop
+    
+    Y1,X1,Z1 = imXYZ[P21,P11]
+    Y2,X2,Z2 = imXYZ[P22,P11]
+    Y3,X3,Z3 = imXYZ[P21,P12]
+    
+    Pt1 = np.array([[X1],[Y1],[Z1],[1]])
+    Pt2 = np.array([[X2],[Y2],[Z2],[1]])
+    Pt3 = np.array([[X3],[Y3],[Z3],[1]])
+    
+    Pix1 = np.dot(P,Pt1)
+    Pix2 = np.dot(P,Pt2)
+    Pix3 = np.dot(P,Pt3)
+    
+    if not (int(Pix1[1]) in range(0,h)):
+        Pix1[1] = 0
+    if not (int(Pix2[1]) in range(0,h)):
+        Pix2[1] = h-1
+    if not (int(Pix1[0]) in range(0,w)):
+        Pix1[0] = 0
+    if not (int(Pix3[0]) in range(0,w)):
+        Pix3[0] = w-1
+    print(Pix1[1],Pix1[0],Pix2[1],Pix3[0])
+    
+    Zone[int(Pix1[1]):int(Pix2[1]),int(Pix1[0])] = [255,0,0]
+    Zone[int(Pix1[1]):int(Pix2[1]),int(Pix3[0])] = [255,0,0]
+    Zone[int(Pix1[1]),int(Pix1[0]):int(Pix3[0])] = [255,0,0]
+    Zone[int(Pix2[1]),int(Pix1[0]):int(Pix3[0])] = [255,0,0]
+    
+    
     return Zone
 
 
@@ -64,43 +98,32 @@ def live_stream():
     print(f"I loaded a background image with shape: {background.shape}")
 
     imXYZ = Calibration_functions.get_image(zed, point_cloud, medianFrames=3, components=[0,1,2])
-
+    
+    
+# threshold out the points
+    zMask = imXYZ[Calibration_functions.ROI[0],Calibration_functions.ROI[1],2].copy()-background[Calibration_functions.ROI] > 0.1
+    
     imXYZroi = imXYZ[Calibration_functions.ROI[0],
                     Calibration_functions.ROI[1]]
 
-    P = np.load("3D_2D/3D_2D_matrix.npy")
 
-    zMin = 0
-    zMax = 0.2
+    pointsXYZ = imXYZroi[zMask][::1]
 
-    npArrayIm = np.zeros((1080,1920,3), dtype=np.uint8)
-    for DX in range(imXYZroi.shape[0]):
-        for DY in range(imXYZroi.shape[1]):
-            X = imXYZroi[DX, DY, 0]
-            Y = imXYZroi[DX, DY, 1]
-            Z = imXYZroi[DX, DY, 2]
-            # convert XYZ to pixels
-            pixels = np.dot(P, np.array([X, Y, Z, 1]).T)
-            
-            #print(pixels)
-            # checks for array limits!?
-            Z -=  backgroundROI[DX, DY]
-                    
-            #if Z < zMin: Z = zMin
-            #if Z > zMax: Z = zMax
-            #print(Z)
-            outputValue = 255*(Z - zMin)/zMax
-            
-            if np.isfinite(pixels[0]) and np.isfinite(pixels[1]):
-                x = int(np.round(pixels[0]))
-                y = int(np.round(pixels[1]))
-                if x >= 0 and x < npArrayIm.shape[0]:
-                    if y >= 0 and y < npArrayIm.shape[1]: 
-                        #print(f"setting {x}-{y} to {outputValue}")
-                        npArrayIm[x-4:x+3,
-                                    y-4:y+3,1] = int(outputValue)
-    zed.close()
-    return npArrayIm
+    #pixels = numpy.zeros([pointsXYZ.shape[0],2])
+    numpyArrayIm = np.zeros((1080,1920,3), dtype=np.uint8)
+        
+    for X, Y, Z in pointsXYZ:
+        # convert XYZ to pixels
+        pixels = np.dot(P, np.array([[X], [Y], [Z],[1]]))
+        print(pixels)
+        if pixels[0]<1080 and pixels[1]<1920:
+            numpyArrayIm[int(pixels[0]),
+                    int(pixels[1]),1] = 255
+    
+    numpyArrayIm = Draw_ROI(imXYZ,numpyArrayIm)
+    zed.close()    
+    
+    return numpyArrayIm
     
 
 def main():
@@ -114,7 +137,6 @@ def main():
 
     def show_frame():
         frame = live_stream()
-        frame = Draw_ROI(frame)
         imgtk = ImageTk.PhotoImage(image=Image.fromarray(frame, mode="RGB"))
         lmain.imgtk = imgtk
         lmain.configure(image=imgtk)

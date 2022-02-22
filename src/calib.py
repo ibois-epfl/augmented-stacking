@@ -20,6 +20,7 @@ optional arguments:
 '''
 
 import sys
+
 from xmlrpc.client import Boolean
 import pyzed.sl as sl
 import numpy as np
@@ -28,6 +29,8 @@ import scipy.ndimage
 import matplotlib.pyplot as plt
 import os.path
 import os
+from PIL import Image
+from PIL import ImageTk
 import skimage.measure
 from Calibration_functions import get_image 
 from Calibration_functions import get_Disk_Position
@@ -42,6 +45,8 @@ ROI = [slice(100, 600), slice(400, 1000)]
 
 # Radius tolerance when comparing the radius given from the area and the perimeter
 RADIUS_TOLERANCE = 1
+
+
 
 def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE,SAVING_PATH):
     
@@ -119,8 +124,8 @@ def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTI
         tifffile.imwrite(f"calib_pts/Image_position_Z_{i+1}.tiff", newImageXYZ[:,:,2][ROI]-background[ROI])
         if VISUALIZE:
             ### Visualize Offset Image
-            #plt.imshow(newImageXYZ, vmin=-0.2 , vmax=0.2, cmap='coolwarm')
-            #plt.show()
+            plt.imshow(newImageXYZ[:,:,2], vmin=-0.2 , vmax=0.2, cmap='coolwarm')
+            plt.show()
             ## Visualize Offset Image ROI
             plt.imshow(newImageXYZ[:,:,2][ROI]-background[ROI], vmin=-0.2 , vmax=0.2, cmap='coolwarm')
             plt.show()
@@ -128,6 +133,7 @@ def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTI
         coordsXYZm = get_Disk_Position(newImageZoffset,newImageXYZ,ROI,CALIB_Z_THRESHOLD_M,RADIUS_TOLERANCE,RADIUS_PERI_THRESHOLD_PX)
         if not coordsXYZm == None:
             if not np.isnan(coordsXYZm[0]):
+                os.makedirs(SAVING_PATH,exist_ok=True)
                 np.save(f"{SAVING_PATH}Image_position_{i+1}.np", np.array(coordsXYZm))
                 Stack_coordsXYZm.append(coordsXYZm)
                 i+=1
@@ -136,14 +142,15 @@ def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTI
         else:
             
             print(f"New acquisition of point {i+1}")
-            
+    
+
 
     if i == NUMBER_OF_CALIB_PTS:
         calibPointsXYZ = []
         for point in range(1,NUMBER_OF_CALIB_PTS+1):
-            calibPointsXYZ.append(np.load(f"calib_pts/Image_position_{point}.np.npy"))
+            calibPointsXYZ.append(np.load(f"{SAVING_PATH}Image_position_{point}.np.npy"))
         calibPointsXYZ = np.array(calibPointsXYZ)
-        np.save("calib_points_XYZ.npy",calibPointsXYZ)
+        np.save(f"{SAVING_PATH}calib_points_XYZ.npy",calibPointsXYZ)
 
     # Closing camera
     zed.close()
@@ -169,7 +176,7 @@ if __name__ == '__main__':
         '-rT', '--rThresh',
         help="Radius in px of the element used for the calibration.",
         type=int,
-        default=10
+        default=20
     )
     parser.add_argument(
         '-s', '--sPoint',

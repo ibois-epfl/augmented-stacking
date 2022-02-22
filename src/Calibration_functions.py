@@ -10,7 +10,8 @@ import os.path
 import os
 import skimage.measure
 
-ROI = [slice(200, 500), slice(400, 900)]
+ROI = [slice(100, 600), slice(400, 1000)]
+
 
 
 def get_image(zed, point_cloud, medianFrames=1, components=[2]):

@@ -103,3 +103,23 @@ To do list for the next steps:
 * With the above tool, check the calibration in ROI limits and different Z-levels
 
 
+## 2022.02.22 - Live Capture and Distortion Test
+
+
+Live_img file has been created to live display the objects added to the scene and project them in green.
+
+For Calibration now use show_calib_img code too display in full screen the calibration image.
+
+The Calibration Object has been fixed, but still got some reflection problem with sunlight reflexion, see image bellow:
+
+<img src="./img/Calibration_object_reflection_issue.jpg" width="400" height="400">
+
+<img src="./img/Calibration_object_reflection_isuue_computer.jpg" width="400" height="400">
+
+It appears that with a Distortion Correction of -30, we got a lower residual. Now it is at arround 28 against 74 without. So we need to use distortion correction.
+
+img src="./img/Residual_with_correction.png" width="400" height="400">
+
+
+It appears the Calibration is not that precise in other Z levels, need to see why...
+This step need to be done with better lighting conditions (At night for example) 
