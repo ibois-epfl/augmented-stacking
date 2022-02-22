@@ -16,6 +16,7 @@ optional arguments:
   -rT RADIUS_THRESHOLD_PX, --rThresh RADIUS_PERI_THRESHOLD_PX       Radius in px of the element used for the calibration.
   -s STARTING_POINT, --sPoint STARTING_POINT                        Number of the starting point, can be used if one acquisition failed, instead of doing all again start from last point.
   -v VISUALIZE, --visualize VISUALIZE                               Boolean for visualising each acquired image. 
+  -sp SAVING_PATH --savePath SAVING_PATH                            Path where the point clouds are saved.
 '''
 
 import sys
@@ -42,7 +43,7 @@ ROI = [slice(100, 600), slice(400, 1000)]
 # Radius tolerance when comparing the radius given from the area and the perimeter
 RADIUS_TOLERANCE = 1
 
-def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
+def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE,SAVING_PATH):
     
     ###########################################################################################################################################
     ### Setting ZED params
@@ -127,7 +128,7 @@ def main(NUMBER_OF_CALIB_PTS,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTI
         coordsXYZm = get_Disk_Position(newImageZoffset,newImageXYZ,ROI,CALIB_Z_THRESHOLD_M,RADIUS_TOLERANCE,RADIUS_PERI_THRESHOLD_PX)
         if not coordsXYZm == None:
             if not np.isnan(coordsXYZm[0]):
-                np.save(f"calib_pts/Image_position_{i+1}.np", np.array(coordsXYZm))
+                np.save(f"{SAVING_PATH}Image_position_{i+1}.np", np.array(coordsXYZm))
                 Stack_coordsXYZm.append(coordsXYZm)
                 i+=1
             else:
@@ -182,7 +183,13 @@ if __name__ == '__main__':
         type=bool,
         default=True
     )
+    parser.add_argument(
+        '-sp', '--savePath',
+        help="Str of th path where the points will be saved.",
+        type=str,
+        default="Calib_Pts/"
+    )
     args = parser.parse_args()
 
     
-    main(args.nbCalibPts, args.calibZThresh, args.rThresh,args.sPoint,args.visualize)
+    main(args.nbCalibPts, args.calibZThresh, args.rThresh,args.sPoint,args.visualize,args.savePath)
