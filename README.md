@@ -92,15 +92,15 @@ New Disk used for Calibration.
 A Full screen image was cast on the object, representing a depth map of the objects.
 
 To do list for the next steps:
-* Find out if the distortion of the projector gives us a better precision. (< 74 func error)
-* Try making a live image
-* Cleaning up the code
-* Cover the Object with paint, make it less reflective
-* Make new calibration target super-easy for the Zed to detect
-* Optional but very nice: plot ROI on the AR system to see edges of vision
-* Two complete calibrations (save data without overwriting!) with more points (4x5 grid) with and without distortion correction and compare residuals. If residual higher with projector “distortion correction” → we should implement distortion in the projection function. If the same → Error is coming from somewhere else. If lower → that’s a pretty good calibration!
-* Implement a loop to read depth cam and plot either greylevels or objects above a threshold on projector
-* With the above tool, check the calibration in ROI limits and different Z-levels
+* Find out if the distortion of the projector gives us a better precision. (< 74 func error) - DONE, YES
+* Try making a live image - DONE FOR THE CALIB
+* Cleaning up the code - YES SORT OF
+* Cover the Object with paint, make it less reflective - SANDED,  BUT WE MIGHT PAINT IT (DOESN CHANGE MUCH)
+* Make new calibration target super-easy for the Zed to detect - DONE
+* Optional but very nice: plot ROI on the AR system to see edges of vision - DONE
+* Two complete calibrations (save data without overwriting!) with more points (4x5 grid) with and without distortion correction and compare residuals. If residual higher with projector “distortion correction” → we should implement distortion in the projection function. If the same → Error is coming from somewhere else. If lower → that’s a pretty good calibration! - GOOD DONE
+* Implement a loop to read depth cam and plot either greylevels or objects above a threshold on projector - ONLY DONE FOR THE CALIB
+* With the above tool, check the calibration in ROI limits and different Z-levels - LIMITED TO LOW LEVELS (THAT'S OK FOR WHAT WE HAVE TO DO FOR NOW)
 
 
 ## 2022.02.22 - Live Capture and Distortion Test
