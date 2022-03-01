@@ -26,7 +26,7 @@ def download_mesh(url, filename):
         print("Error downloading file")
         sys.exit()
     
-    print(dtype(mesh))
+    print(type(mesh))
     return mesh
 
 
