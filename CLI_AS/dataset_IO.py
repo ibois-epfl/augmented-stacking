@@ -4,49 +4,59 @@ The module implements the download and read of stone mesh/cloud data sets presen
 the cloud (posibly github) OR locally if necessary
 '''
 
-# Download a mesh object from git hub repository
-def download_mesh(url, filename):
-    import urllib.request
-    import tarfile
-    import os
-    import shutil
-    import sys
-    import platform
+import requests
+import os
+import sys
+import tqdm
+
+
+def download_github_raw_file(url, filename):
+    """
+    Download a file from GitHub, don't forget to put the raw http of github file
+    e.g. https://raw.githubusercontent.com/ibois-epfl/augmented-stacking-dataset/main/stones/low_res/bun_zipper.ply
+
+    :param url: url of the file
+    :param filename: name of the file
+    :return:
+
+    """
 
     # Check if the file is already downloaded
     if os.path.isfile(filename):
-        print("File already downloaded")
+        print(f"File {filename} already downloaded")
         return
 
-    # Download the file
+    # Download the file and write .ply file
     try:
-        print("Downloading file from: " + url)
-        mesh = urllib.request.urlretrieve(url, filename)
-    except:
-        print("Error downloading file")
-        sys.exit()
+        url_path = os.path.join(url, filename)
+        with tqdm.tqdm(unit='A', unit_scale=True, miniters=1, desc=filename) as t:
+            r = requests.get(url_path, stream=True)
+            # Total size in bytes.
+            total_size = int(r.headers.get('content-length', 0))
+            block_size = 1024
+            wrote = 0
+            with open(filename, 'wb') as f:
+                for data in r.iter_content(block_size):
+                    wrote = wrote + len(data)
+                    f.write(data)
+                    t.update(len(data))
+    except Exception as e:
+        print(f"Error while downloading {filename}")
+        print(e)
+        sys.exit(1)
     
-    print(type(mesh))
-    return mesh
+    return
 
 
-    # # Extract the file
-    # print("Extracting file")
-    # tar = tarfile.open(filename)
-    # tar.extractall()
-    # tar.close()
 
-    # # Remove the tar file
-    # os.remove(filename)
+# Erase mesh file if exists
+def delete_file(filename):
+    """
+    Erase a particular file
 
-    # # Rename the extracted folder
-    # if platform.system() == "Windows":
-    #     os.rename("stone_mesh", "stone_mesh_win")
-    # else:
-    #     os.rename("stone_mesh", "stone_mesh_linux")
+    :param url: filename path
+    :return:
 
-    # # Remove the extracted folder
-    # shutil.rmtree("stone_mesh_linux")
-
-def test():
-    print("test")
+    """
+    if os.path.isfile(filename):
+        os.remove(filename)
