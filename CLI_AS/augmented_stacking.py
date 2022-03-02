@@ -1,6 +1,9 @@
-import dataset_IO
+
 import os
 import sys
+
+import dataset_IO
+import stacking_algorithm
 
 import open3d as o3d
 
@@ -35,7 +38,13 @@ def main():
     # [2] Compute the mesh 6dof pose and update landscape
     #-----------------------------------------------------------------------
 
-    # dataset_IO.delete_file(_name_mesh)
+    # Harcoded dirs/paths (TODO: make them configurable)
+    path_exec = './stacking_algorithm_cpp/build/main'
+    path_mesh = _name_mesh
+    path_landscape  = 'landscape.ply'
+
+
+    stacking_algorithm.compute(path_exec, path_mesh, path_landscape, config_file, output_dir)
 
 
 if __name__ == "__main__":

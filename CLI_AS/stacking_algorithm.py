@@ -6,7 +6,7 @@ For now the outputs are written to disk in ./temp folder because we don´t have 
 
 import sys
 
-def compute(path_exec, path_mesh, path_landscape, config_file, output_dir):
+def compute(path_exec, path_mesh, path_landscape, config_file, dir_output):
     """
     Call the stacking algorithm c++ file
 
@@ -21,5 +21,5 @@ def compute(path_exec, path_mesh, path_landscape, config_file, output_dir):
     # Check for linux system
     if sys.platform == 'linux':
         # Call the c++ file via the command line
-        os.system(f"{path_exec} {path_mesh} {path_landscape} {config_file} {output_dir}")
+        os.system(f"{path_exec} {path_mesh} {path_landscape} {config_file} {dir_output}")
     return
