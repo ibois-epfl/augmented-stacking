@@ -48,3 +48,5 @@
 no
 #24 usercheck
 no
+#25 tempdir
+../temp/
