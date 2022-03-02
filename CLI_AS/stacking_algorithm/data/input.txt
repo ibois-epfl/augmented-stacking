@@ -44,3 +44,7 @@
 0.1
 #22 probability pareto
 0.7
+#23 simulation
+no
+#24 usercheck
+no
