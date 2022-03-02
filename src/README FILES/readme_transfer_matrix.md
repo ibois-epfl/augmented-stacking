@@ -28,7 +28,7 @@ This script will generate following file:
 
 Having those you can simply make the link between the 3D space and the project 2D space.
 
-By using the following python code, you can get from the XYZ space to the xy space and vise versa:
+By using the following python code, you can get from the XYZ space to the xy space and vice versa:
 
 ```bash
 import numpy as np
