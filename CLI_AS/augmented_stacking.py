@@ -1,5 +1,7 @@
 import dataset_IO
 import os
+import sys
+
 import open3d as o3d
 
 
@@ -11,13 +13,16 @@ _name_mesh = 'bun_zipper.ply'
 def main():
     
     # V - [1] Download the low-res mesh
-    # >>> [2] Compute the mesh 6dof pose
+    # >>> [2] Compute the mesh 6dof pose and update landscape
     # [3] Store/save the 6dof pose locally
     # [4] Load the high-res mesh
     # [5] Calculate deviation
     # [6] Colored captured point cloud with rgb deviation values
     # [8] Pass it to the 3D-2D pipeline
 
+    #-----------------------------------------------------------------------
+    # [1] Download the low-res mesh
+    #-----------------------------------------------------------------------
 
     # Download the mesh file
     dataset_IO.download_github_raw_file(_url_low_res_dir, _name_mesh)
@@ -25,6 +30,10 @@ def main():
     # Open and display mesh with open3d
     mesh = o3d.io.read_triangle_mesh(_name_mesh)
     o3d.visualization.draw_geometries([mesh])
+
+    #-----------------------------------------------------------------------
+    # [2] Compute the mesh 6dof pose and update landscape
+    #-----------------------------------------------------------------------
 
     # dataset_IO.delete_file(_name_mesh)
 
