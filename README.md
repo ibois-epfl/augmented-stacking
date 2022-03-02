@@ -123,3 +123,19 @@ It appears that with a Distortion Correction of -30, we got a lower residual. No
 
 It appears the Calibration is not that precise in other Z levels, need to see why...
 This step need to be done with better lighting conditions (At night for example) 
+
+
+
+# 2022-03-02: Integration of stacking algorithm
+
+![sessionas](./img/IMG_20220302_152714.jpg)
+
+Session to start including all software pieces into one common CLI application:
+- integration of dataset fetching service to download stones from cloud
+- integration of stacking algorithm
+- partial integration of devience map
+
+TODO: (Andrea) write code to capture pointcloud with origin in the center
+TODD: (Qianqing) adjust the sensitivity of the deviance map coloring
+TODO: (Qianqing) for deviance map conider only local area (e.g. sphere around the pointcloud)
+TODO: (Andrea) wrap everything in a wrap loop

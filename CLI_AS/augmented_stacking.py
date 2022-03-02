@@ -12,6 +12,7 @@ import subprocess
 
 import dataset_IO
 import stacking_algorithm
+import distance_map
 
 import numpy as np
 import open3d as o3d
@@ -91,8 +92,44 @@ def main():
     # [5] Calculate deviation from captured point cloud
     #-----------------------------------------------------------------------
 
-    
+    _path_pc_captured_landscape = 'A46_point_cloud.ply'
+    _pc_captured_landscape = o3d.io.read_point_cloud(_path_pc_captured_landscape)
 
+
+
+    # Get the center of the pointcloud
+    center = _pc_captured_landscape.get_center()
+    # Move poincloud to origin
+    _pc_captured_landscape.translate(-center)
+    # Rotate pointcloud of 90 degrees around z axis
+    R = _pc_captured_landscape.get_rotation_matrix_from_xyz([0, 0, np.pi/2])
+    _pc_captured_landscape.rotate(R, center=(0,0,0))
+
+
+
+    deviation_pc = distance_map.compute(mesh=high_res_mesh, pc=_pc_captured_landscape)
+
+
+
+    landscape = o3d.io.read_triangle_mesh(_name_landscape)
+
+    # Create sphere on origin
+    sphere = o3d.geometry.TriangleMesh.create_sphere(radius=0.1)
+
+
+
+
+    o3d.visualization.draw_geometries([deviation_pc, high_res_mesh, landscape, sphere])
+
+
+    #-----------------------------------------------------------------------
+    # TODO LIST
+    #-----------------------------------------------------------------------
+
+    #TODO: (Andrea) write code to capture pointcloud with origin in the center
+    #TODD: (Qianqing) adjust the sensitivity of the deviance map coloring
+    #TODO: (Qianqing) for deviance map conider only local area (e.g. sphere around the pointcloud)
+    #TODO: (Andrea) wrap everything in a wrap loop
 
 
 
