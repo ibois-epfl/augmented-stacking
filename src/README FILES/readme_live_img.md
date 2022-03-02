@@ -1,4 +1,4 @@
-## This readme file is explain the live image script, which can be used to display live 3D data on the scene using the calibrated projector.
+## This readme file is explaining the live image script, which can be used to display live 3D data on the scene using the calibrated projector.
 
 For this script you will need following files:
 
