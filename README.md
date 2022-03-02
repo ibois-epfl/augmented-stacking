@@ -128,7 +128,7 @@ This step need to be done with better lighting conditions (At night for example)
 
 # 2022-03-02: Integration of stacking algorithm
 
-![sessionas](./img/IMG_20220302_152714.jpg)
+<img src="./img/IMG_20220302_152714.jpg" width="400" height="400">
 
 Session to start including all software pieces into one common CLI application:
 - integration of dataset fetching service to download stones from cloud
