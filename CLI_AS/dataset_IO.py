@@ -1,13 +1,13 @@
 
 '''
-The module implements the download and read of stone mesh/cloud data sets present in
-the cloud (posibly github) OR locally if necessary
+The module implements I/O functionalities for augmented stacking
 '''
 
 import requests
 import os
 import sys
 import tqdm
+import numpy as np
 
 
 def download_github_raw_file(url, filename):
@@ -47,9 +47,6 @@ def download_github_raw_file(url, filename):
     
     return
 
-
-
-# Erase mesh file if exists
 def delete_file(filename):
     """
     Erase a particular file
@@ -60,3 +57,34 @@ def delete_file(filename):
     """
     if os.path.isfile(filename):
         os.remove(filename)
+
+def read_pose_6dof(filename):
+    """
+    Read a 6dof pose from a text file containing a matrix and return a numpy matrix
+    Here's what the .txt file looks like:
+
+     -0.148643 0.00148648   -0.98889   0.168563
+     0.465496   0.882384 -0.0686438   0.136784
+     0.872479  -0.470527  -0.131852  0.0631906
+             0          0          0          1
+
+    :param filename: path of the text file
+
+    :return: numpy 4x4 matrix with the 6dof pose
+    """
+
+    # Check if the file exists
+    if not os.path.isfile(filename):
+        print(f"Pose text file {filename} does not exist")
+        return
+    
+    # Read the text file
+    with open(filename, 'r') as f:
+        lines = f.readlines()
+    
+    # Store values in numpy transform matrix
+    pose_6dof = np.zeros((4, 4))
+    for i in range(4):
+        pose_6dof[i, :] = [float(x) for x in lines[i].split()]
+
+    return pose_6dof
