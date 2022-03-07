@@ -30,6 +30,7 @@ def compute(path_exec, path_mesh, path_landscape, config_file, name_output, dir_
             print(cr.Fore.CYAN)
             subprocess.check_call(cmd, shell=True)
             print(cr.Style.RESET_ALL)
+            cr.deinit()
         except subprocess.CalledProcessError as e:
             print('Error: Failed to call the c++ stacking algorithm file')
             print(f"ERROR MESSAGE: {e.output}")

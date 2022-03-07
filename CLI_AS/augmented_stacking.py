@@ -3,7 +3,9 @@
 
 """
 Created on Thu Feb 26 15:20:00 2022
-CLI main file for Augmented Stacking
+CLI main file for Augmented Stacking:
+The main file is used to run the augmented stacking algorithm to guide an operator in 
+correctly placing stones following a stacking algorithm.
 """
 
 import os
@@ -13,40 +15,62 @@ import subprocess
 import dataset_IO
 import stacking_algorithm
 import distance_map
+from util import terminal
+from util import visualizer
 
 import numpy as np
 import open3d as o3d
+import colorama as cr
 
 
 _url_low_res_dir = 'https://raw.githubusercontent.com/ibois-epfl/augmented-stacking-dataset/main/stones/low_res/'
 _url_high_res_dir = 'https://raw.githubusercontent.com/ibois-epfl/augmented-stacking-dataset/main/stones/high_res/'
 # _name_mesh = '073ac15d-8ad2-4758-9c8c-5f8339b97edb_Mesh.ply'
-_name_lowres_mesh = 'stone_0.ply'
-_name_highres_mesh = 'stone_0_high_res.ply'
+_name_highres_mesh = 'high_res_0.ply'
 
 _name_landscape = 'landscape.ply'
 
 
+
+
 def main():
 
+    # [0] Decorator for CLI
     # V - [1] Download the low-res mesh
     # V - [2] Compute the mesh 6dof pose and update landscape
     # V - [3] Store/save the 6dof pose locally
-    # >>> [4] Load the high-res mesh
-    # [5] Calculate deviation
-    # [6] Colored captured point cloud with rgb deviation values
+    # V - [4] Load the high-res mesh
+    # >>> [5] Capture scan with correct orientation to point cloud
+    # [6] Calculate deviation
+    # [7] Colored captured point cloud with rgb deviation values
     # [8] Pass it to the 3D-2D pipeline
 
     #-----------------------------------------------------------------------
-    # [1] Download the low-res mesh + apply 4x4 transformation
+    # [0] Decorator
     #-----------------------------------------------------------------------
 
-    # Download the LOW-RES mesh file
-    dataset_IO.download_github_raw_file(_url_low_res_dir, _name_lowres_mesh)
-    
-    # # Open and display mesh with open3d
-    # mesh = o3d.io.read_triangle_mesh(_name_lowres_mesh)
-    # o3d.visualization.draw_geometries([mesh])
+    terminal.display_logo()
+    print('\n<<<<<<<< INFORMATION PROJECT >>>>>>>>')
+    print('<<<<<<<< INFORMATION PROJECT >>>>>>>>')
+    print('<<<<<<<< INFORMATION PROJECT >>>>>>>>')
+    print('<<<<<<<< INFORMATION PROJECT >>>>>>>>')
+    print('<<<<<<<< INFORMATION PROJECT >>>>>>>>')
+
+
+
+    #-----------------------------------------------------------------------
+    # [1] Download the low-res mesh
+    #-----------------------------------------------------------------------
+
+    # Ask for stone label & download LOW-RES mesh
+    name_low_res_mesh = dataset_IO.download_github_raw_file(_url_low_res_dir)
+    low_res_mesh = o3d.io.read_triangle_mesh(name_low_res_mesh)
+    print(f'>>> Mesh {name_low_res_mesh} successfully downloaded and imported')
+
+
+    # Display mesh
+    terminal.custom_print('>>> Press [Esc] to continue ...')
+    visualizer.viualize_mesh_normal(low_res_mesh, 'Low-res mesh')
 
 
     #-----------------------------------------------------------------------
@@ -62,7 +86,7 @@ def main():
 
     # Compute stacking pose
     stacking_algorithm.compute(path_exec=_path_exec,
-                               path_mesh=_name_lowres_mesh,
+                               path_mesh=name_low_res_mesh,
                                path_landscape=_name_landscape,
                                config_file=_config_file,
                                name_output=_name_output,
