@@ -41,12 +41,11 @@ def main():
     #-----------------------------------------------------------------------
 
     terminal.display_logo()
-    print('\n<<<<<<<< INFORMATION PROJECT >>>>>>>>')
+    print('\n<<<<<<<< INFORMATION PROJECT>>>>>>>>')
     print('<<<<<<<< INFORMATION PROJECT >>>>>>>>')
     print('<<<<<<<< INFORMATION PROJECT >>>>>>>>')
     print('<<<<<<<< INFORMATION PROJECT >>>>>>>>')
     print('<<<<<<<< INFORMATION PROJECT >>>>>>>>')
-
 
 
     #-----------------------------------------------------------------------
