@@ -10,39 +10,57 @@ import tqdm
 import numpy as np
 from util import terminal
 
+import open3d as o3d
 
-def download_github_raw_file(url):
+
+def download_github_raw_file(is_raw_mesh):
     """
     Download a file from GitHub, don't forget to put the raw http of github file
     e.g. https://raw.githubusercontent.com/ibois-epfl/augmented-stacking-dataset/main/stones/low_res/bun_zipper.ply
+    The function loops until a good label for an existing rock is given as input.
+    The rock is than store in memory as o3d mesh format.
 
     :param url: url of the file
-    :param filename: name of the file
+    :param is_raw_mesh: true for downloading a raw mesh, false for downloading a high-res mesh
 
-    return: string of the downloaded file
+    return: string of the namefile, mesh
     """
+
+    # GitHub Raw version of dataset addresses
+    URL_LOW_RES_DIR = 'https://raw.githubusercontent.com/ibois-epfl/augmented-stacking-dataset/main/stones/low_res/'
+    URL_HIGH_RES_DIR = 'https://raw.githubusercontent.com/ibois-epfl/augmented-stacking-dataset/main/stones/high_res/'
+
+    # Global variable to store the label of the stone
+    global stone_label 
+
+    # Loop until a good label is given
     while True:
         # Ask for user input
-        stone_label = terminal.user_input('>>> Enter the stone label: ')
-        filename = f'low_res_{stone_label}.ply'
-        print(f'>>> Downloading the low-res mesh: {filename}')
+        if (is_raw_mesh):
+            stone_label = terminal.user_input('>>> Enter the stone label: ')
+            filename = f'low_res_{stone_label}.ply'
+            url_path = os.path.join(URL_LOW_RES_DIR, filename)
+            print(f'>>> Downloading the low-res mesh: {filename}')
+        else:
+            filename = f'high_res_{stone_label}.ply'
+            url_path = os.path.join(URL_HIGH_RES_DIR, filename)
+            print(f'>>> Downloading the high-res mesh: {filename}')
 
         # Check if the file is already downloaded
         if os.path.isfile(filename):
             print(f"File {filename} already downloaded")
-            return filename
+            mesh = o3d.io.read_triangle_mesh(filename)
+            delete_file(filename)
+            return filename, mesh
 
         # Download the file and write .ply file
         try:
-            url_path = os.path.join(url, filename)
             with tqdm.tqdm(unit='A', unit_scale=True, miniters=1, desc=filename) as t:
                 r = requests.get(url_path, stream=True)
-                # Check for 404 error code
                 if r.status_code == 404:
                     terminal.error_print(f"File {filename} not found in the dataset")
                     continue
                 else:
-                    # Total size in bytes.
                     total_size = int(r.headers.get('content-length', 0))
                     block_size = 1024
                     wrote = 0
@@ -51,7 +69,10 @@ def download_github_raw_file(url):
                             wrote = wrote + len(data)
                             f.write(data)
                             t.update(len(data))
-                    return filename
+                    print(f'\n>>> File {filename} successfully downloaded and imported')
+                    mesh = o3d.io.read_triangle_mesh(filename)
+                    delete_file(filename)
+                    return filename, mesh
         except Exception as e:
             terminal.error_print(f"Error while downloading {filename}")
             terminal.error_print(e)
