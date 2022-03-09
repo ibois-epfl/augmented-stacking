@@ -97,14 +97,14 @@ def main():
 
 
 
-    # Get the center of the pointcloud
-    center = _pc_captured_landscape.get_center()
-    # Move poincloud to origin
-    _pc_captured_landscape.translate(-center)
+    # # Get the center of the pointcloud
+    # center = _pc_captured_landscape.get_center()
+    # # Move poincloud to origin
+    # _pc_captured_landscape.translate(-center)
 
-    # Rotate pointcloud of 90 degrees around z axis // DEBUG
-    R = _pc_captured_landscape.get_rotation_matrix_from_xyz([0, 0, np.pi/2])
-    _pc_captured_landscape.rotate(R, center=(0,0,0))
+    # # Rotate pointcloud of 90 degrees around z axis // DEBUG
+    # R = _pc_captured_landscape.get_rotation_matrix_from_xyz([0, 0, np.pi/2])
+    # _pc_captured_landscape.rotate(R, center=(0,0,0))
 
 
 
