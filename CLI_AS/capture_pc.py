@@ -43,21 +43,29 @@ if zed.grab() == sl.ERROR_CODE.SUCCESS:
     point_cloud_np = point_cloud.get_data()
 
 
-# point3D = point_cloud.get_value(i,j)
-# x = point3D[0]
-# y = point3D[1]
-# z = point3D[2]
-# color = point3D[3]
+# Make a point cloud in format xyz
+point_cloud_xyz = np.zeros((point_cloud_np.shape[0], 3))
+point_cloud_xyz[:, 0] = point_cloud_np[:, 0]
+point_cloud_xyz[:, 1] = point_cloud_np[:, 1]
+point_cloud_xyz[:, 2] = point_cloud_np[:, 2]
+
+# Remap points's coordinates with center of image as origin
+point_cloud_xyz_remapped = np.zeros((point_cloud_np.shape[0], 3))
+point_cloud_xyz_remapped[:, 0] = point_cloud_xyz[:, 0] - point_cloud_np[:, 2]
+point_cloud_xyz_remapped[:, 1] = point_cloud_xyz[:, 1] - point_cloud_np[:, 2]
+point_cloud_xyz_remapped[:, 2] = point_cloud_xyz[:, 2]
 
 # print(point_cloud_np)
-print(type(point_cloud_np))
-print(point_cloud_np.shape)
+print(type(point_cloud_xyz_remapped))
+print(point_cloud_xyz_remapped.shape)
 
-point_cloud_np[:,:,1:3]
-
+# Convert np point cloud to o3d format
 point_cloud_o3d = o3d.geometry.PointCloud()
-point_cloud_o3d.points = o3d.utility.Vector3dVector()
- 
+point_cloud_o3d.points = o3d.utility.Vector3dVector(point_cloud_xyz_remapped)
+
+# Show point cloud
+o3d.visualization.draw_geometries([point_cloud_o3d])
+
 
 # Close the camera
 zed.close()
