@@ -121,7 +121,7 @@ def pcd2mesh(pcd):
     
     :param pcd: point cloud to mesh
     
-    return: A mesh
+    return: A mesh and a clean, voxelized point cloud
     """
 
     # TODO

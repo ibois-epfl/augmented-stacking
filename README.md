@@ -125,7 +125,7 @@ It appears the Calibration is not that precise in other Z levels, need to see wh
 This step need to be done with better lighting conditions (At night for example) 
 
 
-
+---
 # 2022-03-02: Integration of stacking algorithm
 
 <img src="./img/IMG_20220302_152714.jpg" width="400" height="400">
@@ -139,3 +139,20 @@ TODO: (Andrea) write code to capture pointcloud with origin in the center
 TODD: (Qianqing) adjust the sensitivity of the deviance map coloring
 TODO: (Qianqing) for deviance map conider only local area (e.g. sphere around the pointcloud)
 TODO: (Andrea) wrap everything in a wrap loop
+
+---
+## 2022.03.09 - CLI Draft + Live Depth Capture
+
+Started working on a first draft of a CLI interface to operate during the augmented stacking
+
+<img src="./img/CLIdraft.png" width="400" height="400">
+
+
+The live capture of the scene as a point cloud is mostly finished. 
+
+<img src="./img/capture.png" width="400" height="400">
+
+
+In order to avoid to retransform the capture point cloud to the coordinate system of the algorithm working space, we decided to feed the point cloud (once meshed) directly to the stacking algorithm. In doing so the estimated pose will transform the stone directly to the captured scene. In addition, this will allow less deviation in time between the computed model and the real life scene.
+
+<img src="./img/changer.png" width="400" height="400">
