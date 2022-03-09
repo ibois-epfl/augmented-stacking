@@ -2,7 +2,7 @@
 
 ![stacking_image](./img/augmented_stones_finalShot_v1.png)
 
-Development code for an dry-stone and -timber stacking technique in AR. Developed within the research of Cluster ENAC 2022 (EPFL). And thanks to the work of Andrea Settimi (IBOIS, EPFL), Edward Andò (Imaging Analysis Center, EPFL), Qianqing Wang (EESD, EPFL) and the coordination of Julien Gamerro (IBOIS, EPFL)..
+Development code for an dry-stone and -timber stacking technique in AR. 
 
 
 ---
