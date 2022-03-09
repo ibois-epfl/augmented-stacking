@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 # rearrange point cloud points following center of image as origin
 # export point cloud as .ply format
 
-ROI = [slice(100, 600), slice(400, 1000)] # TODO: convertir ROI in pixel in meters
+ROI = [slice(200, 500), slice(500, 900)] # TODO: convertir ROI in pixel in meters
 
 NUMBER_OF_AVERAGE_FRAMES = 10
 
@@ -114,11 +114,20 @@ def np2o3d(np_vector):
 
     return pcd
 
-def process_pcd(pcd):
+def pcd2mesh(pcd):
 
+    """
+    Process a point cloud to obtain a mesh
     
+    :param pcd: point cloud to mesh
+    
+    return: A mesh
+    """
+
+    # TODO
 
     pass
+
 # Set up the zed paramters and initialize
 zed, point_cloud = set_up_zed()
 
