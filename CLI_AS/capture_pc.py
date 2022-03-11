@@ -124,9 +124,20 @@ def pcd2mesh(pcd):
     return: A mesh and a clean, voxelized point cloud
     """
 
-    # TODO
+    # alpha = 0.005
+    # mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(pcd, alpha)
 
-    pass
+
+    pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.05, max_nn=20))
+    print('Estimated normals')
+
+    radii = [0.005, 0.1, 0.02, 0.04] # original [0.005, 0.01, 0.02, 0.04]
+    
+    mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(
+        pcd, o3d.utility.DoubleVector(radii))
+
+    return mesh
+
 
 # Set up the zed paramters and initialize
 zed, point_cloud = set_up_zed()
@@ -140,11 +151,15 @@ pcd = np2o3d(median_pcd)
 # Downsample pointcloud
 if IS_DOWNSAMPLED: pcd_down = pcd.voxel_down_sample(voxel_size=0.01)
 
+
+# Mesh the point cloud
+# mesh = pcd2mesh(pcd)
+
 # Show point cloud
-o3d.visualization.draw_geometries([pcd_down])
+# o3d.visualization.draw_geometries([mesh])
 
 # Save point cloud
-# o3d.io.write_point_cloud("landscape.ply", pcd)
+o3d.io.write_point_cloud("landscape_test.ply", pcd)
 
 # Close the camera
 zed.close()
