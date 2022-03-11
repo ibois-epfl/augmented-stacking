@@ -22,7 +22,7 @@ import numpy as np
 import open3d as o3d
 import colorama as cr
 
-_name_landscape = 'landscape.ply'
+_name_landscape = './landscape.ply'
 
 def main():
 

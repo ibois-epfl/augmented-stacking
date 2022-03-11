@@ -4,6 +4,8 @@ import open3d as o3d
 import tifffile
 import matplotlib.pyplot as plt
 
+from util import visualizer
+
 # open camera
 # capture point cloud
 # rearrange point cloud points following center of image as origin
@@ -127,14 +129,60 @@ def pcd2mesh(pcd):
     # alpha = 0.005
     # mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(pcd, alpha)
 
+    # alpha = 0.01
+    # print(f"alpha={alpha:.3f}")
+    # mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(pcd, alpha)
 
-    pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.05, max_nn=20))
-    print('Estimated normals')
+    # # Ball pivoting VERSION 1
+    # pcd.estimate_normals(
+    # search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.02, max_nn=20))
+    # radii = [0.005, 0.2, 0.2, 0.2] # original [0.005, 0.01, 0.02, 0.04]
+    # mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(
+    #     pcd, o3d.utility.DoubleVector(radii))
 
-    radii = [0.005, 0.1, 0.02, 0.04] # original [0.005, 0.01, 0.02, 0.04]
+
+    # # Ball pivoting VERSION 2
+    # pcd.estimate_normals(
+    # search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30)) # r=0.03
+
+    # # estimate radius for rolling ball
+    # distances = pcd.compute_nearest_neighbor_distance()
+    # avg_dist = np.mean(distances)
+    # radius = 0.7 * avg_dist   
+
+    # mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(
+    #         pcd,
+    #         o3d.utility.DoubleVector([radius, radius * 2]))
+
+
+    # Poisson VERSION 1
+
+    pcd.estimate_normals(
+    search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.02, max_nn=20)) # r=0.05
+
+
+    print('run Poisson surface reconstruction')
+    with o3d.utility.VerbosityContextManager(o3d.utility.VerbosityLevel.Debug) as cm:
+        mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
+        pcd, depth=6)
     
-    mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(
-        pcd, o3d.utility.DoubleVector(radii))
+    bbox = pcd.get_axis_aligned_bounding_box()
+    mesh = mesh.crop(bbox)
+
+    
+
+    # print('visualize densities')
+    # densities = np.asarray(densities)
+    # density_colors = plt.get_cmap('plasma')(
+    # (densities - densities.min()) / (densities.max() - densities.min()))
+    # density_colors = density_colors[:, :3]
+    # density_mesh = o3d.geometry.TriangleMesh()
+    # density_mesh.vertices = mesh.vertices
+    # density_mesh.triangles = mesh.triangles
+    # density_mesh.triangle_normals = mesh.triangle_normals
+    # density_mesh.vertex_colors = o3d.utility.Vector3dVector(density_colors)
+
+    visualizer.viualize_mesh_normal(mesh, "meshed landscape")
 
     return mesh
 
@@ -149,20 +197,21 @@ median_pcd = get_median_cloud(zed,point_cloud,NUMBER_OF_AVERAGE_FRAMES, ROI)
 pcd = np2o3d(median_pcd)
 
 # Downsample pointcloud
-if IS_DOWNSAMPLED: pcd_down = pcd.voxel_down_sample(voxel_size=0.01)
+if IS_DOWNSAMPLED: pcd_down = pcd.voxel_down_sample(voxel_size=0.002)
 
 
 # Mesh the point cloud
-# mesh = pcd2mesh(pcd)
+mesh = pcd2mesh(pcd_down)
 
 # Show point cloud
-# o3d.visualization.draw_geometries([mesh])
+# o3d.visualization.draw_geometries([pcd_down])
 
 # Save point cloud
-o3d.io.write_point_cloud("landscape_test.ply", pcd)
+# o3d.io.write_point_cloud("pclandscape.ply", pcd_down)
+o3d.io.write_triangle_mesh("landscape.ply", mesh, write_ascii=True)
+
+print("Mesh out")
 
 # Close the camera
 zed.close()
-
-
 
