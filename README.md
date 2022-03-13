@@ -156,3 +156,19 @@ The live capture of the scene as a point cloud is mostly finished.
 In order to avoid to retransform the capture point cloud to the coordinate system of the algorithm working space, we decided to feed the point cloud (once meshed) directly to the stacking algorithm. In doing so the estimated pose will transform the stone directly to the captured scene. In addition, this will allow less deviation in time between the computed model and the real life scene.
 
 <img src="./img/changer.png" width="400" height="400">
+
+---
+# 2022.03.12 - Implementing live capture from camera
+
+The point cloud capture is now implemented with a ROI (Region of Interest) corresponding to the building area of the wall.
+
+<img src="./img/capturing_2.png" width="550" height="400">
+
+In order to avoid transformation/calibration processes between the captured coordinate system and the stacking algorithm coordinate system we decided to feed the captured landscape directly to the stacking algorithm. We are now working on meshing correctly (water-tight and high-definition but low density meshes). See here:
+
+<img src="./img/capturing_1.png" width="550" height="400">
+
+**TODO list:**
+- Andrea: working on the 3d-2d-3d pipeline for indication / point cloud meshing solutions
+- Qianqing: working point cloud meshing solutions + integration of meshed landscape to stacking algorithm
+
