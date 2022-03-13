@@ -162,11 +162,11 @@ In order to avoid to retransform the capture point cloud to the coordinate syste
 
 The point cloud capture is now implemented with a ROI (Region of Interest) corresponding to the building area of the wall.
 
-<img src="./img/capturing_2.png" width="550" height="400">
+<img src="./img/capturing_2.png" width="650" height="400">
 
 In order to avoid transformation/calibration processes between the captured coordinate system and the stacking algorithm coordinate system we decided to feed the captured landscape directly to the stacking algorithm. We are now working on meshing correctly (water-tight and high-definition but low density meshes). See here:
 
-<img src="./img/capturing_1.png" width="550" height="400">
+<img src="./img/capturing_1.png" width="650" height="400">
 
 **TODO list:**
 - Andrea: working on the 3d-2d-3d pipeline for indication / point cloud meshing solutions
