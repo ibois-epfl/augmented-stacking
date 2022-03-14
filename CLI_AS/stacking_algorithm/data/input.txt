@@ -25,9 +25,9 @@
 #12yMax
 0.25
 #13zMin
-0
+-2.1
 #14zMax
-1.5
+0
 #15angleMin
 -3.14
 #16angleMax
