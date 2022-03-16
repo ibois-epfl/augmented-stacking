@@ -27,7 +27,6 @@ _name_landscape = './landscape.ply'
 
 def main():
 
-
     # [0] Decorator for CLI
     # V - [1] Download the low-res mesh
     # V - [2] Compute the mesh 6dof pose and update landscape
@@ -49,65 +48,15 @@ def main():
     print('<<<<<<<< INFORMATION PROJECT >>>>>>>>')
     print('<<<<<<<< INFORMATION PROJECT >>>>>>>>')
 
-<<<<<<< HEAD
-    # -----------------------------------------------------------------------
-    # [1] Download the low-res mesh
-    # -----------------------------------------------------------------------
-
-    # Ask for stone label & download LOW-RES mesh and open it
-    name_low_res_mesh, low_res_mesh = dataset_IO.download_github_raw_file(
-        is_raw_mesh=True)
-
-    # Display mesh
-    terminal.custom_print('>>> Press [Esc] to continue ...')
-    visualizer.viualize_mesh_normal(low_res_mesh, 'Low-res mesh')
-    o3d.io.write_triangle_mesh(name_low_res_mesh, low_res_mesh)
-
-    # -----------------------------------------------------------------------
-    # [2-3] Compute the mesh 6dof pose and update landscape
-    # -----------------------------------------------------------------------
-
-    # Compute stacking pose
-    NBPOSE = 5
-    global stack_try
-
-    def stack_try(n):
-        config_file = './stacking_algorithm/data/input_'+str(n)+".txt"
-        name_output = 'pose_'+str(n)
-        stacking_algorithm.compute(path_exec='./stacking_algorithm/build/main',
-                                   path_mesh=name_low_res_mesh,
-                                   path_landscape=_name_landscape,  # TODO: param this
-                                   config_file=config_file,
-                                   name_output=name_output,
-                                   dir_output='./temp')
-
-        # read the 6dof pose and store it as numpy array
-        pose_matrix = dataset_IO.read_pose_6dof(f'./temp/pose_{n}.txt')
-        print("Computation done: here's the computed 4x4 Pose Matrix:\n\n", pose_matrix)
-        low_res_mesh_copy = o3d.geometry.TriangleMesh(low_res_mesh)
-        low_res_mesh_copy.transform(pose_matrix)
-        axis = o3d.geometry.TriangleMesh.create_coordinate_frame(
-            size=0.1, origin=[0, 0, 0])
-        landscape = o3d.io.read_triangle_mesh(_name_landscape)
-        visualizer.viualize_wall(
-            [low_res_mesh_copy, landscape, axis], f'{n} wall view')
-        return pose_matrix
-    from multiprocessing import Pool
-    pool = Pool(5)
-    transforms = pool.map(stack_try, list(range(NBPOSE)))
-    choice = input('>>> Choose a pose ...')
-    pose_matrix = transforms[int(choice)]
-    # -----------------------------------------------------------------------
-=======
     while(True):
 
-
-        #-----------------------------------------------------------------------
+        # -----------------------------------------------------------------------
         # [1] Download the low-res mesh
-        #-----------------------------------------------------------------------
+        # -----------------------------------------------------------------------
 
         # Ask for stone label & download LOW-RES mesh and open it
-        name_low_res_mesh, low_res_mesh = dataset_IO.download_github_raw_file(is_raw_mesh=True)
+        name_low_res_mesh, low_res_mesh = dataset_IO.download_github_raw_file(
+            is_raw_mesh=True)
 
         o3d.io.write_triangle_mesh(name_low_res_mesh, low_res_mesh)
         print(f'DEBUG {name_low_res_mesh}')
@@ -116,22 +65,60 @@ def main():
         terminal.custom_print('>>> Press [Esc] to continue ...')
         visualizer.viualize_mesh_normal(low_res_mesh, 'Low-res mesh')
 
+        # # -----------------------------------------------------------------------
+        # # [2-3] Compute the mesh 6dof pose and update landscape
+        # # -----------------------------------------------------------------------
 
-        #-----------------------------------------------------------------------
-        # [2-3] Compute the mesh 6dof pose and update landscape
-        #-----------------------------------------------------------------------
+        # # Compute stacking pose
+        # stacking_algorithm.compute(path_exec='./stacking_algorithm/build/main',
+        #                            path_mesh=name_low_res_mesh,
+        #                            path_landscape=_name_landscape,  # TODO: param this
+        #                            config_file='./stacking_algorithm/data/input.txt',
+        #                            name_output='pose',
+        #                            dir_output='./temp')
+
+        # # read the 6dof pose and store it as numpy array
+        # pose_matrix = dataset_IO.read_pose_6dof('./temp/pose.txt')
+        # print("Computation done: here's the computed 4x4 Pose Matrix:\n\n", pose_matrix)
+        # -----------------------------------------------------------------------
+        # Start paralle
+        # -----------------------------------------------------------------------
+        from multiprocessing import Pool
 
         # Compute stacking pose
-        stacking_algorithm.compute(path_exec='./stacking_algorithm/build/main',
-                                path_mesh=name_low_res_mesh,
-                                path_landscape=_name_landscape, # TODO: param this
-                                config_file='./stacking_algorithm/data/input.txt',
-                                name_output='pose',
-                                dir_output='./temp')
+        NBPOSE = 5
+        global stack_try
 
-        # read the 6dof pose and store it as numpy array
-        pose_matrix = dataset_IO.read_pose_6dof('./temp/pose.txt')
-        print("Computation done: here's the computed 4x4 Pose Matrix:\n\n", pose_matrix)
+        def stack_try(n):
+            config_file = './stacking_algorithm/data/input_'+str(n)+".txt"
+            name_output = 'pose_'+str(n)
+            stacking_algorithm.compute(path_exec='./stacking_algorithm/build/main',
+                                       path_mesh=name_low_res_mesh,
+                                       path_landscape=_name_landscape,  # TODO: param this
+                                       config_file=config_file,
+                                       name_output=name_output,
+                                       dir_output='./temp')
+
+            # read the 6dof pose and store it as numpy array
+            pose_matrix = dataset_IO.read_pose_6dof(f'./temp/pose_{n}.txt')
+            print(
+                "Computation done: here's the computed 4x4 Pose Matrix:\n\n", pose_matrix)
+            low_res_mesh_copy = o3d.geometry.TriangleMesh(low_res_mesh)
+            low_res_mesh_copy.transform(pose_matrix)
+            axis = o3d.geometry.TriangleMesh.create_coordinate_frame(
+                size=0.1, origin=[0, 0, 0])
+            landscape = o3d.io.read_triangle_mesh(_name_landscape)
+            visualizer.viualize_wall(
+                [low_res_mesh_copy, landscape, axis], f'{n} wall view')
+            return pose_matrix
+
+        pool = Pool(5)
+        transforms = pool.map(stack_try, list(range(NBPOSE)))
+        choice = input('>>> Choose a pose ...')
+        pose_matrix = transforms[int(choice)]
+        # -----------------------------------------------------------------------
+        # End paralle
+        # -----------------------------------------------------------------------
 
         # DEBUG import landscape
         temp_landscape = o3d.io.read_triangle_mesh(_name_landscape)
@@ -141,7 +128,6 @@ def main():
 
         print(f'DEBUG::MIN POINT LANDSCAPE: {np.min(temp_landscape.vertices)}')
 
-
         # DEBUG: merge stone cloud with landscape and print out landscape
         # mergedmesh = low_res_mesh + temp_landscape
         mergedmesh = low_res_mesh + temp_landscape
@@ -150,17 +136,10 @@ def main():
         # DEBUG: replace landscape mesh with the new one
         o3d.io.write_triangle_mesh(_name_landscape, mergedmesh)
 
-
-        
-
-
-
-
     print("BREAKPOINT")
     exit()
 
-    #-----------------------------------------------------------------------
->>>>>>> 05187f97be414cf9cebea38ef2f024024a69c81c
+    # -----------------------------------------------------------------------
     # [4] Load the high-res mesh + apply 4x4 transformation
     # -----------------------------------------------------------------------
 
