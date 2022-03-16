@@ -1,10 +1,13 @@
+import pymeshlab # keep on top as first import (why?)
 import pyzed.sl as sl
 import numpy as np
 import open3d as o3d
 import tifffile
 import matplotlib.pyplot as plt
 
+from util import srfreconstruction
 from util import visualizer
+
 
 # open camera
 # capture point cloud
@@ -126,6 +129,17 @@ def pcd2mesh(pcd):
     return: A mesh and a clean, voxelized point cloud
     """
 
+
+
+    path_pcd = './temp/tempcloud.ply'
+    o3d.io.write_point_cloud(path_pcd, pcd)
+
+    out_path = srfreconstruction.reconstruct(path_pcd, './temp')
+
+    mesh = o3d.io.read_triangle_mesh(out_path)
+
+
+
     # alpha = 0.005
     # mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(pcd, alpha)
 
@@ -157,17 +171,17 @@ def pcd2mesh(pcd):
 
     # Poisson VERSION 1
 
-    pcd.estimate_normals(
-    search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.02, max_nn=20)) # r=0.05
+    # pcd.estimate_normals(
+    # search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.02, max_nn=20)) # r=0.05
 
 
-    print('run Poisson surface reconstruction')
-    with o3d.utility.VerbosityContextManager(o3d.utility.VerbosityLevel.Debug) as cm:
-        mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
-        pcd, depth=6)
+    # print('run Poisson surface reconstruction')
+    # with o3d.utility.VerbosityContextManager(o3d.utility.VerbosityLevel.Debug) as cm:
+    #     mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
+    #     pcd, depth=6)
     
-    bbox = pcd.get_axis_aligned_bounding_box()
-    mesh = mesh.crop(bbox)
+    # bbox = pcd.get_axis_aligned_bounding_box()
+    # mesh = mesh.crop(bbox)
 
     
 
