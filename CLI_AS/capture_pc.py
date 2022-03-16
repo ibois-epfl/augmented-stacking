@@ -14,6 +14,7 @@ from util import visualizer
 # rearrange point cloud points following center of image as origin
 # export point cloud as .ply format
 
+#TODO: set wall scanning 1.5 x 0.7 m dimension area
 ROI = [slice(200, 500), slice(500, 900)] # TODO: convertir ROI in pixel in meters
 
 NUMBER_OF_AVERAGE_FRAMES = 10
