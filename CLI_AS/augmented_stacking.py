@@ -26,6 +26,7 @@ _name_landscape = './landscape.ply'
 
 def main():
 
+
     # [0] Decorator for CLI
     # V - [1] Download the low-res mesh
     # V - [2] Compute the mesh 6dof pose and update landscape
@@ -47,35 +48,65 @@ def main():
     print('<<<<<<<< INFORMATION PROJECT >>>>>>>>')
     print('<<<<<<<< INFORMATION PROJECT >>>>>>>>')
 
-
-    #-----------------------------------------------------------------------
-    # [1] Download the low-res mesh
-    #-----------------------------------------------------------------------
-
-    # Ask for stone label & download LOW-RES mesh and open it
-    name_low_res_mesh, low_res_mesh = dataset_IO.download_github_raw_file(is_raw_mesh=True)
-
-    # Display mesh
-    terminal.custom_print('>>> Press [Esc] to continue ...')
-    visualizer.viualize_mesh_normal(low_res_mesh, 'Low-res mesh')
+    while(True):
 
 
-    #-----------------------------------------------------------------------
-    # [2-3] Compute the mesh 6dof pose and update landscape
-    #-----------------------------------------------------------------------
+        #-----------------------------------------------------------------------
+        # [1] Download the low-res mesh
+        #-----------------------------------------------------------------------
 
-    # Compute stacking pose
-    stacking_algorithm.compute(path_exec='./stacking_algorithm/build/main',
-                               path_mesh=name_low_res_mesh,
-                               path_landscape=_name_landscape, # TODO: param this
-                               config_file='./stacking_algorithm/data/input.txt',
-                               name_output='pose',
-                               dir_output='./temp')
+        # Ask for stone label & download LOW-RES mesh and open it
+        name_low_res_mesh, low_res_mesh = dataset_IO.download_github_raw_file(is_raw_mesh=True)
 
-    # read the 6dof pose and store it as numpy array
-    pose_matrix = dataset_IO.read_pose_6dof('./temp/pose.txt')
-    print("Computation done: here's the computed 4x4 Pose Matrix:\n\n", pose_matrix)
+        o3d.io.write_triangle_mesh(name_low_res_mesh, low_res_mesh)
+        print(f'DEBUG {name_low_res_mesh}')
 
+        # Display mesh
+        terminal.custom_print('>>> Press [Esc] to continue ...')
+        visualizer.viualize_mesh_normal(low_res_mesh, 'Low-res mesh')
+
+
+        #-----------------------------------------------------------------------
+        # [2-3] Compute the mesh 6dof pose and update landscape
+        #-----------------------------------------------------------------------
+
+        # Compute stacking pose
+        stacking_algorithm.compute(path_exec='./stacking_algorithm/build/main',
+                                path_mesh=name_low_res_mesh,
+                                path_landscape=_name_landscape, # TODO: param this
+                                config_file='./stacking_algorithm/data/input.txt',
+                                name_output='pose',
+                                dir_output='./temp')
+
+        # read the 6dof pose and store it as numpy array
+        pose_matrix = dataset_IO.read_pose_6dof('./temp/pose.txt')
+        print("Computation done: here's the computed 4x4 Pose Matrix:\n\n", pose_matrix)
+
+        # DEBUG import landscape
+        temp_landscape = o3d.io.read_triangle_mesh(_name_landscape)
+        temp_landscape.compute_vertex_normals()
+
+        low_res_mesh.transform(pose_matrix)
+
+        print(f'DEBUG::MIN POINT LANDSCAPE: {np.min(temp_landscape.vertices)}')
+
+
+        # DEBUG: merge stone cloud with landscape and print out landscape
+        # mergedmesh = low_res_mesh + temp_landscape
+        mergedmesh = low_res_mesh + temp_landscape
+        visualizer.viualize_wall([mergedmesh], 'wall view')
+
+        # DEBUG: replace landscape mesh with the new one
+        o3d.io.write_triangle_mesh(_name_landscape, mergedmesh)
+
+
+        
+
+
+
+
+    print("BREAKPOINT")
+    exit()
 
     #-----------------------------------------------------------------------
     # [4] Load the high-res mesh + apply 4x4 transformation
