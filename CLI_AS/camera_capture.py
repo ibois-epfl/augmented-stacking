@@ -66,7 +66,6 @@ def close_up_zed(zed_cam):
     """
     zed_cam.close()
 
-
 def get_median_cloud(zed, point_cloud, medianFrames, ROI):
 
     """
@@ -244,3 +243,21 @@ def get_mesh_scene(n_target_downasample):
     close_up_zed(zed)
 
     return o3d_m
+
+def get_pcd_scene(n_target_downsample, zed, point_cloud):
+    """
+    Main method to get point cloud
+
+    :param n_target_downasample: target number of points to downsample cloud
+    :param zed: initilaized camera and point cloud from the camera
+    return: point cloud in open3d format
+    """
+
+    # Capture the average point cloud from frames
+    np_median_pcd = get_median_cloud(zed,point_cloud,NUMBER_OF_AVERAGE_FRAMES, ROI)
+
+    # Convert numpy to o3d cloud
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(np_median_pcd)
+
+    return pcd

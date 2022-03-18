@@ -4,6 +4,8 @@ Module to deal with visualization of meshes/stacking process.
 
 import open3d as o3d
 
+from util import terminal
+
 STONE_VIS_W = 600 # px
 STONE_VIS_H = 400 # px
 
@@ -11,6 +13,8 @@ WALL_VIS_W = 700 # px
 WALL_VIS_H = 700 # px
 
 def viualize_mesh_normal(mesh, title):
+    terminal.custom_print('>>> Press [Esc] to continue ...')
+
     vis = o3d.visualization.Visualizer()
     vis.create_window(window_name=title,
                       width=STONE_VIS_W,

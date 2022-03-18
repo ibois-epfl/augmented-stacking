@@ -8,6 +8,7 @@ import colorama as cr
 
 
 CLR_USER_INPUT = cr.Fore.YELLOW
+CLR_GENERAL_MSG = cr.Fore.GREEN
 CLR_ERROR_MSG = cr.Fore.RED
 
 PATH_LOGO = './logo/logoascii'
@@ -49,7 +50,7 @@ def custom_print(terminal_msg):
     """
     
     cr.init()
-    print(CLR_USER_INPUT)
+    print(CLR_GENERAL_MSG)
     print(terminal_msg)
     print(cr.Style.RESET_ALL)
     cr.deinit()
