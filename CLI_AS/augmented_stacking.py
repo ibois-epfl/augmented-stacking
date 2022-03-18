@@ -17,6 +17,7 @@ import stacking_algorithm
 import distance_map
 from util import terminal
 from util import visualizer
+import camera_capture
 
 import numpy as np
 import open3d as o3d
@@ -24,8 +25,8 @@ import colorama as cr
 
 _name_landscape = './landscape.ply'
 
-def main():
 
+def main():
 
     # [0] Decorator for CLI
     # V - [1] Download the low-res mesh
@@ -67,8 +68,16 @@ def main():
 
 
         #-----------------------------------------------------------------------
-        # [2-3] Compute the mesh 6dof pose and update landscape
+        # [2-3] Capture the scene mesh and compute the mesh 6dof pose + update landscape
         #-----------------------------------------------------------------------
+
+        # Capture meshed scene
+        landscape_mesh = camera_capture.get_mesh_scene(2000)
+
+        # Save meshed scene
+        print("Writing out the captured mesh from 3d camera")
+        o3d.io.write_triangle_mesh(_name_landscape, landscape_mesh, write_ascii=True)
+        print(f"Mesh out with name {_name_landscape}")
 
         # Compute stacking pose
         stacking_algorithm.compute(path_exec='./stacking_algorithm/build/main',
@@ -83,30 +92,19 @@ def main():
         print("Computation done: here's the computed 4x4 Pose Matrix:\n\n", pose_matrix)
 
         # DEBUG import landscape
-        temp_landscape = o3d.io.read_triangle_mesh(_name_landscape)
-        temp_landscape.compute_vertex_normals()
+        # temp_landscape = o3d.io.read_triangle_mesh(_name_landscape)
+        # temp_landscape.compute_vertex_normals()
 
         low_res_mesh.transform(pose_matrix)
 
-        print(f'DEBUG::MIN POINT LANDSCAPE: {np.min(temp_landscape.vertices)}')
 
 
         # DEBUG: merge stone cloud with landscape and print out landscape
         # mergedmesh = low_res_mesh + temp_landscape
-        mergedmesh = low_res_mesh + temp_landscape
+        mergedmesh = low_res_mesh + landscape_mesh
         visualizer.viualize_wall([mergedmesh], 'wall view')
 
-        # DEBUG: replace landscape mesh with the new one
-        o3d.io.write_triangle_mesh(_name_landscape, mergedmesh)
 
-
-        
-
-
-
-
-    print("BREAKPOINT")
-    exit()
 
     #-----------------------------------------------------------------------
     # [4] Load the high-res mesh + apply 4x4 transformation
