@@ -234,12 +234,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Get the Calibration Points",
                                    formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
-        '-cpts', '--nbCalibPts',
-        help="Number of Calibration points.",
-        type=int,
-        default=9
-    )
-    parser.add_argument(
         '-zT', '--calibZThresh',
         help="Approximate height (float) of the element used for the calibration in meters.",
         type=float,
@@ -263,13 +257,8 @@ if __name__ == '__main__':
         type=bool,
         default=True
     )
-    parser.add_argument(
-        '-sp', '--savePath',
-        help="Str of th path where the points will be saved.",
-        type=str,
-        default="Calib_Pts/"
-    )
+
     args = parser.parse_args()
 
     
-    main(args.nbCalibPts, args.calibZThresh, args.rThresh,args.sPoint,args.visualize,args.savePath)
+    main(args.calibZThresh, args.rThresh,args.sPoint,args.visualize)
