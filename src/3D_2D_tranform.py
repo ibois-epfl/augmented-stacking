@@ -184,7 +184,6 @@ def main(PROJECTOR_PIXEL_PTS_PATH,CALIB_PTS_XYZ,SAVE_PATH,number_of_calibration_
     Rt[:, -1] = np.array([dX, dY, dZ, 1])
     K = np.array([[f*m_x, gamma, u0, 0], [0, f*m_y, v0, 0], [0, 0, 1, 0]])
 
-    totalError = 0
     for i in range(NUMBER_OF_CALIBRATION_PTS):
         RHS = np.dot(np.dot(K, Rt), np.array([calib_points_XYZ[i,0], calib_points_XYZ[i,1], calib_points_XYZ[i,2], 1]).T)/s
         print(f"Input pixels: {proj_xy[i]}, output match: {RHS[0:2]}")
