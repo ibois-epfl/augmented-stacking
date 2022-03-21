@@ -4,6 +4,7 @@ If you want the script to work without any thing to be changed, you should use t
 
 
 
+
 1. Generation of the Calibration grid
 
 In order to be able to calibrate the camera, you will first need to generate the calibration image.
