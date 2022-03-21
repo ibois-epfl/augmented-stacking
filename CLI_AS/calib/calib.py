@@ -69,14 +69,9 @@ def main(CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
 
     os.makedirs(_utils_path,exist_ok=True)
     os.makedirs(_grid_path,exist_ok=True)
-    os.makedirs(_calib_2D_pixel_path,exist_ok=True)
-    os.makedirs(_calib_3D_path,exist_ok=True)
-    os.makedirs(_calib_img_path,exist_ok=True)
     os.makedirs(_calib_temp_image_path,exist_ok=True)
-    os.makedirs(_calibration_information_path,exist_ok=True)
     os.makedirs(_coordinates_path,exist_ok=True)
     os.makedirs(_points_path,exist_ok=True)
-    os.makedirs(_calib_background_path,exist_ok=True)
 
     ###########################################################################################################################################
     ### 1. Display of the Calibration Grid
