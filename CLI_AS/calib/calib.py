@@ -33,13 +33,13 @@ import os
 from PIL import Image
 from PIL import ImageTk
 import skimage.measure
-from Calibration_functions import get_image 
-from Calibration_functions import get_Disk_Position
-from Calibration_functions import pause
-from Calibration_functions import draw_grid
-from Calibration_functions import display_calibration
-from Calibration_functions import calculate_3D_2D_matrix
-from Calibration_functions import get_3D_2D_matrix
+from calibration_functions import get_image 
+from calibration_functions import get_Disk_Position
+from calibration_functions import pause
+from calibration_functions import draw_grid
+from calibration_functions import display_calibration
+from calibration_functions import calculate_3D_2D_matrix
+from calibration_functions import get_3D_2D_matrix
 import argparse
 
 # Number of frames we use for the background acquisition
@@ -55,7 +55,9 @@ RADIUS_TOLERANCE = 1
 
 def main(CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
 
-    _utils_path = "./utils/"
+    root_file = os.path.dirname(__file__)
+
+    _utils_path = root_file + "/utils/"
     _grid_path = _utils_path + "grid/"
     _calib_img_path = _grid_path + "calibration_image.png"
     _calib_2D_pixel_path = _grid_path + "2D_pixel_coordinates.npy"
