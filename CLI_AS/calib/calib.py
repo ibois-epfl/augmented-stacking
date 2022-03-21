@@ -55,7 +55,7 @@ RADIUS_TOLERANCE = 1
 
 def main(CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
 
-    _utils_path = ".utils/"
+    _utils_path = "utils/"
     _grid_path = _utils_path + "grid/"
     _calib_img_path = _grid_path + "calibration_image.png"
     _calib_2D_pixel_path = _grid_path + "2D_pixel_coordinates.npy"
