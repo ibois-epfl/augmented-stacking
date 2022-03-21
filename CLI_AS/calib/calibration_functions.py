@@ -13,7 +13,7 @@ from PIL import Image
 from PIL import ImageTk
 import json
 if sys.version_info[0] == 2:  # the tkinter library changed it's name from Python 2 to 3.
-    import Tkinter
+    import Tkinter 
     tkinter = Tkinter #I decided to use a library reference to avoid potential naming conflicts with people's programs.
 else:
     import tkinter
@@ -227,18 +227,32 @@ def display_calibration(CALIB_IMG_PATH):
         - CALIB_IMG_PATH: the path of the image displayed, here it is used for the calibration image.
     """
 
+    class Fullscreen_Window:
 
-    root = tkinter.Tk()
-    w, h = root.winfo_screenwidth(), root.winfo_screenheight()
-    root.geometry("%dx%d+0+0" % (w, h))
-    root.attributes('-fullscreen', True)
-    root.bind('<Escape>', lambda e: root.quit())
-    lmain = tkinter.Label(root)
-    lmain.pack()
-    Calib_img = Image.open(CALIB_IMG_PATH)
-    lmain.imgtk = imgtk = ImageTk.PhotoImage(image=Calib_img)
-    lmain.configure(image=imgtk)
-    root.mainloop()
+        def __init__(self,image_path):
+            self.tk = tkinter.Tk()
+            self.tk.attributes('-zoomed', True)  # This just maximizes it so we can see the window. It's nothing to do with fullscreen.
+            image = Image.open(image_path)
+            self.image = ImageTk.PhotoImage(image=image)
+            self.state = False
+            self.tk.bind("<F11>", self.toggle_fullscreen)
+            self.tk.bind("<Escape>", self.end_fullscreen)
+
+        def toggle_fullscreen(self, event=None):
+            self.state = not self.state  # Just toggling the boolean
+            self.tk.attributes("-fullscreen", self.state)
+            lmain = tkinter.Label(self.tk)
+            lmain.pack()
+            lmain.configure(image=self.image)
+            return "break"
+
+        def end_fullscreen(self, event=None):
+            self.state = False
+            self.tk.attributes("-fullscreen", False)
+            return "break"
+    
+    w = Fullscreen_Window(CALIB_IMG_PATH)
+    w.tk.mainloop()
 
 
 
@@ -276,10 +290,11 @@ def draw_grid(save_path_img,save_path_2D_pts,nb_lines_X=3,nb_lines_Y=3,line_widt
     for i in range(1,nb_lines_X+1):
         Img[i*X_space:i*X_space+line_width+1,:,1]=255
         for j in range (1,nb_lines_Y+1):
-            Pts[(i-1)*(nb_lines_X+1)+(j-1),1]=j*Y_space+line_width//2
-            Pts[(i-1)*(nb_lines_X+1)+(j-1),0]=i*X_space+line_width//2
+            Pts[(i-1)*(nb_lines_Y)+(j-1),1]=j*Y_space+line_width//2
+            Pts[(i-1)*(nb_lines_Y)+(j-1),0]=i*X_space+line_width//2
     for i in range(1,nb_lines_Y+1):
         Img[:,i*Y_space:i*Y_space+line_width+1,1]=255
+    print(Pts)
 
     np.save(save_path_2D_pts,Pts)
     plt.imsave(save_path_img,Img)

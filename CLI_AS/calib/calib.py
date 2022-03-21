@@ -20,7 +20,8 @@ optional arguments:
 '''
 
 import sys
-
+import subprocess
+import _thread
 from xmlrpc.client import Boolean
 import json
 import pyzed.sl as sl
@@ -62,6 +63,7 @@ def main(CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
     _calib_img_path = _grid_path + "calibration_image.png"
     _calib_2D_pixel_path = _grid_path + "2D_pixel_coordinates.npy"
     _calib_background_path = _utils_path + "Background.tiff"
+    _display_calib_function_path = root_file + "/display_calib_grid.py"
 
     _points_path = _utils_path + "points/"
     _coordinates_path = _points_path + "coordinates/"
@@ -91,7 +93,12 @@ def main(CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
     print("We will now project the calibration grid, make sure you expend your screen on the projector.\nSo you can see both the terminal on your screen and the calibration image projected on the floor.")
     print("If you want to exit the full screen mode just press the <ESC> key, but this will close the image.")
     pause()
-    display_calibration(_calib_img_path)
+
+    # displaying the grid
+    thread.start_new_thread ( display_calibration, _calib_img_path )
+    # cmd = f'python {_display_calib_function_path} -i {_calib_img_path}'
+    # p = subprocess.Popen(cmd, shell=True,creationflags=subprocess.CREATE_NEW_CONSOLE)
+    # out, err = p.communicate()
     
     ###########################################################################################################################################
     ### 2.1 Setting ZED params
