@@ -21,7 +21,7 @@ optional arguments:
 
 import sys
 import subprocess
-import _thread
+import threading
 from xmlrpc.client import Boolean
 import json
 import pyzed.sl as sl
@@ -90,16 +90,18 @@ def main(CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
 
     draw_grid(_calib_img_path,_calib_2D_pixel_path,nb_lines_X=_nb_lines_X,nb_lines_Y=_nb_lines_Y)
 
-    print("We will now project the calibration grid, make sure you expend your screen on the projector.\nSo you can see both the terminal on your screen and the calibration image projected on the floor.")
-    print("If you want to exit the full screen mode just press the <ESC> key, but this will close the image.")
-    pause()
+
 
     # displaying the grid
-    thread.start_new_thread ( display_calibration, _calib_img_path )
+    threaded_app = display_calibration(_calib_img_path)
+    # threading.start_new_thread ( display_calibration, _calib_img_path )
     # cmd = f'python {_display_calib_function_path} -i {_calib_img_path}'
-    # p = subprocess.Popen(cmd, shell=True,creationflags=subprocess.CREATE_NEW_CONSOLE)
-    # out, err = p.communicate()
+    # p = subprocess.call(cmd, shell=True)
     
+    print("We will now project the calibration grid, make sure you expend your screen on the projector.\nSo you can see both the terminal on your screen and the calibration image projected on the floor.")
+    print("Use the <F11> key, to toogle fullscreen mode.\nOnce the grid is set up:")
+    pause()
+
     ###########################################################################################################################################
     ### 2.1 Setting ZED params
     ###########################################################################################################################################

@@ -1,6 +1,6 @@
 
 import sys
-#import ogl_viewer.viewer as gl
+import ogl_viewer.viewer as gl
 import pyzed.sl as sl
 import numpy as np
 import tifffile
@@ -12,11 +12,11 @@ import skimage.measure
 from PIL import Image
 from PIL import ImageTk
 import json
+import threading
 if sys.version_info[0] == 2:  # the tkinter library changed it's name from Python 2 to 3.
-    import Tkinter 
-    tkinter = Tkinter #I decided to use a library reference to avoid potential naming conflicts with people's programs.
+    import Tkinter as tk
 else:
-    import tkinter
+    import tkinter as tk
 
 ############################################################################################################################################
 ############################################### Function used for 3D-2D matrix estimation ##################################################
@@ -227,32 +227,46 @@ def display_calibration(CALIB_IMG_PATH):
         - CALIB_IMG_PATH: the path of the image displayed, here it is used for the calibration image.
     """
 
-    class Fullscreen_Window:
+    class App(threading.Thread):
 
-        def __init__(self,image_path):
-            self.tk = tkinter.Tk()
-            self.tk.attributes('-zoomed', True)  # This just maximizes it so we can see the window. It's nothing to do with fullscreen.
-            image = Image.open(image_path)
-            self.image = ImageTk.PhotoImage(image=image)
-            self.state = False
-            self.tk.bind("<F11>", self.toggle_fullscreen)
-            self.tk.bind("<Escape>", self.end_fullscreen)
+        def __init__(self):
+            threading.Thread.__init__(self)
+            self.start()
 
+        def callback(self):
+            self.root.quit()
+        
         def toggle_fullscreen(self, event=None):
             self.state = not self.state  # Just toggling the boolean
             self.tk.attributes("-fullscreen", self.state)
-            lmain = tkinter.Label(self.tk)
-            lmain.pack()
-            lmain.configure(image=self.image)
             return "break"
 
         def end_fullscreen(self, event=None):
             self.state = False
             self.tk.attributes("-fullscreen", False)
             return "break"
+        
+        def stop(self,event=None):
+            root = self.tk
+            root.quit()
+            return "break"
+
+        def run(self):
+            self.tk = tk.Tk()
+            self.tk.attributes('-zoomed', True)  # This just maximizes it so we can see the window. It's nothing to do with fullscreen.
+            image = Image.open(CALIB_IMG_PATH)
+            self.image = ImageTk.PhotoImage(image=image)
+            lmain = tk.Label(self.tk)
+            lmain.pack()
+            lmain.configure(image=self.image)
+            self.state = False
+            self.tk.bind("<F11>", self.toggle_fullscreen)
+            self.tk.bind("<Escape>", self.end_fullscreen)
+            self.tk.bind("<q>", self.stop)
+            self.tk.protocol("WM_DELETE_WINDOW", self.callback)
+            self.tk.mainloop()
     
-    w = Fullscreen_Window(CALIB_IMG_PATH)
-    w.tk.mainloop()
+    App()
 
 
 
