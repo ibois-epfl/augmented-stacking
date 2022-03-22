@@ -42,6 +42,7 @@ from calibration_functions import display_calibration
 from calibration_functions import calculate_3D_2D_matrix
 from calibration_functions import get_3D_2D_matrix
 import argparse
+from tqdm import tqdm
 
 # Number of frames we use for the background acquisition
 NUMBER_OF_AVERAGE_FRAMES = 64
@@ -54,7 +55,7 @@ RADIUS_TOLERANCE = 1
 
 
 
-def main(CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
+def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
 
     root_file = os.path.dirname(__file__)
 
@@ -62,6 +63,7 @@ def main(CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
     _grid_path = _utils_path + "grid/"
     _calib_img_path = _grid_path + "calibration_image.png"
     _calib_2D_pixel_path = _grid_path + "2D_pixel_coordinates.npy"
+    _calib_2D_camera_pixel_path = _grid_path + "camera_2D_pixel_coordinates.npy"
     _calib_background_path = _utils_path + "Background.tiff"
     _display_calib_function_path = root_file + "/display_calib_grid.py"
 
@@ -122,6 +124,7 @@ def main(CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
     status = zed.open(init)
     if status != sl.ERROR_CODE.SUCCESS:
         print(repr(status))
+        threaded_app.stop()
         exit()
     camera_info = zed.get_camera_information()
     print("POP: ZED camera opened, serial number: {0}".format(camera_info.serial_number))
@@ -130,108 +133,158 @@ def main(CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
     ###########################################################################################################################################
     ### 2.2. Setting point cloud params 
     ###########################################################################################################################################
-    
-    point_cloud = sl.Mat(zed.get_camera_information().camera_resolution.width, 
+    try:
+        point_cloud = sl.Mat(zed.get_camera_information().camera_resolution.width, 
                          zed.get_camera_information().camera_resolution.height,
                          sl.MAT_TYPE.F32_C4,
                          sl.MEM.CPU)
+    except Exception as e:
+        print(e.text)
+        threaded_app.stop()
 
 
     ###########################################################################################################################################
     ### 3. Acquiring Background - Empty the scene
     ###########################################################################################################################################
+    try:
+        if not OLD_ACQUISITION:
+            if OLD_BACKGROUND:
+                # Check if the empty background image exists
+                if not os.path.exists(_calib_background_path):
+                    print(f"{_calib_background_path} not found, acquiring {NUMBER_OF_AVERAGE_FRAMES} frames.")
+                    print("Make sure the scene is Empty.")
+                    pause()
 
-    # Check if the empty background image exists
-    if not os.path.exists(_calib_background_path):
-        print(f"{_calib_background_path} not found, acquiring {NUMBER_OF_AVERAGE_FRAMES} frames.")
-        print("Make sure the scene is Empty.")
-        pause()
+                    # Background average depth 
+                    print("Background acquisition ...")
+                    background = get_image(zed,point_cloud,medianFrames=NUMBER_OF_AVERAGE_FRAMES, components=[2])[:,:,0]
+                    tifffile.imwrite(_calib_background_path, background)
+                else:
+                    print("Loading previous Background.tiff")
+                    background = tifffile.imread(_calib_background_path)
+                    print(f"I loaded a background image with shape: {background.shape}")
+            else:
+                print(f"Acquiring {NUMBER_OF_AVERAGE_FRAMES} frames for background.")
+                print("Make sure the scene is Empty.")
+                pause()
 
-        # Background average depth 
-        print("Background acquisition ...")
-        background = get_image(zed,point_cloud,medianFrames=NUMBER_OF_AVERAGE_FRAMES, components=[2])[:,:,0]
-        tifffile.imwrite(_calib_background_path, background)
-    else:
-        print("Loading previous Background.tiff")
-        background = tifffile.imread(_calib_background_path)
-        print(f"I loaded a background image with shape: {background.shape}")
-
+                # Background average depth 
+                print("Background acquisition ...")
+                background = get_image(zed,point_cloud,medianFrames=NUMBER_OF_AVERAGE_FRAMES, components=[2])[:,:,0]
+                tifffile.imwrite(_calib_background_path, background)
+    except Exception as e:
+        print(e)
+        threaded_app.stop()
+        exit()
         
     ###########################################################################################################################################
     ### 4. Acquiring Positions - Place the CD on the scene 
     ###########################################################################################################################################
+    try:
+        if not OLD_ACQUISITION:
+            # The CD has to be at a minimum height of calibZThresholdM in meters
+            print("Acquiring Positions ...")
+            Stack_coordsXYZm = []
+            Stack_coordsPixs = []
+            i=STARTING_POINT
+            while i < NUMBER_OF_CALIB_PTS:
+                print(f"Put the CD into the Scene. On position {i+1}.")
+                pause()
+                print("Acquiring image ...")
+                newImageXYZ = get_image(zed,point_cloud,
+                                        medianFrames=NUMBER_OF_AVERAGE_FRAMES,
+                                        components=[0,1,2])
+                newImageZoffset = newImageXYZ[:,:,2]-background
+                tifffile.imwrite(f"{_calib_temp_image_path}/Image_position_Z_{i+1}.tiff", newImageXYZ[:,:,2][ROI]-background[ROI])
+                if VISUALIZE:
+                    ### Visualize Offset Image
+                    plt.imshow(newImageXYZ[:,:,2], vmin=-0.2 , vmax=0.2, cmap='coolwarm')
+                    plt.show()
+                    ## Visualize Offset Image ROI
+                    plt.imshow(newImageXYZ[:,:,2][ROI]-background[ROI], vmin=-0.2 , vmax=0.2, cmap='coolwarm')
+                    plt.show()
+                print("Acquiring position ...")
+                coordsXYZm,coordsPx = get_Disk_Position(newImageZoffset,newImageXYZ,ROI,CALIB_Z_THRESHOLD_M,RADIUS_TOLERANCE,RADIUS_PERI_THRESHOLD_PX)
+                if not coordsXYZm == None:
+                    if not np.isnan(coordsXYZm[0]):
+                        np.save(f"{_coordinates_path}Image_position_{i+1}.npy", np.array(coordsXYZm))
+                        np.save(f"{_coordinates_path}Camera_px_position_{i+1}.npy",np.array(coordsPx))
+                        Stack_coordsXYZm.append(coordsXYZm)
+                        Stack_coordsPixs.append(coordsPx)
+                        i+=1
+                    else:
+                        print("nan value encountered please try again")
+                else:
+                    print(f"New acquisition of point {i+1}")
 
-    # The CD has to be at a minimum height of calibZThresholdM in meters
-    print("Acquiring Positions ...")
-    Stack_coordsXYZm = []
-    Stack_coordsPixs = []
-    i=STARTING_POINT
-    while i < NUMBER_OF_CALIB_PTS:
-        print(f"Put the CD into the Scene. On position {i+1}.")
-        pause()
-        print("Acquiring image ...")
-        newImageXYZ = get_image(zed,point_cloud,
-                                medianFrames=NUMBER_OF_AVERAGE_FRAMES,
-                                components=[0,1,2])
-        newImageZoffset = newImageXYZ[:,:,2]-background
-        tifffile.imwrite(f"{_calib_temp_image_path}/Image_position_Z_{i+1}.tiff", newImageXYZ[:,:,2][ROI]-background[ROI])
-        if VISUALIZE:
-            ### Visualize Offset Image
-            plt.imshow(newImageXYZ[:,:,2], vmin=-0.2 , vmax=0.2, cmap='coolwarm')
-            plt.show()
-            ## Visualize Offset Image ROI
-            plt.imshow(newImageXYZ[:,:,2][ROI]-background[ROI], vmin=-0.2 , vmax=0.2, cmap='coolwarm')
-            plt.show()
-        print("Acquiring position ...")
-        coordsXYZm,CoordsPx = get_Disk_Position(newImageZoffset,newImageXYZ,ROI,CALIB_Z_THRESHOLD_M,RADIUS_TOLERANCE,RADIUS_PERI_THRESHOLD_PX)
-        if not coordsXYZm == None:
-            if not np.isnan(coordsXYZm[0]):
-                np.save(f"{_coordinates_path}Image_position_{i+1}.npy", np.array(coordsXYZm))
-                Stack_coordsXYZm.append(coordsXYZm)
-                Stack_coordsPixs.append(CoordsPx)
-                i+=1
-            else:
-                print("nan value encountered please try again")
+            ## Gathering all points into one file
+            if i == NUMBER_OF_CALIB_PTS:
+                calibPointsXYZ = np.array(Stack_coordsXYZm)
+                np.save(_calib_3D_path,calibPointsXYZ)
+                cameraPointsPx = np.array(Stack_coordsPixs)
+                np.save(_calib_2D_camera_pixel_path,cameraPointsPx)
+            
+            # Closing camera
+            zed.close()
         else:
-            print(f"New acquisition of point {i+1}")
-    
+            ## TODO: Test if the number of calib points is the same...
+            Stack_coordsPixs = []
+            Stack_coordsXYZm = []
+            print("Loading the last acquired points.")
+            for i in tqdm(range(NUMBER_OF_CALIB_PTS)):
+                coordsXYZm = np.load(f"{_coordinates_path}Image_position_{i+1}.npy")
+                coordsPx = np.load(f"{_coordinates_path}Camera_px_position_{i+1}.npy")
+                print(coordsPx)
+                Stack_coordsXYZm.append(coordsXYZm)
+                Stack_coordsPixs.append(coordsPx)
+            pause()
+    except Exception as e:
+        print(e)
+        threaded_app.stop()
+        exit()
 
-    ## Gathering all points into one file
-    if i == NUMBER_OF_CALIB_PTS:
-        calibPointsXYZ = np.array(Stack_coordsXYZm)
-        np.save(_calib_3D_path,calibPointsXYZ)
-    
     ###########################################################################################################################################
     ### 5. Obtain the pixel to meter and meter to pixel conversion for ROI
     ###########################################################################################################################################
-    
-    ## Obtain the conversion between the 3D point cloud and the pixel ROI
-    XYZ_Pt1 = np.load(f"{_coordinates_path}Image_position_1.npy") 
-    XYZ_Pt2 = np.load(f"{_coordinates_path}Image_position_{_nb_lines_X}.npy")
-    Pixs_Pt1 = Stack_coordsPixs[0][0]
-    Pixs_Pt2 = Stack_coordsPixs[_nb_lines_X][0]
-
-    Distance_m = np.abs(XYZ_Pt1[0]-XYZ_Pt2[0])
-    Distance_px = int(np.abs(Pixs_Pt1[0]-Pixs_Pt2[0]))
-
-    print(f"{Distance_m}m in the 3D point cloud corresponds to {Distance_px}px on the acquired image.")
-
-    # Closing camera
-    zed.close()
+    try:
+        ## Obtain the conversion between the 3D point cloud and the pixel ROI
+        XYZ_Pt1 = np.load(f"{_coordinates_path}Image_position_1.npy") 
+        XYZ_Pt2 = np.load(f"{_coordinates_path}Image_position_{_nb_lines_X}.npy")
+        Pixs_Pt1 = np.load(f"{_coordinates_path}Camera_px_position_1.npy") 
+        Pixs_Pt2 = np.load(f"{_coordinates_path}Camera_px_position_{_nb_lines_X}.npy")
+        print(Pixs_Pt1)
+        print(Pixs_Pt2)
+        print(XYZ_Pt1)
+        print(XYZ_Pt2)
+        Distance_m = np.round(np.sqrt((XYZ_Pt1[0]-XYZ_Pt2[0])**2 + (XYZ_Pt1[1]-XYZ_Pt2[1])**2 + (XYZ_Pt1[2]-XYZ_Pt2[2])**2),2)
+        Distance_px = np.round(np.sqrt((Pixs_Pt1[0]-Pixs_Pt2[0])**2 + (Pixs_Pt1[1]-Pixs_Pt2[1])**2),2)
+        print(f"{Distance_m}m in the 3D point cloud corresponds to {Distance_px}px on the acquired image.")
+        pause()
+    except Exception as e:
+        print(e)
+        threaded_app.stop()
 
     ###########################################################################################################################################
     ### 6. Estimate the 3D 2D matrix 
     ###########################################################################################################################################
+    try:
+        From_3D_2D_matrix = calculate_3D_2D_matrix(_calib_2D_pixel_path,_calib_3D_path)
+        Data = {"3D_2D_Matrix":From_3D_2D_matrix,"ROI_info":{"Distance_m":Distance_m,"Distance_px":Distance_px}}
+        print(Data)
 
-    From_3D_2D_matrix = calculate_3D_2D_matrix(_calib_2D_pixel_path,_calib_3D_path)
-    Data = {"3D_2D_Matrix":From_3D_2D_matrix,"ROI_info":{"Distance_m":Distance_m,"Distance_px":Distance_px}}
-    
-    data_file = open(_calibration_information_path, "w")
-    json.dump(Data, data_file)
-    data_file.close()
+        data_file = open(_calibration_information_path, "w")
+        json.dump(Data, data_file)
+        data_file.close()
+        P = get_3D_2D_matrix(_calibration_information_path)
+        print(P)
+    except Exception as e:
+        print(e)
+        threaded_app.stop()
+        exit()
 
-    P = get_3D_2D_matrix(_calibration_information_path)
-    print(P)
+    print("\n\n End of Calibration \n\n")
+    threaded_app.stop()
+    exit()
 
 
 
@@ -263,8 +316,19 @@ if __name__ == '__main__':
         type=bool,
         default=True
     )
+    parser.add_argument(
+        '-b', '--oldBackground',
+        help="Boolean for a new background acquisition.",
+        type=bool,
+        default=False
+    )
+    parser.add_argument(
+        '-a', '--oldAcquisition',
+        help="Boolean for a new point acquisition.",
+        type=bool,
+        default=False
+    )
 
     args = parser.parse_args()
-
-    
-    main(args.calibZThresh, args.rThresh,args.sPoint,args.visualize)
+    print(args.oldAcquisition)
+    main(args.oldAcquisition,args.oldBackground,args.calibZThresh, args.rThresh,args.sPoint,args.visualize)
