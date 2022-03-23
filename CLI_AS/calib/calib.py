@@ -23,7 +23,7 @@ import sys
 import shutil
 from xmlrpc.client import Boolean
 import yaml
-# import pyzed.sl as sl
+import pyzed.sl as sl
 import numpy as np
 import tifffile
 import matplotlib.pyplot as plt
@@ -45,16 +45,6 @@ import terminal
 import argparse
 import glob
 from tqdm import tqdm
-
-# Number of frames we use for the background acquisition
-NUMBER_OF_AVERAGE_FRAMES = 64
-
-# Region of Interest can change if the camera moves
-ROI = [slice(100, 600), slice(400, 1000)]
-
-# Radius tolerance when comparing the radius given from the area and the perimeter
-RADIUS_TOLERANCE = 1
-
 
 
 def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
