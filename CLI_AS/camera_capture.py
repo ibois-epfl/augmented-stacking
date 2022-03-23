@@ -11,17 +11,53 @@ import tifffile
 import matplotlib.pyplot as plt
 import sys
 
+## Imports for function: convert_roit_meter_pixel
+import os
+import yaml 
+from util import terminal
+
 from util import visualizer
 
 
+
 #TODO: set wall scanning 1.5 x 0.7 m dimension area
-ROI = [slice(200, 500), slice(500, 900)] # TODO: convertir ROI in pixel in meters
+ROI = [0.7,1.5] # TODO: convertir ROI in pixel in meters
 
 NUMBER_OF_AVERAGE_FRAMES = 10
 
 IS_DOWNSAMPLED = True
 
+## I added this function in the process of the get_median_cloud function
+def convert_roi_meter_pixel(roi):
+    """
+    This function is returning a rectangular Region Of Interest in pixel slices, centered in the middle of the image.
+    And take as an input an array of the width and the length of the ROI in meters.
 
+    :param roi: Array of the width and the length of the ROI in meters.
+    """
+
+    _root_file = os.path.dirname(__file__)
+    _calib_information_path = _root_file + "/calib/utils/calibration_info.yaml"
+    if not os.path.exists(_calib_information_path):
+        terminal.error_print(f"No Calibration Data has been found in: {_calib_information_path}")
+        exit()
+    else:
+        # Opening YAML file
+        with open(_calib_information_path) as yaml_file:
+            data = yaml.load(yaml_file,Loader=yaml.FullLoader)
+        roi_info = data["ROI_info"]
+        distance_m = roi_info["Distance_m"]
+        distance_px = roi_info["Distance_px"]
+        convert_m_px = distance_px/distance_m
+        roi_px = roi * convert_m_px
+
+        ## We suppose the camera used is the zed camera, with an image acquisition of 1280x720 pixels
+        ## the center is (360,640)
+
+        slice_roi = [slice(int(360-roi_px[0]/2),int(360)+roi_px[0]/2),slice(int(640-roi_px[1]/2),int(640+roi_px[1]/2))]
+
+    return slice_roi
+ 
 def set_up_zed():
 
     """
@@ -94,8 +130,11 @@ def get_median_cloud(zed, point_cloud, medianFrames, ROI):
     stack_of_images = np.array(stack_of_images)
     stack_of_images[not np.isfinite] = np.nan
 
+    # Convert the ROI value from meters to pixels and into a slice object.
+    roi = convert_roi_meter_pixel(ROI)
+
     # Crop the point cloud following the ROI
-    stack_of_images = stack_of_images[:, ROI[0], ROI[1], :]
+    stack_of_images = stack_of_images[:, roi[0], roi[1], :]
 
     # Median the point clouds
     median = np.nanmedian(stack_of_images, axis=0)
