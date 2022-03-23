@@ -87,6 +87,10 @@ def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOL
     print("\n##########################################\n## 0. Initialisation \n##########################################")
     
     ## number of calibration points
+    print(f"This calibration will create a folder {_utils_path} where every thing will be stored.")
+    print("\nThe number of calibration points have to be at least 8, otherwise the calibration wont be precise enough.")
+    print("The more points you have the better the calibration. I suggest you to take 3*3 or 4*3 points.")
+    print("For more precision: use the distortion option of the projector and make the corners angle right.")
     _nb_lines_Y = int(terminal.user_input("Number of points in X direction:"))
     _nb_lines_X = int(terminal.user_input("Number of points in Y direction:"))
     NUMBER_OF_CALIB_PTS = _nb_lines_X * _nb_lines_Y
@@ -109,19 +113,19 @@ def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOL
             plt.show()
             answer = None
             while not answer in ["Y","n"]:
-                answer = str(terminal.user_input("\n Do you want to reuse the last acquisition and skip the new acquisition process ? (Y/n)\n>> "))
+                answer = str(terminal.user_input("\n Having seen the background.\n Do you want to reuse the last acquisition and skip the new acquisition process ? (Y/n)\n>> "))
             if answer == "Y":
                 print("You have chosen to keep the old acquired points.")
                 OLD_ACQUISITION = True
             else:
                 print("You have chosen to do a new acquisition.")
                 OLD_ACQUISITION = False
-    ## TODO: Consistency btw number_of_calib_pts and nb_saved_files.
+    ## Consistency btw number_of_calib_pts and nb_saved_files.
     if OLD_ACQUISITION:
         list_3D = glob.glob(f"{_coordinates_path}Image_position_*.npy")
         list_2D = glob.glob(f"{_coordinates_path}Camera_px_position_*.npy")
-        if not (len(list_2D) >= NUMBER_OF_CALIB_PTS and len(list_3D) >= NUMBER_OF_CALIB_PTS):
-            print(f"\n It seems the number of points saved are less then the amount you asked for.\n\n  - Asked points: {NUMBER_OF_CALIB_PTS} \n  - 2D points: {len(list_2D)} \n  - 3D points: {len(list_3D)}")
+        if not (len(list_2D) == NUMBER_OF_CALIB_PTS and len(list_3D) == NUMBER_OF_CALIB_PTS):
+            print(f"\n It seems the number of points saved are not equal the amount you asked for.\n\n  - Asked points: {NUMBER_OF_CALIB_PTS} \n  - 2D points: {len(list_2D)} \n  - 3D points: {len(list_3D)}")
             answer = None
             while not answer in ["Y","n"]:
                 answer = terminal.user_input("Do you want to continue, making a new acquisition ? (Y/n)\n>> ")
@@ -156,39 +160,42 @@ def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOL
 
 
     if not OLD_ACQUISITION:
+        try:
+
+            # Set ZED params
+            init = sl.InitParameters(camera_resolution=sl.RESOLUTION.HD720, # HD720 | 1280*720
+                                    camera_fps=30, # available framerates: 15, 30, 60 fps
+                                    depth_mode=sl.DEPTH_MODE.QUALITY, # posible mods: sl.DEPTH_MODE.PERFORMANCE/.QUALITY/.ULTRA
+                                    coordinate_units=sl.UNIT.METER,
+                                    coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP, # sl.COORDINATE_SYSTEM.LEFT_HANDED_Y_UP
+                                    sdk_verbose = True, # Enable verbose logging
+                                    depth_minimum_distance=0.3, # Enable capture from 30 cm
+                                    depth_maximum_distance=3.0 # Enable capture up to 3m
+                                    ) 
+            
+            # Open ZED and catch error
+            zed = sl.Camera()
+            status = zed.open(init)
+            if status != sl.ERROR_CODE.SUCCESS:
+                terminal.error_print(repr(status))
+                threaded_app.error_down()
+                exit()
+            camera_info = zed.get_camera_information()
+            print("\nPOP: ZED camera opened, serial number: {0}".format(camera_info.serial_number))
 
 
-        # Set ZED params
-        init = sl.InitParameters(camera_resolution=sl.RESOLUTION.HD720, # HD720 | 1280*720
-                                camera_fps=30, # available framerates: 15, 30, 60 fps
-                                depth_mode=sl.DEPTH_MODE.QUALITY, # posible mods: sl.DEPTH_MODE.PERFORMANCE/.QUALITY/.ULTRA
-                                coordinate_units=sl.UNIT.METER,
-                                coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP, # sl.COORDINATE_SYSTEM.LEFT_HANDED_Y_UP
-                                sdk_verbose = True, # Enable verbose logging
-                                depth_minimum_distance=0.3, # Enable capture from 30 cm
-                                depth_maximum_distance=3.0 # Enable capture up to 3m
-                                ) 
-        
-        # Open ZED and catch error
-        zed = sl.Camera()
-        status = zed.open(init)
-        if status != sl.ERROR_CODE.SUCCESS:
-            print(repr(status))
-            threaded_app.down()
+            ###########################################################################################################################################
+            ### 2.2. Setting point cloud params 
+            ###########################################################################################################################################
+            
+            point_cloud = sl.Mat(zed.get_camera_information().camera_resolution.width, 
+                                zed.get_camera_information().camera_resolution.height,
+                                sl.MAT_TYPE.F32_C4,
+                                sl.MEM.CPU)
+        except Exception as e:
+            terminal.error_print(e)
+            threaded_app.error_down()
             exit()
-        camera_info = zed.get_camera_information()
-        print("\nPOP: ZED camera opened, serial number: {0}".format(camera_info.serial_number))
-
-
-        ###########################################################################################################################################
-        ### 2.2. Setting point cloud params 
-        ###########################################################################################################################################
-        
-        point_cloud = sl.Mat(zed.get_camera_information().camera_resolution.width, 
-                            zed.get_camera_information().camera_resolution.height,
-                            sl.MAT_TYPE.F32_C4,
-                            sl.MEM.CPU)
-
 
     ###########################################################################################################################################
     ### 3. Acquiring Background - Empty the scene
@@ -197,42 +204,20 @@ def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOL
     try:
         if not OLD_ACQUISITION:
             # Check if the empty background image exists
-            if not os.path.exists(_calib_background_path):
-                print(f"Acquiring {NUMBER_OF_AVERAGE_FRAMES} frames.")
-                print("Make sure the scene is Empty.")
-                pause()
+            print(f"Acquiring {NUMBER_OF_AVERAGE_FRAMES} frames.")
+            print("Make sure the scene is Empty.")
+            pause()
 
-                # Background average depth 
-                print("Background acquisition ...")
-                background = get_image(zed,point_cloud,medianFrames=NUMBER_OF_AVERAGE_FRAMES, components=[2])[:,:,0]
-                tifffile.imwrite(_calib_background_path, background)
-            else:
-                print(f"Following background has been found in: {_calib_background_path}")
-                print(f"I loaded a background image with shape: {background.shape}")
-                background = tifffile.imread(_calib_background_path)
-                plt.imshow(background)
-                plt.show()
-                decision = None
-                while not decision in ["Y","n"]:
-                    decision = terminal.user_input("Do you want to keep this background ? (Y/n)\n>> ")
-                if decision == "Y":
-                    print("You have chosen to keep the background.")
-                else:
-                    print("You have chosen to make a new acquisition of the background.")
-                    print(f"Acquiring {NUMBER_OF_AVERAGE_FRAMES} frames for background.")
-                    print("Make sure the scene is Empty.")
-                    pause()
-
-                    # Background average depth 
-                    print("Background acquisition ...")
-                    background = get_image(zed,point_cloud,medianFrames=NUMBER_OF_AVERAGE_FRAMES, components=[2])[:,:,0]
-                    tifffile.imwrite(_calib_background_path, background)
+            # Background average depth 
+            print("Background acquisition ...")
+            background = get_image(zed,point_cloud,medianFrames=NUMBER_OF_AVERAGE_FRAMES, components=[2])[:,:,0]
+            tifffile.imwrite(_calib_background_path, background)
         else:
             print("\nYou have chosen to keep the old acquired points, no background is required.")
             
     except Exception as e:
         terminal.error_print(e)
-        threaded_app.down()
+        threaded_app.error_down()
         exit()
         
     ###########################################################################################################################################
@@ -245,13 +230,16 @@ def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOL
 
     try:
         if not OLD_ACQUISITION:
-            print(f"\n You are about to Acquire new points. Do you want to delete the old points located in:\n\n  {_coordinates_path}")
+            print(f"\n You are about to Acquire new points. The following folder will be deleted :\n\n  {_coordinates_path}")
             answer = None 
             while not answer in ["Y","n"]:
-                answer = terminal.user_input("Do you want to delete those files ? (Y/n)\n>> ")
+                answer = terminal.user_input("Do you want to continue ? (Y/n)\n>> ")
             if answer:
                 shutil.rmtree(_coordinates_path)
                 os.makedirs(_coordinates_path)
+            else:
+                print("You exited the program.")
+                exists()
             print("\nDuring the Acquisition of the images you should not enter the scene.")
 
             # The CD has to be at a minimum height of calibZThresholdM in meters
@@ -309,7 +297,7 @@ def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOL
             pause()
     except Exception as e:
         terminal.error_print(e)
-        threaded_app.down()
+        threaded_app.error_down()
         exit()
 
     ###########################################################################################################################################
@@ -328,7 +316,7 @@ def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOL
         print(f"\n{Distance_m} m in the 3D point cloud corresponds to {Distance_px} px on the camera image.")
     except Exception as e:
         terminal.error_print(e)
-        threaded_app.down()
+        threaded_app.error_down()
         exit()
 
     ###########################################################################################################################################
@@ -351,7 +339,7 @@ def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOL
         threaded_app.stop()
         exit()
     print("\n\n End of Calibration \n\n")
-    threaded_app.down()
+    threaded_app.error_down()
 
 
 

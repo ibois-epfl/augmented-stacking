@@ -263,6 +263,11 @@ def display_calibration(CALIB_IMG_PATH):
                 root.quit()
                 return "break"
 
+        def error_down(self):
+            root = self.tk
+            root.quit()
+
+
         def run(self):
             self.tk = tk.Tk()
             self.tk.attributes('-zoomed', True)  # This just maximizes it so we can see the window. It's nothing to do with fullscreen.
