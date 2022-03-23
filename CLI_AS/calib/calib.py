@@ -23,7 +23,7 @@ import sys
 import shutil
 from xmlrpc.client import Boolean
 import yaml
-# import pyzed.sl as sl
+import pyzed.sl as sl
 import numpy as np
 import tifffile
 import matplotlib.pyplot as plt
@@ -87,7 +87,7 @@ def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOL
     print("\n##########################################\n## 0. Initialisation \n##########################################")
     
     ## number of calibration points
-    _nb_lines_Y = int(terminal.user_input("Number of pints in X direction:"))
+    _nb_lines_Y = int(terminal.user_input("Number of points in X direction:"))
     _nb_lines_X = int(terminal.user_input("Number of points in Y direction:"))
     NUMBER_OF_CALIB_PTS = _nb_lines_X * _nb_lines_Y
     if NUMBER_OF_CALIB_PTS > 7:
@@ -117,18 +117,18 @@ def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOL
                 print("You have chosen to do a new acquisition.")
                 OLD_ACQUISITION = False
     ## TODO: Consistency btw number_of_calib_pts and nb_saved_files.
-
-    list_3D = glob.glob(f"{_coordinates_path}Image_position_*.npy")
-    list_2D = glob.glob(f"{_coordinates_path}Camera_px_position_*.npy")
-    if not (len(list_2D) > NUMBER_OF_CALIB_PTS and len(list_3D) > NUMBER_OF_CALIB_PTS):
-        print(f"\n It seems the number of points saved are less then the amount you asked for.\n\n  - Asked points: {NUMBER_OF_CALIB_PTS} \n  - 2D points: {len(list_2D)} \n  - 3D points: {len(list_3D)}")
-        answer = None
-        while not answer in ["Y","n"]:
-            answer = terminal.user_input("Do you want to continue, making a new acquisition ? (Y/n)\n>> ")
-        if answer == "Y":
-            OLD_ACQUISITION = False
-        else:
-            exit()
+    if OLD_ACQUISITION:
+        list_3D = glob.glob(f"{_coordinates_path}Image_position_*.npy")
+        list_2D = glob.glob(f"{_coordinates_path}Camera_px_position_*.npy")
+        if not (len(list_2D) >= NUMBER_OF_CALIB_PTS and len(list_3D) >= NUMBER_OF_CALIB_PTS):
+            print(f"\n It seems the number of points saved are less then the amount you asked for.\n\n  - Asked points: {NUMBER_OF_CALIB_PTS} \n  - 2D points: {len(list_2D)} \n  - 3D points: {len(list_3D)}")
+            answer = None
+            while not answer in ["Y","n"]:
+                answer = terminal.user_input("Do you want to continue, making a new acquisition ? (Y/n)\n>> ")
+            if answer == "Y":
+                OLD_ACQUISITION = False
+            else:
+                exit()
     pause()
 
     
@@ -145,7 +145,6 @@ def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOL
     print("\n A tkinter window will appear, place it on the projectors display.\n\n - <F11>:  Toogle Full screen mode.\n - < q >: Close the window.\n")
     pause()
     threaded_app = display_calibration(_calib_img_path)
-    pause()
 
     confirmation = None
     while not confirmation in ["y"]:
@@ -246,10 +245,13 @@ def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOL
 
     try:
         if not OLD_ACQUISITION:
-            print(f"\n You are about to Acquire new points. Do you want to delete the old points ocated in:\n\n  {_coordinates_path}")
+            print(f"\n You are about to Acquire new points. Do you want to delete the old points located in:\n\n  {_coordinates_path}")
             answer = None 
             while not answer in ["Y","n"]:
                 answer = terminal.user_input("Do you want to delete those files ? (Y/n)\n>> ")
+            if answer:
+                shutil.rmtree(_coordinates_path)
+                os.makedirs(_coordinates_path)
             print("\nDuring the Acquisition of the images you should not enter the scene.")
 
             # The CD has to be at a minimum height of calibZThresholdM in meters
