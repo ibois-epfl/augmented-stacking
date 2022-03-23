@@ -19,7 +19,6 @@ from util import terminal
 from util import visualizer
 
 
-#TODO: Add color reading from point cloud into image generation in: pcd_to_2D_image l.65
 
 #TODO: set wall scanning 1.5 x 0.7 m dimension area
 ROI = [0.7,1.5] 
@@ -92,18 +91,19 @@ def pcd_to_2D_image(pcd):
         # Building up the transformation matrix size (3x4)
         transformation_matrix = np.dot(np.array([[f*m_x, gamma, u0, 0], [0, f*m_y, v0, 0], [0, 0, 1, 0]]),rotation_translation)/s
         # Going through the points of the point cloud
-        npy_pcd = np.asarray(pcd.points).reshape((-1,3))
+        npy_pcd = np.asarray(pcd.points)
+        npy_pcd_color = np.asarray(pcd.colors)
         img = np.zeros((720,1280,3))
         for i,point in enumerate(npy_pcd):
             # Converting the 3D Point cloud into a 2D plane of size (3xn) corresponding to (x,y,1)
             px_of_projection = np.dot(transformation_matrix,np.array([[point[0]],[point[1]],[point[2]],1]))
-            # TODO: Geting the color from pcd for each point
-            color = [0,100,100] ## maybe in float ?
+            # Geting the color from pcd for each point
+            color = npy_pcd_color[i,:] 
             # coloring the image
             img[px_of_projection[0],px_of_projection[1],:] = color
         
         return img
-## I added this function in the process of the get_median_cloud function
+
 def convert_roi_meter_pixel(roi):
     """
     This function is returning a rectangular Region Of Interest in pixel slices, centered in the middle of the image.
@@ -182,7 +182,7 @@ def close_up_zed(zed_cam):
     """
     zed_cam.close()
 
-def get_median_cloud(zed, point_cloud, medianFrames, ROI):
+def get_median_cloud(zed, point_cloud, medianFrames, roi_m):
 
     """
     This function is giving an average value of X, Y and Z 
@@ -211,10 +211,10 @@ def get_median_cloud(zed, point_cloud, medianFrames, ROI):
     stack_of_images[not np.isfinite] = np.nan
 
     # Convert the ROI value from meters to pixels and into a slice object.
-    roi = convert_roi_meter_pixel(ROI)
+    roi_px = convert_roi_meter_pixel(roi_m)
 
     # Crop the point cloud following the ROI
-    stack_of_images = stack_of_images[:, roi[0], roi[1], :]
+    stack_of_images = stack_of_images[:, roi_px[0], roi_px[1], :]
 
     # Median the point clouds
     median = np.nanmedian(stack_of_images, axis=0)
