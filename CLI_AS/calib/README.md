@@ -3,4 +3,5 @@
 Just run the calib.py code and follow the instructions.
 
 Example of the Interface:
-![Interaction example]("img/example.jpg")
+![Example](./img/example.png)
+
