@@ -37,7 +37,10 @@ from calibration_functions import display_calibration
 from calibration_functions import calculate_3D_2D_matrix
 from calibration_functions import get_3D_2D_matrix
 _root_file = os.path.dirname(__file__)
-sys.path.append(_root_file+"/../util")
+if _root_file == '':
+    sys.path.append(_root_file+"../util")
+else:
+    sys.path.append(_root_file+"/../util")
 import terminal
 import argparse
 import glob
@@ -57,8 +60,11 @@ RADIUS_TOLERANCE = 1
 def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
 
     root_file = os.path.dirname(__file__)
+    if root_file == "":
+        _utils_path = root_file + "utils/"
+    else:
+        _utils_path = root_file + "/utils/"
 
-    _utils_path = root_file + "/utils/"
     _grid_path = _utils_path + "grid/"
     _calib_img_path = _grid_path + "calibration_image.png"
     _calib_2D_pixel_path = _grid_path + "2D_pixel_coordinates.npy"
