@@ -1,6 +1,6 @@
 
 import sys
-import pyzed.sl as sl
+# import pyzed.sl as sl
 import numpy as np
 import tifffile
 import scipy.ndimage
@@ -11,7 +11,7 @@ from tqdm import tqdm
 import skimage.measure
 from PIL import Image
 from PIL import ImageTk
-import json
+import yaml
 import threading
 if sys.version_info[0] == 2:  # the tkinter library changed it's name from Python 2 to 3.
     import Tkinter as tk
@@ -100,7 +100,7 @@ def optimise_me(x,calib_points_XYZ,proj_xy):
         RHS = np.dot(np.dot(K, Rt), XYZ1)/s
         totalError += np.square(RHS[0:2] - proj_xy[i]).sum()
     
-    if j%100 == 0: print(f"{dX} {dY} {dZ}: {np.sqrt(totalError)}")
+    if j%1000 == 0: print(f"Error: {np.sqrt(totalError)}")
     return np.sqrt(totalError) 
 
 def calculate_3D_2D_matrix(PROJECTOR_PIXEL_PTS_PATH,CALIB_PTS_XYZ):
@@ -184,25 +184,24 @@ def calculate_3D_2D_matrix(PROJECTOR_PIXEL_PTS_PATH,CALIB_PTS_XYZ):
         RHS = np.dot(np.dot(K, Rt), np.array([calib_points_XYZ[i,0], calib_points_XYZ[i,1], calib_points_XYZ[i,2], 1]).T)/s
         print(f"Input pixels: {proj_xy[i]}, output match: {RHS[0:2]}")
 
-    # Json file saving as a dictionary
-    K_dict = {"s": s , "f": f , "u0":u0 , "v0":v0 , "dX":dX , "dY":dY , "dZ":dZ , "m_x":m_x , "m_y":m_y , "gamma":gamma , "r0":r0 , "r1":r1 , "r2":r2 }
-    
+    # yaml file saving as a dictionary
+    K_dict = {"s": float(s) , "f": float(f) , "u0":float(u0) , "v0":float(v0) , "dX":float(dX) , "dY":float(dY) , "dZ":float(dZ) , "m_x":float(m_x) , "m_y":float(m_y) , "gamma":float(gamma) , "r0":float(r0) , "r1":float(r1) , "r2":float(r2) }
     return K_dict
 
-def get_3D_2D_matrix(JSON_PATH):
+def get_3D_2D_matrix(YAML_PATH):
     """
-    This function opens the Calibration Json File, reads the information about the 3D_2D_matrix and return it as a numpy array
+    This function opens the Calibration Yaml File, reads the information about the 3D_2D_matrix and return it as a numpy array
 
     Args:
-        - JSON_PATH: Path of the json calibration file, containing the 3D_2D_Matrix information.
+        - YAML_PATH: Path of the yaml calibration file, containing the 3D_2D_Matrix information.
     """
 
-    # Opening JSON file
-    with open(JSON_PATH) as json_file:
-        data = json.load(json_file)
+    # Opening YAML file
+    with open(YAML_PATH) as yaml_file:
+        data = yaml.load(yaml_file,Loader=yaml.FullLoader)
+    print(data)
     Matrix = data["3D_2D_Matrix"]
     s, f, u0, v0, dX, dY, dZ, m_x, m_y, gamma, r0, r1, r2 = Matrix["s"],Matrix["f"],Matrix["u0"],Matrix["v0"],Matrix["dX"],Matrix["dY"],Matrix["dZ"],Matrix["m_x"],Matrix["m_y"],Matrix["gamma"],Matrix["r0"], Matrix["r1"],Matrix["r2"]
-    print(s,f,u0,v0,dX)
     Rt = np.zeros((4, 4))
     R = rotationMatrix(np.array([r0, r1, r2]))
     Rt[0:3, 0:3] = R
@@ -232,10 +231,11 @@ def display_calibration(CALIB_IMG_PATH):
 
         def __init__(self):
             threading.Thread.__init__(self)
+            self.alive = True
             self.start()
 
         def callback(self):
-            self.root.quit()
+            self.tk.quit()
         
         def toggle_fullscreen(self, event=None):
             self.state = not self.state  # Just toggling the boolean
@@ -246,26 +246,40 @@ def display_calibration(CALIB_IMG_PATH):
             self.state = False
             self.tk.attributes("-fullscreen", False)
             return "break"
-        
-        def stop(self,event=None):
-            root = self.tk
-            root.quit()
+
+
+        def close(self,event=None):
+            self.alive = not self.alive
+            if not self.alive :
+                self.lmain.configure(compound="center",text="Close Window ?\n Press <Enter> to Confirm.\n Press <q> to exit.",font=("Courier", 44),fg="white",bg="black")
+            else:
+                self.lmain.configure(text="")
+
             return "break"
+
+        def down(self,event=None):
+            if not self.alive:
+                root = self.tk
+                root.quit()
+                return "break"
 
         def run(self):
             self.tk = tk.Tk()
             self.tk.attributes('-zoomed', True)  # This just maximizes it so we can see the window. It's nothing to do with fullscreen.
             image = Image.open(CALIB_IMG_PATH)
             self.image = ImageTk.PhotoImage(image=image)
-            lmain = tk.Label(self.tk)
+            lmain = tk.Label(self.tk,image=self.image)
             lmain.pack()
-            lmain.configure(image=self.image)
+            self.lmain = lmain
             self.state = False
             self.tk.bind("<F11>", self.toggle_fullscreen)
             self.tk.bind("<Escape>", self.end_fullscreen)
-            self.tk.bind("<q>", self.stop)
+            self.tk.bind("<q>", self.close)
+            self.tk.bind("<Return>",self.down)
             self.tk.protocol("WM_DELETE_WINDOW", self.callback)
             self.tk.mainloop()
+
+            
     
     app = App()
     return app
@@ -312,7 +326,7 @@ def draw_grid(save_path_img,save_path_2D_pts,nb_lines_X=3,nb_lines_Y=3,line_widt
         Img[:,i*Y_space:i*Y_space+line_width+1,1]=255
     np.save(save_path_2D_pts,Pts)
     plt.imsave(save_path_img,Img)
-    print(f"Calibration image of {nb_lines_X}x{nb_lines_Y} generated and saved in {save_path_img}")
+    print(f"A Calibration image of size: {nb_lines_X}x{nb_lines_Y} was generated.\nIt is saved in: {save_path_img}")
    
 
 
@@ -344,6 +358,7 @@ def get_image(zed, point_cloud, medianFrames=1, components=[2]):
         else:
             print(":(")
             return None
+    print("\nThe Scene can now be enterd.\nProcessing images ...")
     stack_of_images = np.array(stack_of_images)
     stack_of_images[not np.isfinite] = np.nan
     median = np.nanmedian(stack_of_images, axis=0)
