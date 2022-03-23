@@ -1,6 +1,6 @@
 
 import sys
-import pyzed.sl as sl
+# import pyzed.sl as sl
 import numpy as np
 import tifffile
 import scipy.ndimage

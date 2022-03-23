@@ -23,7 +23,7 @@ import sys
 import shutil
 from xmlrpc.client import Boolean
 import yaml
-import pyzed.sl as sl
+# import pyzed.sl as sl
 import numpy as np
 import tifffile
 import matplotlib.pyplot as plt
