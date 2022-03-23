@@ -21,12 +21,89 @@ from util import visualizer
 
 
 #TODO: set wall scanning 1.5 x 0.7 m dimension area
-ROI = [0.7,1.5] # TODO: convertir ROI in pixel in meters
+ROI = [0.7,1.5] 
 
 NUMBER_OF_AVERAGE_FRAMES = 10
 
 IS_DOWNSAMPLED = True
 
+
+
+## Following functions were added for 3D to 2D image genration
+def rotationMatrix(r):
+    """
+    Simple 3D Matrix rotation function, obtained from following sources:
+    https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
+
+    Args: 
+        -r: a rotation vector, with rotation value in x, y and z direction.
+    """
+    ## Parameter for the rotationmatrix function
+    rotationAngleDegThreshold = 0.00001
+
+    # its length is the rotation angle
+    rotationAngleDeg = np.linalg.norm(r)
+
+    if rotationAngleDeg > rotationAngleDegThreshold:
+        # its direction is the rotation axis.
+        rotationAxis = r / rotationAngleDeg
+
+        # positive angle is clockwise
+        K = np.array([[       0,         -rotationAxis[2],  rotationAxis[1]],
+                            [ rotationAxis[2],        0,         -rotationAxis[0]],
+                            [-rotationAxis[1],  rotationAxis[0],        0       ]])
+
+        # Note the np.dot is very important.
+        R = np.eye(3) + (np.sin(np.deg2rad(rotationAngleDeg)) * K) + \
+            ((1.0 - np.cos(np.deg2rad(rotationAngleDeg))) * np.dot(K, K))
+
+        tmp = np.eye(4)
+        tmp[0:3, 0:3] = R
+    else:
+        R = np.eye(3)
+    return R
+
+def pcd_to_2D_image(pcd):
+    """
+    This function is converting a open3D point cloud into a 2D projection for the projector.
+    It is using the results of the calibration function.
+    """
+    _root_file = os.path.dirname(__file__)
+    if _root_file == "":
+        _calib_information_path = _root_file + "calib/utils/calibration_info.yaml"
+    else:
+        _calib_information_path = _root_file + "/calib/utils/calibration_info.yaml"
+    # Test if the file exist as it is supposed when runing calib function entirely
+    if not os.path.exists(_calib_information_path):
+        terminal.error_print(f"No Calibration Data has been found in: {_calib_information_path}")
+        exit()
+    else:
+        ## Load the transformation matrix 
+        # Opening YAML file
+        with open(_calib_information_path) as yaml_file:
+            data = yaml.load(yaml_file,Loader=yaml.FullLoader)
+        # extracting information    
+        matrix_data = data["3D_2D_Matrix"]
+        s, f, u0, v0, dX, dY, dZ, m_x, m_y, gamma, r0, r1, r2 = matrix_data["s"],matrix_data["f"],matrix_data["u0"],matrix_data["v0"],matrix_data["dX"],matrix_data["dY"],matrix_data["dZ"],matrix_data["m_x"],matrix_data["m_y"],matrix_data["gamma"],matrix_data["r0"], matrix_data["r1"],matrix_data["r2"]
+        # Building up the rotation and translation matrix size (4x4)
+        rotation_translation = np.zeros((4, 4))
+        rotation = rotationMatrix(np.array([r0, r1, r2]))
+        rotation_translation[0:3, 0:3] = rotation
+        rotation_translation[:, -1] = np.array([dX, dY, dZ, 1])
+        # Building up the transformation matrix size (3x4)
+        transformation_matrix = np.dot(np.array([[f*m_x, gamma, u0, 0], [0, f*m_y, v0, 0], [0, 0, 1, 0]]),rotation_translation)/s
+        # Going through the points of the point cloud
+        npy_pcd = np.asarray(pcd.points).reshape((-1,3))
+        img = np.zeros((720,1280,3))
+        for i,point in enumerate(npy_pcd):
+            # Converting the 3D Point cloud into a 2D plane of size (3xn) corresponding to (x,y,1)
+            px_of_projection = np.dot(transformation_matrix,np.array([[point[0]],[point[1]],[point[2]],1]))
+            # TODO: Geting the color from pcd for each point
+            color = [0,100,100] ## maybe in float ?
+            # coloring the image
+            img[px_of_projection[0],px_of_projection[1],:] = color
+        
+        return img
 ## I added this function in the process of the get_median_cloud function
 def convert_roi_meter_pixel(roi):
     """
@@ -37,7 +114,11 @@ def convert_roi_meter_pixel(roi):
     """
 
     _root_file = os.path.dirname(__file__)
-    _calib_information_path = _root_file + "/calib/utils/calibration_info.yaml"
+    if _root_file == "":
+        _calib_information_path = _root_file + "calib/utils/calibration_info.yaml"
+    else:
+        _calib_information_path = _root_file + "/calib/utils/calibration_info.yaml"
+    # Test if the file exist as it is supposed when runing calib function entirely
     if not os.path.exists(_calib_information_path):
         terminal.error_print(f"No Calibration Data has been found in: {_calib_information_path}")
         exit()
