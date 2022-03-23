@@ -46,8 +46,18 @@ import argparse
 import glob
 from tqdm import tqdm
 
+# Number of frames we use for the background acquisition
+NUMBER_OF_AVERAGE_FRAMES = 64
 
-def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
+# Region of Interest can change if the camera moves
+ROI = [slice(100, 600), slice(400, 1000)]
+
+# Radius tolerance when comparing the radius given from the area and the perimeter
+RADIUS_TOLERANCE = 1
+
+
+
+def main(OLD_ACQUISITION,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_POINT,VISUALIZE):
 
     root_file = os.path.dirname(__file__)
     if root_file == "":
@@ -235,7 +245,7 @@ def main(OLD_ACQUISITION,OLD_BACKGROUND,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOL
                 os.makedirs(_coordinates_path)
             else:
                 print("You exited the program.")
-                exists()
+                exit()
             print("\nDuring the Acquisition of the images you should not enter the scene.")
 
             # The CD has to be at a minimum height of calibZThresholdM in meters
@@ -367,12 +377,7 @@ if __name__ == '__main__':
         type=bool,
         default=True
     )
-    parser.add_argument(
-        '-b', '--oldBackground',
-        help="Boolean for a new background acquisition.",
-        type=bool,
-        default=False
-    )
+
     parser.add_argument(
         '-a', '--oldAcquisition',
         help="Boolean for a new point acquisition.",
@@ -381,4 +386,4 @@ if __name__ == '__main__':
     )
 
     args = parser.parse_args()
-    main(args.oldAcquisition,args.oldBackground,args.calibZThresh, args.rThresh,args.sPoint,args.visualize)
+    main(args.oldAcquisition,args.calibZThresh, args.rThresh,args.sPoint,args.visualize)
