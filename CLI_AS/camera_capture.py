@@ -19,6 +19,7 @@ from util import terminal
 from util import visualizer
 
 
+#TODO: Add color reading from point cloud into image generation in: pcd_to_2D_image l.65
 
 #TODO: set wall scanning 1.5 x 0.7 m dimension area
 ROI = [0.7,1.5] 
@@ -26,8 +27,6 @@ ROI = [0.7,1.5]
 NUMBER_OF_AVERAGE_FRAMES = 10
 
 IS_DOWNSAMPLED = True
-
-
 
 ## Following functions were added for 3D to 2D image genration
 def rotationMatrix(r):
