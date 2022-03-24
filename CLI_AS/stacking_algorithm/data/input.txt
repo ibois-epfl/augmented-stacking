@@ -13,9 +13,9 @@
 #6weightPre
 0
 #7weightVoidZ
-1
+0
 #8weightVoidY
-1
+0
 #9xMin
 -0.3
 #10xMax

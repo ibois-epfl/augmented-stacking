@@ -18,10 +18,12 @@ import distance_map
 from util import terminal
 from util import visualizer
 import camera_capture
-
+import matplotlib.pyplot as plt
 import numpy as np
 import open3d as o3d
 import colorama as cr
+from cv2 import *
+
 
 _name_landscape = './landscape.ply'
 
@@ -31,8 +33,6 @@ _faces_target_low_res_mesh = 500
 # Set a target of max vertices for the captured scene mesh
 _vertices_target_low_res_scene = 2000
 
-
-def main():
 
 
 def main():
@@ -141,10 +141,24 @@ def main():
         # TEST: prepare visualizer
         pcd = camera_capture.get_pcd_scene(2000, zed, point_cloud)
         deviation_pc = distance_map.compute(mesh=merged_landscape, pc=pcd)
+        # TEST: try img
+        print(f"COlors diversity map has colors: {deviation_pc.has_colors()}")
+        img = camera_capture.pcd_to_2D_image(deviation_pc)
+
+        # TODO: save image an visualize it
+        print(img.shape)
+        print(type(img))
+        print(img)
+        cv2.imwrite("Colored_2D_image.jpg",img)
+        exit()
+
         vis = o3d.visualization.Visualizer()
+
+        # Put background black to avoid camera mis-capture
+
         vis.create_window()
         vis.add_geometry(deviation_pc)
-        vis.add_geometry(merged_landscape)
+        # vis.add_geometry(merged_landscape)  # do not visualize mesh TODO: add transparency
 
         # MIAN ADJUSTING LOOP
         # Now adjust the position untill it's in the good spot
@@ -157,8 +171,15 @@ def main():
             # Get point cloud from camera
             pcd = camera_capture.get_pcd_scene(2000, zed, point_cloud)
 
+            
+
+
             # Calculate the deviation of the rock from the cloud
             pcd_temp = distance_map.compute(mesh=merged_landscape, pc=pcd)
+            
+
+            
+            
             deviation_pc.points = pcd_temp.points
             deviation_pc.colors = pcd_temp.colors
 

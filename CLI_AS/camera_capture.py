@@ -8,8 +8,8 @@ import pyzed.sl as sl
 import numpy as np
 import open3d as o3d
 import tifffile
-import matplotlib.pyplot as plt
 import sys
+import tifffile
 
 ## Imports for function: convert_roit_meter_pixel
 import os
@@ -95,15 +95,19 @@ def pcd_to_2D_image(pcd):
         # Going through the points of the point cloud
         npy_pcd = np.asarray(pcd.points)
         npy_pcd_color = np.asarray(pcd.colors)
-        img = np.zeros((720,1280,3))
+        img = np.zeros((1080,1920,3))
         for i,point in enumerate(npy_pcd):
             # Converting the 3D Point cloud into a 2D plane of size (3xn) corresponding to (x,y,1)
-            px_of_projection = np.dot(transformation_matrix,np.array([[point[0]],[point[1]],[point[2]],1]))
+            px_of_projection = np.dot(transformation_matrix,np.array([[point[0]],[point[1]],[point[2]],[1]]))
             # Geting the color from pcd for each point
             color = npy_pcd_color[i,:] 
-            # coloring the image
-            img[px_of_projection[0],px_of_projection[1],:] = color
-        
+            if px_of_projection[0]<1080 and px_of_projection[1]<1920:
+                # coloring the image TODO: test if the new pixel is in the img range
+                print(color)
+                img[int(px_of_projection[0]),int(px_of_projection[1]),:] = np.uint8(color*254)
+                print(np.uint8(color*254))
+                print("colored the pixel")
+        print("out of loop")
         return img
 
 def convert_roi_meter_pixel(roi,center):
@@ -137,7 +141,6 @@ def convert_roi_meter_pixel(roi,center):
         ## the center is (360,640)
         slice_roi = [slice(int(center[0]-roi_px[0]/2),int(center[0]+roi_px[0]/2)),
                      slice(int(center[1]-roi_px[1]/2),int(center[1]+roi_px[1]/2))]
-        print(slice_roi)
 
     return slice_roi
  
@@ -358,35 +361,15 @@ def get_mesh_scene(n_target_downasample):
     # Average point cloud from frames
     np_median_pcd = get_median_cloud(zed,point_cloud,NUMBER_OF_AVERAGE_FRAMES, ROI,CENTER)
 
-    #DEBUG
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(np_median_pcd)
-    o3d.visualization.draw_geometries([pcd])
-    #DEBUG
-
     # From point cloud to pymeshlab mesh set + downsapling
     o3d_m = np_pcd2o3d_mesh(np_median_pcd, n_target_downasample=n_target_downasample)
     
-    # # minimum of pcd in y,y,z
-    # points = np.asarray(pcd.points)
-    # x_min = np.min(points[:,0])
-    # y_min = np.min(points[:,1])
-    # z_min = np.min(points[:,2])
-    # # maximum of pcd in x,y,z
-    # x_max = np.max(points[:,0])
-    # y_max = np.max(points[:,1])
-    # z_max = np.max(points[:,2])
-
-    # # bounding box
-    # min_bound = np.array([[x_min],[y_min],[z_min]],dtype=np.float64)
-    # max_bound = np.array([[x_max],[y_max],[z_max]],dtype=np.float64)
-
-    # # Crop the mesh to fit the ROI
-    # o3d_m = o3d.geometry.crop_triangle_mesh(o3d_m, min_bound, max_bound)
-
+    # TODO: clean up this code ~ condense
+    # Crop mesh according to ROI
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(np_median_pcd)
     bbox = pcd.get_axis_aligned_bounding_box()
     o3d_m = o3d_m.crop(bbox)
-
 
     # Close the camera
     close_up_zed(zed)
