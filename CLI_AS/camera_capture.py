@@ -23,11 +23,13 @@ from util import visualizer
 #TODO: set wall scanning 1.5 x 0.7 m dimension area
 ROI = [0.7,1.5] 
 
+CENTER = [320,750]
+
 NUMBER_OF_AVERAGE_FRAMES = 10
 
 IS_DOWNSAMPLED = True
 
-## Following functions were added for 3D to 2D image genration
+
 def rotationMatrix(r):
     """
     Simple 3D Matrix rotation function, obtained from following sources:
@@ -104,7 +106,7 @@ def pcd_to_2D_image(pcd):
         
         return img
 
-def convert_roi_meter_pixel(roi):
+def convert_roi_meter_pixel(roi,center):
     """
     This function is returning a rectangular Region Of Interest in pixel slices, centered in the middle of the image.
     And take as an input an array of the width and the length of the ROI in meters.
@@ -129,12 +131,13 @@ def convert_roi_meter_pixel(roi):
         distance_m = roi_info["Distance_m"]
         distance_px = roi_info["Distance_px"]
         convert_m_px = distance_px/distance_m
-        roi_px = roi * convert_m_px
+        roi_px = np.array(roi) * convert_m_px
 
         ## We suppose the camera used is the zed camera, with an image acquisition of 1280x720 pixels
         ## the center is (360,640)
-
-        slice_roi = [slice(int(360-roi_px[0]/2),int(360)+roi_px[0]/2),slice(int(640-roi_px[1]/2),int(640+roi_px[1]/2))]
+        slice_roi = [slice(int(center[0]-roi_px[0]/2),int(center[0]+roi_px[0]/2)),
+                     slice(int(center[1]-roi_px[1]/2),int(center[1]+roi_px[1]/2))]
+        print(slice_roi)
 
     return slice_roi
  
@@ -182,7 +185,7 @@ def close_up_zed(zed_cam):
     """
     zed_cam.close()
 
-def get_median_cloud(zed, point_cloud, medianFrames, roi_m):
+def get_median_cloud(zed, point_cloud, medianFrames, roi_m,center):
 
     """
     This function is giving an average value of X, Y and Z 
@@ -211,8 +214,8 @@ def get_median_cloud(zed, point_cloud, medianFrames, roi_m):
     stack_of_images[not np.isfinite] = np.nan
 
     # Convert the ROI value from meters to pixels and into a slice object.
-    roi_px = convert_roi_meter_pixel(roi_m)
-
+    roi_px = convert_roi_meter_pixel(roi_m,center)
+    # roi_px = ROI
     # Crop the point cloud following the ROI
     stack_of_images = stack_of_images[:, roi_px[0], roi_px[1], :]
 
@@ -353,10 +356,37 @@ def get_mesh_scene(n_target_downasample):
     zed, point_cloud = set_up_zed()
 
     # Average point cloud from frames
-    np_median_pcd = get_median_cloud(zed,point_cloud,NUMBER_OF_AVERAGE_FRAMES, ROI)
+    np_median_pcd = get_median_cloud(zed,point_cloud,NUMBER_OF_AVERAGE_FRAMES, ROI,CENTER)
+
+    #DEBUG
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(np_median_pcd)
+    o3d.visualization.draw_geometries([pcd])
+    #DEBUG
 
     # From point cloud to pymeshlab mesh set + downsapling
     o3d_m = np_pcd2o3d_mesh(np_median_pcd, n_target_downasample=n_target_downasample)
+    
+    # # minimum of pcd in y,y,z
+    # points = np.asarray(pcd.points)
+    # x_min = np.min(points[:,0])
+    # y_min = np.min(points[:,1])
+    # z_min = np.min(points[:,2])
+    # # maximum of pcd in x,y,z
+    # x_max = np.max(points[:,0])
+    # y_max = np.max(points[:,1])
+    # z_max = np.max(points[:,2])
+
+    # # bounding box
+    # min_bound = np.array([[x_min],[y_min],[z_min]],dtype=np.float64)
+    # max_bound = np.array([[x_max],[y_max],[z_max]],dtype=np.float64)
+
+    # # Crop the mesh to fit the ROI
+    # o3d_m = o3d.geometry.crop_triangle_mesh(o3d_m, min_bound, max_bound)
+
+    bbox = pcd.get_axis_aligned_bounding_box()
+    o3d_m = o3d_m.crop(bbox)
+
 
     # Close the camera
     close_up_zed(zed)
@@ -373,7 +403,7 @@ def get_pcd_scene(n_target_downsample, zed, point_cloud):
     """
 
     # Capture the average point cloud from frames
-    np_median_pcd = get_median_cloud(zed,point_cloud,NUMBER_OF_AVERAGE_FRAMES, ROI)
+    np_median_pcd = get_median_cloud(zed,point_cloud,NUMBER_OF_AVERAGE_FRAMES, ROI, CENTER)
 
     # Convert numpy to o3d cloud
     pcd = o3d.geometry.PointCloud()

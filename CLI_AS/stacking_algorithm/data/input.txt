@@ -3,7 +3,7 @@
 #1foundation file name
 ../output/s4/foundation.ply
 #2weightPyramid
-1
+0
 #3weightHeight
 1
 #4weightFPFH
@@ -17,13 +17,13 @@
 #8weightVoidY
 0
 #9xMin
--0.25
+-0.3
 #10xMax
-0.25
+0.3
 #11yMin
--0.25
+-0.5
 #12yMax
-0.25
+0.5
 #13zMin
 -2.1
 #14zMax

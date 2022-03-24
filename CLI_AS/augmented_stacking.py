@@ -75,7 +75,9 @@ def main():
             low_res_mesh = low_res_mesh.simplify_quadric_decimation(target_number_of_triangles=_faces_target_low_res_mesh)
             new_faces_low_res_mesh = len(np.asarray(low_res_mesh.triangles))
             terminal.custom_print(f" Number of vertices of the decimated mesh: {new_faces_low_res_mesh}")
-            visualizer.viualize_mesh_normal(low_res_mesh, 'Low-res mesh')
+        
+        # Visual inspection of downloaded mesh
+        visualizer.viualize_mesh_normal(low_res_mesh, 'Low-res mesh')
 
         # Write out the mesh (for algorithm to read)
         o3d.io.write_triangle_mesh(name_low_res_mesh, low_res_mesh)
@@ -122,13 +124,14 @@ def main():
         # [4] Load the high-res mesh + apply 4x4 transformation
         #-----------------------------------------------------------------------
 
-        # Download the HIGH-RES mesh file and open it
-        name_highres_mesh, high_res_mesh = dataset_IO.download_github_raw_file(is_raw_mesh=False)
+        # # Download the HIGH-RES mesh file and open it
+        # name_highres_mesh, high_res_mesh = dataset_IO.download_github_raw_file(is_raw_mesh=False)
 
-        # Apply transformation to mesh
-        high_res_mesh.transform(pose_matrix)
+        # # Apply transformation to mesh
+        # high_res_mesh.transform(pose_matrix)
 
-
+        # Merge transformed stone and landscape mesh
+        merged_landscape = low_res_mesh + landscape_mesh
 
         
         # First open the camera and close at the end
@@ -136,11 +139,11 @@ def main():
 
         # TEST: prepare visualizer
         pcd = camera_capture.get_pcd_scene(2000, zed, point_cloud)
-        deviation_pc = distance_map.compute(mesh=high_res_mesh, pc=pcd)
+        deviation_pc = distance_map.compute(mesh=merged_landscape, pc=pcd)
         vis = o3d.visualization.Visualizer()
         vis.create_window()
         vis.add_geometry(deviation_pc)
-        vis.add_geometry(high_res_mesh)
+        vis.add_geometry(merged_landscape)
 
         # MIAN ADJUSTING LOOP
         # Now adjust the position untill it's in the good spot
@@ -154,7 +157,7 @@ def main():
             pcd = camera_capture.get_pcd_scene(2000, zed, point_cloud)
 
             # Calculate the deviation of the rock from the cloud
-            pcd_temp = distance_map.compute(mesh=high_res_mesh, pc=pcd)
+            pcd_temp = distance_map.compute(mesh=merged_landscape, pc=pcd)
             deviation_pc.points = pcd_temp.points
             deviation_pc.colors = pcd_temp.colors
 
@@ -163,8 +166,8 @@ def main():
             vis.update_renderer()
 
             # TODO: implement non-block visualization open3d
-            # high_res_mesh.compute_vertex_normals() # // DEBUG
-            # visualizer.viualize_wall([deviation_pc, high_res_mesh], 'wall view')
+            # merged_landscape.compute_vertex_normals() # // DEBUG
+            # visualizer.viualize_wall([deviation_pc, merged_landscape], 'wall view')
         
         # Destroy non-blocking visualizator
         vis.destroy_window()
