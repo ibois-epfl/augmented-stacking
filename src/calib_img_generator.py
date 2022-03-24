@@ -17,6 +17,7 @@ import argparse
 from datetime import date
 from pathlib import Path
 
+
 def draw_grid(nb_lines_X=3,nb_lines_Y=3,line_width=4):
     X =[]
     Y =[]
