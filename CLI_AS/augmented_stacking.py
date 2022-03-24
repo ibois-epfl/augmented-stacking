@@ -88,7 +88,6 @@ def main():
         # Capture meshed scene
         landscape_mesh = camera_capture.get_mesh_scene(_vertices_target_low_res_scene)
         visualizer.viualize_wall([landscape_mesh], 'wall view')
-        breakpoint()
 
         # Save meshed scene
         print("Writing out the captured mesh from 3d camera")
