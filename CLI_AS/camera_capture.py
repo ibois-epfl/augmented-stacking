@@ -75,37 +75,64 @@ def pcd_to_2D_image(pcd):
         _calib_information_path = _root_file + "/calib/utils/calibration_info.yaml"
     # Test if the file exist as it is supposed when runing calib function entirely
     if not os.path.exists(_calib_information_path):
-        terminal.error_print(f"No Calibration Data has been found in: {_calib_information_path}")
+        terminal.error_print(
+            f"No Calibration Data has been found in: {_calib_information_path}"
+        )
         exit()
     else:
-        ## Load the transformation matrix 
+        ## Load the transformation matrix
         # Opening YAML file
         with open(_calib_information_path) as yaml_file:
-            data = yaml.load(yaml_file,Loader=yaml.FullLoader)
-        # extracting information    
+            data = yaml.load(yaml_file, Loader=yaml.FullLoader)
+        # extracting information
         matrix_data = data["3D_2D_Matrix"]
-        s, f, u0, v0, dX, dY, dZ, m_x, m_y, gamma, r0, r1, r2 = matrix_data["s"],matrix_data["f"],matrix_data["u0"],matrix_data["v0"],matrix_data["dX"],matrix_data["dY"],matrix_data["dZ"],matrix_data["m_x"],matrix_data["m_y"],matrix_data["gamma"],matrix_data["r0"], matrix_data["r1"],matrix_data["r2"]
+        s, f, u0, v0, dX, dY, dZ, m_x, m_y, gamma, r0, r1, r2 = (
+            matrix_data["s"],
+            matrix_data["f"],
+            matrix_data["u0"],
+            matrix_data["v0"],
+            matrix_data["dX"],
+            matrix_data["dY"],
+            matrix_data["dZ"],
+            matrix_data["m_x"],
+            matrix_data["m_y"],
+            matrix_data["gamma"],
+            matrix_data["r0"],
+            matrix_data["r1"],
+            matrix_data["r2"],
+        )
         # Building up the rotation and translation matrix size (4x4)
         rotation_translation = np.zeros((4, 4))
         rotation = rotationMatrix(np.array([r0, r1, r2]))
         rotation_translation[0:3, 0:3] = rotation
         rotation_translation[:, -1] = np.array([dX, dY, dZ, 1])
         # Building up the transformation matrix size (3x4)
-        transformation_matrix = np.dot(np.array([[f*m_x, gamma, u0, 0], [0, f*m_y, v0, 0], [0, 0, 1, 0]]),rotation_translation)/s
+        transformation_matrix = (
+            np.dot(
+                np.array([[f * m_x, gamma, u0, 0], [0, f * m_y, v0, 0], [0, 0, 1, 0]]),
+                rotation_translation,
+            )
+            / s
+        )
         # Going through the points of the point cloud
         npy_pcd = np.asarray(pcd.points)
         npy_pcd_color = np.asarray(pcd.colors)
-        img = np.zeros((1080,1920,3))
-        for i,point in enumerate(npy_pcd):
+        img = np.zeros((1080, 1920, 3))
+        for i, point in enumerate(npy_pcd):
             # Converting the 3D Point cloud into a 2D plane of size (3xn) corresponding to (x,y,1)
-            px_of_projection = np.dot(transformation_matrix,np.array([[point[0]],[point[1]],[point[2]],[1]]))
+            px_of_projection = np.dot(
+                transformation_matrix,
+                np.array([[point[0]], [point[1]], [point[2]], [1]]),
+            )
             # Geting the color from pcd for each point
-            color = npy_pcd_color[i,:] 
-            if px_of_projection[0]<1080 and px_of_projection[1]<1920:
+            color = npy_pcd_color[i, :]
+            if px_of_projection[0] < 1080 and px_of_projection[1] < 1920:
                 # coloring the image TODO: test if the new pixel is in the img range
                 print(color)
-                img[int(px_of_projection[0]),int(px_of_projection[1]),:] = np.uint8(color*254)
-                print(np.uint8(color*254))
+                img[int(px_of_projection[0]), int(px_of_projection[1]), :] = np.uint8(
+                    color * 254
+                )
+                print(np.uint8(color * 254))
                 print("colored the pixel")
         print("out of loop")
         return img
