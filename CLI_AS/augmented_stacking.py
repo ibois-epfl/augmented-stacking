@@ -12,6 +12,11 @@ import os
 import sys
 import subprocess
 
+# TODO: the package opencv is not found in virtual env, solve
+# the issue without importing the sys.path here. With this it works
+sys.path.append('/usr/local/lib/python3.8/dist-packages')
+import cv2
+
 import dataset_IO
 import stacking_algorithm
 import distance_map
@@ -22,7 +27,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import open3d as o3d
 import colorama as cr
-from cv2 import *
 
 
 _name_landscape = './landscape.ply'
