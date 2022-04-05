@@ -330,7 +330,6 @@ def draw_grid(save_path_img,save_path_2D_pts,nb_lines_X=3,nb_lines_Y=3,line_widt
             Pts[(i-1)*(nb_lines_X)+(j-1),1]=i*Y_space+line_width//2
     for i in range(1,nb_lines_X+1):
         Img[:,i*X_space-line_width//2:i*X_space+line_width//2,1]=255
-    print(Pts)
     np.save(save_path_2D_pts,Pts)
     plt.imsave(save_path_img,Img)
     print(f"A Calibration image of size: {nb_lines_X}x{nb_lines_Y} was generated.\nIt is saved in: {save_path_img}")
