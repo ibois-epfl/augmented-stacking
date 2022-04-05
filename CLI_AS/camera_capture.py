@@ -3,11 +3,6 @@ The module opens the camera capture a point cloud and:
 - mesh the point cloud and give back a water-tight mesh
 """
 
-import pymeshlab # keep on top as first import (why?)
-import pyzed.sl as sl
-import numpy as np
-import open3d as o3d
-import tifffile
 import sys
 if sys.version_info[0] == 2:  # the tkinter library changed it's name from Python 2 to 3.
     import Tkinter
@@ -17,6 +12,13 @@ else:
 from PIL import Image
 from PIL import ImageTk
 
+import pymeshlab # keep on top as first import (why?)
+import pyzed.sl as sl
+import numpy as np
+import open3d as o3d
+import tifffile
+
+import threading
 ## Imports for function: convert_roit_meter_pixel
 import os
 import yaml 
@@ -34,7 +36,7 @@ CENTER = [320,750]
 # CENTER = [360,680]
 
 
-NUMBER_OF_AVERAGE_FRAMES = 10
+NUMBER_OF_AVERAGE_FRAMES = 1
 
 IS_DOWNSAMPLED = True
 
@@ -137,8 +139,8 @@ def pcd_to_2D_image(pcd):
         Pixls.append(pixels)
         # print(pixels)
         if pixels[1]<1080 and pixels[0]<1920 and pixels[0]>0 and pixels[1]>0:
-            img[int(pixels[1]),
-                    int(pixels[0]),:] = np.uint8(npy_pcd_color[i,:]*255)
+            img[int(pixels[1])-1:int(pixels[1])+1,
+                    int(pixels[0])-1:int(pixels[0])+1,:] = np.uint8(npy_pcd_color[i,:]*255)
     Pixls = np.array(Pixls)
 
     return img
@@ -427,8 +429,10 @@ def get_pcd_scene(n_target_downsample, zed, point_cloud):
     return pcd
 
 class Live_stream(object):
+    
     def __init__(self,zed,point_cloud,merged_landscape):
         self.tk = tkinter.Tk()
+
         self.w, self.h = self.tk.winfo_screenwidth(), self.tk.winfo_screenheight()
         self.tk.geometry("%dx%d+0+0" % (self.w, self.h))
         self.state = False
@@ -437,26 +441,32 @@ class Live_stream(object):
         self.tk.bind("<F11>", self._toggle_fullscreen)
         self.lmain = tkinter.Label(self.tk)
         self.lmain.pack()
+
         self.zed = zed
         self.point_cloud = point_cloud
         self.merged_landscape = merged_landscape
 
     def _end_stream(self,event=None):
         # self.tk.quit()
-        self.tk.destroy().pack()
+        self.tk.quit()
+        self.tk.destroy()
 
     def _toggle_fullscreen(self, event=None):
-            self.state = not self.state  # Just toggling the boolean
-            self.tk.attributes("-fullscreen", self.state)
-            return "break"
+        self.state = not self.state  # Just toggling the boolean
+        self.tk.attributes("-fullscreen", self.state)
+        return "break"
+
+    def run(self):
+        self._show_frame()
+        self.tk.mainloop()
 
     def _show_frame(self):
         self.frame = self._get_live_stream()
         self.imgtk = ImageTk.PhotoImage(image=Image.fromarray(self.frame, mode="RGB"))
-        self.lmain.imgtk = self.imgtk
         self.lmain.configure(image=self.imgtk)
         self.lmain.after(10, self._show_frame)
-    
+        
+        
     def _get_live_stream(self):
         # Get point cloud from camera
         pcd = get_pcd_scene(2000, self.zed, self.point_cloud)  #TODO: check param 2000
@@ -469,7 +479,5 @@ class Live_stream(object):
 
         return img
     
-    def run(self):
-        terminal.custom_print(f"When the stone is placed correctly, Press <Esc>")
-        self._show_frame()
-        self.tk.mainloop()
+
+        
