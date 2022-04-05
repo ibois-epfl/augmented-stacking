@@ -97,8 +97,8 @@ def main(OLD_ACQUISITION,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_P
     print("\nThe number of calibration points have to be at least 8, otherwise the calibration wont be precise enough.")
     print("The more points you have the better the calibration. I suggest you to take 3*3 or 4*3 points.")
     print("For more precision: use the distortion option of the projector and make the corners angle right.")
-    _nb_lines_Y = int(terminal.user_input("Number of points in X direction:"))
-    _nb_lines_X = int(terminal.user_input("Number of points in Y direction:"))
+    _nb_lines_X = int(terminal.user_input("Number of points in X direction:"))
+    _nb_lines_Y = int(terminal.user_input("Number of points in Y direction:"))
     NUMBER_OF_CALIB_PTS = _nb_lines_X * _nb_lines_Y
     if NUMBER_OF_CALIB_PTS > 7:
         print(f"This makes a total of {NUMBER_OF_CALIB_PTS} points.")
@@ -147,18 +147,18 @@ def main(OLD_ACQUISITION,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_P
     ###########################################################################################################################################
 
     print("\n##########################################\n## 1. Calibration Grid Generation \n##########################################")
+    if not OLD_ACQUISITION:
+        draw_grid(_calib_img_path,_calib_2D_pixel_path,nb_lines_X=_nb_lines_X,nb_lines_Y=_nb_lines_Y)
 
-    draw_grid(_calib_img_path,_calib_2D_pixel_path,nb_lines_X=_nb_lines_X,nb_lines_Y=_nb_lines_Y)
+        # displaying the grid
+        print("\n##########################################\n## 2. Calibration Grid Display \n##########################################")
+        print("\n A tkinter window will appear, place it on the projectors display.\n\n - <F11>:  Toogle Full screen mode.\n - < q >: Close the window.\n")
+        pause()
+        threaded_app = display_calibration(_calib_img_path)
 
-    # displaying the grid
-    print("\n##########################################\n## 2. Calibration Grid Display \n##########################################")
-    print("\n A tkinter window will appear, place it on the projectors display.\n\n - <F11>:  Toogle Full screen mode.\n - < q >: Close the window.\n")
-    pause()
-    threaded_app = display_calibration(_calib_img_path)
-
-    confirmation = None
-    while not confirmation in ["y"]:
-        confirmation = terminal.user_input("\nConfirmation:  Grid is on place. \n>> Type <y> and Press ENTER to Continue ...")
+        confirmation = None
+        while not confirmation in ["y"]:
+            confirmation = terminal.user_input("\nConfirmation:  Grid is on place. \n>> Type <y> and Press ENTER to Continue ...")
 
     ###########################################################################################################################################
     ### 2.1 Setting ZED params if New Acquisition is requested
@@ -303,7 +303,8 @@ def main(OLD_ACQUISITION,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_P
             pause()
     except Exception as e:
         terminal.error_print(e)
-        threaded_app.error_down()
+        if not OLD_ACQUISITION:
+            threaded_app.error_down()
         exit()
 
     ###########################################################################################################################################
@@ -322,7 +323,8 @@ def main(OLD_ACQUISITION,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_P
         print(f"\n{Distance_m} m in the 3D point cloud corresponds to {Distance_px} px on the camera image.")
     except Exception as e:
         terminal.error_print(e)
-        threaded_app.error_down()
+        if not OLD_ACQUISITION:
+            threaded_app.error_down()
         exit()
 
     ###########################################################################################################################################
@@ -345,7 +347,8 @@ def main(OLD_ACQUISITION,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_P
         threaded_app.stop()
         exit()
     print("\n\n End of Calibration \n\n")
-    threaded_app.error_down()
+    if not OLD_ACQUISITION:
+        threaded_app.error_down()
 
 
 

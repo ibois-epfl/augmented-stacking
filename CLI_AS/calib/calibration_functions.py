@@ -145,11 +145,15 @@ def calculate_3D_2D_matrix(PROJECTOR_PIXEL_PTS_PATH,CALIB_PTS_XYZ):
     output = scipy.optimize.minimize(optimise_me,
                                      x0,
                                      args=(calib_points_XYZ,proj_xy),
-                                     method='Powell',
+                                     method='L-BFGS-B',
                                      options={'disp': True,
-                                              'xtol': 0.00000001,
-                                              'ftol': 0.0000001,
-                                              'maxiter': 1000})
+                                              'gtol': 0.000000000000001,
+                                              'ftol': 0.000000000000001,
+                                              'maxiter': 1000000,
+                                              'maxcor':10000,
+                                              'eps':0.00000000005,
+                                              'maxfun':10000000,
+                                              'maxls':50000})
 
 
     # Results
@@ -199,7 +203,6 @@ def get_3D_2D_matrix(YAML_PATH):
     # Opening YAML file
     with open(YAML_PATH) as yaml_file:
         data = yaml.load(yaml_file,Loader=yaml.FullLoader)
-    print(data)
     Matrix = data["3D_2D_Matrix"]
     s, f, u0, v0, dX, dY, dZ, m_x, m_y, gamma, r0, r1, r2 = Matrix["s"],Matrix["f"],Matrix["u0"],Matrix["v0"],Matrix["dX"],Matrix["dY"],Matrix["dZ"],Matrix["m_x"],Matrix["m_y"],Matrix["gamma"],Matrix["r0"], Matrix["r1"],Matrix["r2"]
     Rt = np.zeros((4, 4))
@@ -289,8 +292,6 @@ def display_calibration(CALIB_IMG_PATH):
     app = App()
     return app
 
-
-
 def draw_grid(save_path_img,save_path_2D_pts,nb_lines_X=3,nb_lines_Y=3,line_width=4):
 
     """
@@ -315,26 +316,25 @@ def draw_grid(save_path_img,save_path_2D_pts,nb_lines_X=3,nb_lines_Y=3,line_widt
     Img = np.zeros(shape,dtype=np.uint8)
 
     # Calculate space between lines
-    X_space = (shape[0] - nb_lines_X*line_width)//(nb_lines_X+1)
-    Y_space = (shape[1] - nb_lines_Y*line_width)//(nb_lines_Y+1)
+    X_space = (shape[1] - nb_lines_X*line_width)//(nb_lines_X+1)
+    Y_space = (shape[0] - nb_lines_Y*line_width)//(nb_lines_Y+1)
 
-    #Pts coordinate saving
+    #Pts coordinate saving 
     Pts=np.zeros((nb_lines_Y*nb_lines_X,2))
 
     # Draw the lines
-    for i in range(1,nb_lines_X+1):
-        Img[i*X_space:i*X_space+line_width+1,:,1]=255
-        for j in range (1,nb_lines_Y+1):
-            Pts[(i-1)*(nb_lines_Y)+(j-1),1]=i*X_space+line_width//2
-            Pts[(i-1)*(nb_lines_Y)+(j-1),0]=j*Y_space+line_width//2
     for i in range(1,nb_lines_Y+1):
-        Img[:,i*Y_space:i*Y_space+line_width+1,1]=255
+        Img[i*Y_space-line_width//2:i*Y_space+line_width//2,:,1]=255
+        for j in range (1,nb_lines_X+1):
+            Pts[(i-1)*(nb_lines_X)+(j-1),0]=j*X_space+line_width//2
+            Pts[(i-1)*(nb_lines_X)+(j-1),1]=i*Y_space+line_width//2
+    for i in range(1,nb_lines_X+1):
+        Img[:,i*X_space-line_width//2:i*X_space+line_width//2,1]=255
+    print(Pts)
     np.save(save_path_2D_pts,Pts)
     plt.imsave(save_path_img,Img)
     print(f"A Calibration image of size: {nb_lines_X}x{nb_lines_Y} was generated.\nIt is saved in: {save_path_img}")
    
-
-
 def get_image(zed, point_cloud, medianFrames=1, components=[2]):
 
     """
