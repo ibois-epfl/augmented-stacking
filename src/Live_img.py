@@ -9,12 +9,11 @@ else:
 from PIL import Image
 from PIL import ImageTk
 import Calibration_functions
-import cv2
 import pyzed.sl as sl
 import tifffile
 
 P = np.load("3D_2D/Distortion_correction_-30_3D_2D_matrix.npy")
-
+print(P)
 def Draw_ROI(imXYZ,img):
     
     # Most of the time the ROI is outside the preojectors range, so we will not be able to draw the roi correctly...
@@ -115,7 +114,6 @@ def live_stream():
     for X, Y, Z in pointsXYZ:
         # convert XYZ to pixels
         pixels = np.dot(P, np.array([[X], [Y], [Z],[1]]))
-        print(pixels)
         if pixels[0]<1080 and pixels[1]<1920:
             numpyArrayIm[int(pixels[0]),
                     int(pixels[1]),1] = 255
@@ -140,7 +138,7 @@ def main():
         imgtk = ImageTk.PhotoImage(image=Image.fromarray(frame, mode="RGB"))
         lmain.imgtk = imgtk
         lmain.configure(image=imgtk)
-        lmain.after(10, show_frame)
+        lmain.after(5, show_frame)
     show_frame()
     root.mainloop()
 
