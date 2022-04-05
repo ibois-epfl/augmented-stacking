@@ -176,10 +176,10 @@ In order to avoid transformation/calibration processes between the captured coor
 
 The image is beeing created and displayed as you can see here:
 <p>
-    <img src="./img/live_img_1.jpg" width="500">
-    <img src="./img/live_img_2.jpg" width="500">
+    <img src="./img/live_img_1.jpg" width="400">
+    <img src="./img/live_img_2.jpg" width="400">
 </p>
-<img src="./img/live_img_3.jpg" width="650">
+<img src="./img/live_img_3.jpg" width="400">
 We still need to fix a BUG which is occuring when using both the O3d visualizer and the tkinter window for live visualisation.
 
 ```bash
