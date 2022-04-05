@@ -6,10 +6,7 @@ from util import visualizer
 answer = None
 while not answer == 'Y':
     merged_landscape = camera_capture.get_mesh_scene(2000)
-    zed, point_cloud = camera_capture.set_up_zed()
-
-    Live = camera_capture.Live_stream(zed,point_cloud,merged_landscape)
-    Live.run()
-
+    vis = visualizer.viualize_wall_class([merged_landscape],"DEBUG")
+    vis.destroy()
+    del vis
     answer = terminal.user_input("Is the stone placed correctly ? (Y/n)")
-    zed.close()
