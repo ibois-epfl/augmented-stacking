@@ -172,3 +172,25 @@ In order to avoid transformation/calibration processes between the captured coor
 - Andrea: working on the 3d-2d-3d pipeline for indication / point cloud meshing solutions
 - Qianqing: working point cloud meshing solutions + integration of meshed landscape to stacking algorithm
 
+# 2022.04.05 - Finalisation of Live Implementing
+
+The image is beeing created and displayed as you can see here:
+<p>
+    <img src="./img/live_img_1.png" width="500">
+    <img src="./img/live_img_1.png" width="500">
+</p>
+<img src="./img/live_img_3.png" width="650">
+We still need to fix a BUG which is occuring when using both the O3d visualizer and the tkinter window for live visualisation.
+
+```bash
+X Error of failed request:  BadWindow (invalid Window parameter)
+  Major opcode of failed request:  15 (X_QueryTree)
+  Resource id in failed request:  0x620000f
+  Serial number of failed request:  1858
+  Current serial number in output stream:  1858
+```
+
+TODO:
+- Fixing the bug or changing the Live stream procedure.
+- Cleaning up the code
+
