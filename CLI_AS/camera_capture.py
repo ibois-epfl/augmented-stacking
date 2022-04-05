@@ -139,8 +139,8 @@ def pcd_to_2D_image(pcd):
         Pixls.append(pixels)
         # print(pixels)
         if pixels[1]<1080 and pixels[0]<1920 and pixels[0]>0 and pixels[1]>0:
-            img[int(pixels[1])-1:int(pixels[1])+1,
-                    int(pixels[0])-1:int(pixels[0])+1,:] = np.uint8(npy_pcd_color[i,:]*255)
+            img[int(pixels[1])-2:int(pixels[1])+2,
+                    int(pixels[0])-2:int(pixels[0])+2,:] = np.uint8(npy_pcd_color[i,:]*255)
     Pixls = np.array(Pixls)
 
     return img
