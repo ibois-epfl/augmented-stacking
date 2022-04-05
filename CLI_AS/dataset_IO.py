@@ -25,7 +25,6 @@ def download_github_raw_file(is_raw_mesh):
 
     return: string of the namefile, mesh
     """
-
     # GitHub Raw version of dataset addresses
     URL_LOW_RES_DIR = 'https://raw.githubusercontent.com/ibois-epfl/augmented-stacking-dataset/main/stones/low_res/'
     URL_HIGH_RES_DIR = 'https://raw.githubusercontent.com/ibois-epfl/augmented-stacking-dataset/main/stones/high_res/'
