@@ -9,7 +9,13 @@ import numpy as np
 import open3d as o3d
 import tifffile
 import sys
-import tifffile
+if sys.version_info[0] == 2:  # the tkinter library changed it's name from Python 2 to 3.
+    import Tkinter
+    tkinter = Tkinter #I decided to use a library reference to avoid potential naming conflicts with people's programs.
+else:
+    import tkinter
+from PIL import Image
+from PIL import ImageTk
 
 ## Imports for function: convert_roit_meter_pixel
 import os
@@ -17,13 +23,16 @@ import yaml
 from util import terminal
 
 from util import visualizer
-
-
+import distance_map
+sys.path.append('/usr/local/lib/python3.8/dist-packages')
+import cv2
 
 #TODO: set wall scanning 1.5 x 0.7 m dimension area
 ROI = [0.7,1.5] 
 
 CENTER = [320,750]
+# CENTER = [360,680]
+
 
 NUMBER_OF_AVERAGE_FRAMES = 10
 
@@ -63,11 +72,8 @@ def rotationMatrix(r):
         R = np.eye(3)
     return R
 
-def pcd_to_2D_image(pcd):
-    """
-    This function is converting a open3D point cloud into a 2D projection for the projector.
-    It is using the results of the calibration function.
-    """
+def load_transformation_matrix():
+
     _root_file = os.path.dirname(__file__)
     if _root_file == "":
         _calib_information_path = _root_file + "calib/utils/calibration_info.yaml"
@@ -101,41 +107,41 @@ def pcd_to_2D_image(pcd):
             matrix_data["r1"],
             matrix_data["r2"],
         )
-        # Building up the rotation and translation matrix size (4x4)
-        rotation_translation = np.zeros((4, 4))
-        rotation = rotationMatrix(np.array([r0, r1, r2]))
-        rotation_translation[0:3, 0:3] = rotation
-        rotation_translation[:, -1] = np.array([dX, dY, dZ, 1])
-        # Building up the transformation matrix size (3x4)
-        transformation_matrix = (
-            np.dot(
-                np.array([[f * m_x, gamma, u0, 0], [0, f * m_y, v0, 0], [0, 0, 1, 0]]),
-                rotation_translation,
-            )
-            / s
-        )
-        # Going through the points of the point cloud
-        npy_pcd = np.asarray(pcd.points)
-        npy_pcd_color = np.asarray(pcd.colors)
-        img = np.zeros((1080, 1920, 3))
-        for i, point in enumerate(npy_pcd):
-            # Converting the 3D Point cloud into a 2D plane of size (3xn) corresponding to (x,y,1)
-            px_of_projection = np.dot(
-                transformation_matrix,
-                np.array([[point[0]], [point[1]], [point[2]], [1]]),
-            )
-            # Geting the color from pcd for each point
-            color = npy_pcd_color[i, :]
-            if px_of_projection[0] < 1080 and px_of_projection[1] < 1920:
-                # coloring the image TODO: test if the new pixel is in the img range
-                print(color)
-                img[int(px_of_projection[0]), int(px_of_projection[1]), :] = np.uint8(
-                    color * 254
-                )
-                print(np.uint8(color * 254))
-                print("colored the pixel")
-        print("out of loop")
-        return img
+        Rt = np.zeros((4, 4))
+        R = rotationMatrix(np.array([r0, r1, r2]))
+        Rt[0:3, 0:3] = R
+        Rt[:, -1] = np.array([dX, dY, dZ, 1])
+        K = np.array([[f*m_x, gamma, u0, 0], [0, f*m_y, v0, 0], [0, 0, 1, 0]])
+        transformation_matrix = np.dot(K,Rt)/s
+
+        return transformation_matrix
+
+def pcd_to_2D_image(pcd):
+    """
+    This function is converting a open3D point cloud into a 2D projection for the projector.
+    It is using the results of the calibration function.
+    """
+    P = load_transformation_matrix()
+    # Going through the points of the point cloud
+    npy_pcd = np.asarray(pcd.points)
+    npy_pcd_color = np.asarray(pcd.colors)
+    img = np.zeros((1080, 1920, 3),dtype=np.uint8)
+
+    pointsXYZ = npy_pcd[::1]
+    Pixls = []
+    for i, pt in enumerate(pointsXYZ):
+        X,Y,Z = pt
+        # print(X,Y,Z)
+        # convert XYZ to pixels
+        pixels = np.dot(P, np.array([[X], [Y], [Z],[1]]))
+        Pixls.append(pixels)
+        # print(pixels)
+        if pixels[1]<1080 and pixels[0]<1920 and pixels[0]>0 and pixels[1]>0:
+            img[int(pixels[1]),
+                    int(pixels[0]),:] = np.uint8(npy_pcd_color[i,:]*255)
+    Pixls = np.array(Pixls)
+
+    return img
 
 def convert_roi_meter_pixel(roi,center):
     """
@@ -373,7 +379,6 @@ def np_pcd2o3d_mesh(np_pcd, n_target_downasample=None):
 
     return o3d_m
 
-
 def get_mesh_scene(n_target_downasample):
     """
     Main method to get point cloud and mesh
@@ -420,3 +425,51 @@ def get_pcd_scene(n_target_downsample, zed, point_cloud):
     pcd.points = o3d.utility.Vector3dVector(np_median_pcd)
 
     return pcd
+
+class Live_stream(object):
+    def __init__(self,zed,point_cloud,merged_landscape):
+        self.tk = tkinter.Tk()
+        self.w, self.h = self.tk.winfo_screenwidth(), self.tk.winfo_screenheight()
+        self.tk.geometry("%dx%d+0+0" % (self.w, self.h))
+        self.state = False
+        self.tk.attributes('-zoomed', True)  # This just maximizes it so we can see the window. It's nothing to do with fullscreen.
+        self.tk.bind('<Escape>', self._end_stream)
+        self.tk.bind("<F11>", self._toggle_fullscreen)
+        self.lmain = tkinter.Label(self.tk)
+        self.lmain.pack()
+        self.zed = zed
+        self.point_cloud = point_cloud
+        self.merged_landscape = merged_landscape
+
+    def _end_stream(self,event=None):
+        # self.tk.quit()
+        self.tk.destroy().pack()
+
+    def _toggle_fullscreen(self, event=None):
+            self.state = not self.state  # Just toggling the boolean
+            self.tk.attributes("-fullscreen", self.state)
+            return "break"
+
+    def _show_frame(self):
+        self.frame = self._get_live_stream()
+        self.imgtk = ImageTk.PhotoImage(image=Image.fromarray(self.frame, mode="RGB"))
+        self.lmain.imgtk = self.imgtk
+        self.lmain.configure(image=self.imgtk)
+        self.lmain.after(10, self._show_frame)
+    
+    def _get_live_stream(self):
+        # Get point cloud from camera
+        pcd = get_pcd_scene(2000, self.zed, self.point_cloud)  #TODO: check param 2000
+
+        # Calculate the deviation of the rock from the cloud
+        pcd_temp = distance_map.compute(mesh=self.merged_landscape, pc=pcd)
+        
+        # Convert 3D>2D >> image
+        img = pcd_to_2D_image(pcd_temp)
+
+        return img
+    
+    def run(self):
+        terminal.custom_print(f"When the stone is placed correctly, Press <Esc>")
+        self._show_frame()
+        self.tk.mainloop()

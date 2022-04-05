@@ -29,6 +29,7 @@ import open3d as o3d
 import colorama as cr
 
 
+
 _name_landscape = './landscape.ply'
 
 # Set a target of mesh faces for the low-res mesh
@@ -142,61 +143,66 @@ def main():
         # First open the camera and close at the end
         zed, point_cloud = camera_capture.set_up_zed()
 
-        # TEST: prepare visualizer
-        pcd = camera_capture.get_pcd_scene(2000, zed, point_cloud)
-        deviation_pc = distance_map.compute(mesh=merged_landscape, pc=pcd)
-        # TEST: try img
-        print(f"COlors diversity map has colors: {deviation_pc.has_colors()}")
-        img = camera_capture.pcd_to_2D_image(deviation_pc)
+        # # TEST: prepare visualizer
+        # pcd = camera_capture.get_pcd_scene(2000, zed, point_cloud)
+        # deviation_pc = distance_map.compute(mesh=merged_landscape, pc=pcd)       
+        # # TEST: try img
+        # print(f"COlors diversity map has colors: {deviation_pc.has_colors()}")
+        # img = camera_capture.pcd_to_2D_image(deviation_pc)
 
-        # TODO: save image an visualize it
-        print(img.shape)
-        print(type(img))
-        print(img)
-        cv2.imwrite("Colored_2D_image.jpg",img)
-        exit()
+        # # TODO: save image an visualize it
+        # print(img.shape)
+        # print(type(img))
+        # # print(img)
+        # # cv2.imwrite("Colored_2D_image.jpg",img)
+        # # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        # cv2.namedWindow("window")
+        # cv2.imshow("window", img)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
-        vis = o3d.visualization.Visualizer()
+        # exit()  # DEBUG
 
-        # Put background black to avoid camera mis-capture
+        # vis = o3d.visualization.Visualizer()
 
-        vis.create_window()
-        vis.add_geometry(deviation_pc)
+        # # Put background black to avoid camera mis-capture
+
+        # vis.create_window()
+        # vis.add_geometry(deviation_pc)
         # vis.add_geometry(merged_landscape)  # do not visualize mesh TODO: add transparency
 
         # MIAN ADJUSTING LOOP
         # Now adjust the position untill it's in the good spot
-        while(True):
 
-            # -----------------------------------------------------------------------
-            # [5] Calculate deviation from captured point cloud
-            # -----------------------------------------------------------------------
 
-            # Get point cloud from camera
-            pcd = camera_capture.get_pcd_scene(2000, zed, point_cloud)
+        Live = camera_capture.Live_stream(zed,point_cloud,merged_landscape)
+        Live.run()
 
+        # while(True):
+
+        #     # -----------------------------------------------------------------------
+        #     # [5] Calculate deviation from captured point cloud
+        #     # -----------------------------------------------------------------------
+
+        #     # Get point cloud from camera
+        #     pcd = camera_capture.get_pcd_scene(2000, zed, point_cloud)  #TODO: check param 2000
+
+        #     # Calculate the deviation of the rock from the cloud
+        #     pcd_temp = distance_map.compute(mesh=merged_landscape, pc=pcd)
             
+        #     # Convert 3D>2D >> image
+        #     img = camera_capture.pcd_to_2D_image(deviation_pc)
 
+        #     # vis.update_geometry(deviation_pc)
+        #     # vis.poll_events()
+        #     # vis.update_renderer()
 
-            # Calculate the deviation of the rock from the cloud
-            pcd_temp = distance_map.compute(mesh=merged_landscape, pc=pcd)
-            
-
-            
-            
-            deviation_pc.points = pcd_temp.points
-            deviation_pc.colors = pcd_temp.colors
-
-            vis.update_geometry(deviation_pc)
-            vis.poll_events()
-            vis.update_renderer()
-
-            # TODO: implement non-block visualization open3d
-            # merged_landscape.compute_vertex_normals() # // DEBUG
-            # visualizer.viualize_wall([deviation_pc, merged_landscape], 'wall view')
+        #     # TODO: implement non-block visualization open3d
+        #     # merged_landscape.compute_vertex_normals() # // DEBUG
+        #     # visualizer.viualize_wall([deviation_pc, merged_landscape], 'wall view')
         
-        # Destroy non-blocking visualizator
-        vis.destroy_window()
+        # # Destroy non-blocking visualizator
+        # vis.destroy_window()
 
         # Now that the loop is closed, close the camera
         zed.close()
