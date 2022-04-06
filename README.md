@@ -193,4 +193,5 @@ X Error of failed request:  BadWindow (invalid Window parameter)
 TODO:
 - Fixing the bug or changing the Live stream procedure.
 - Cleaning up the code
-
+- make pixel biggers for better readability
+- config file for augmented stacking algorithm
