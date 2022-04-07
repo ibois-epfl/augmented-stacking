@@ -195,3 +195,27 @@ TODO:
 - Cleaning up the code
 - make pixel biggers for better readability
 - config file for augmented stacking algorithm
+
+
+---
+# 2022.04.07 - Changing strategy on augmented instructions
+
+<p>
+    <img src="./img/stone_vid_ar_1.gif" width="400">
+    <img src="./img/stone_vid_ar_2.gif" width="400">
+</p>
+
+The calculation of the deviance map did not provide a data that could be turned into meaningful information to guide the operator to place the stone. 
+Here's are the main problems:
+- the projected map is hard to follow, especially with a projector in daylight. The distinction between different colors is hard.
+- the "occupancy map" by open3d library, as it was used, produced overlaped points since it took in consideration also of points underneath the mesh
+
+So we decided to reorganise the data calculated between the captured point cloud and the computed mesh from the stacking algorithm. Here's the algorithm that will be implemented:
+
+![dataflow_v2](./img/last_stand_stacking_algorithm.png)
+
+
+TODO LIST:
+- implementation of the described code and visualization
+- adjustments of config file for stacking algorithm
+
