@@ -5,9 +5,9 @@
 #2weightPyramid
 0
 #3weightHeight
-0
-#4weightFPFH
 1
+#4weightFPFH
+0
 #5weightInt
 0
 #6weightPre
@@ -21,9 +21,9 @@
 #10xMax
 0.3
 #11yMin
--0.5
+-0.1
 #12yMax
-0.5
+0.3
 #13zMin
 -2.1
 #14zMax
@@ -33,9 +33,9 @@
 #16angleMax
 3.14
 #17populationSize
-1000
+5000
 #18 numberIteration
-5
+10
 #19 gridSize
 0.01
 #20 stacknumber
@@ -50,3 +50,7 @@ no
 no
 #25 tempdir
 ../temp/
+#26 weightTri
+1
+#27 triangulation file
+placeTriangulation
