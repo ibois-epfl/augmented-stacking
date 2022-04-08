@@ -96,7 +96,7 @@ def main():
         # Capture meshed scene
         landscape_mesh = camera_capture.get_mesh_scene(
             _vertices_target_low_res_scene)
-        # visualizer.viualize_wall([landscape_mesh], 'wall view')
+        visualizer.viualize_wall([landscape_mesh], 'wall view')
 
 
         # Save meshed scene
@@ -123,7 +123,7 @@ def main():
 
         # Transform the low-res mesh for visualization
         low_res_mesh.transform(pose_matrix)
-        # visualizer.viualize_wall([low_res_mesh, landscape_mesh], 'wall view')
+        visualizer.viualize_wall([low_res_mesh, landscape_mesh], 'wall view')
 
         # ---------------------------------------------------------------------------
         # ---------------------------------------------------------------------------
@@ -139,30 +139,11 @@ def main():
 
         # Merge transformed stone and landscape mesh
         merged_landscape = low_res_mesh + landscape_mesh
-
         
+
         # First open the camera and close at the end
         zed, point_cloud = camera_capture.set_up_zed()
 
-        # # TEST: prepare visualizer
-        # pcd = camera_capture.get_pcd_scene(2000, zed, point_cloud)
-        # deviation_pc = distance_map.compute(mesh=merged_landscape, pc=pcd)       
-        # # TEST: try img
-        # print(f"COlors diversity map has colors: {deviation_pc.has_colors()}")
-        # img = camera_capture.pcd_to_2D_image(deviation_pc)
-
-        # # TODO: save image an visualize it
-        # print(img.shape)
-        # print(type(img))
-        # # print(img)
-        # # cv2.imwrite("Colored_2D_image.jpg",img)
-        # # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        # cv2.namedWindow("window")
-        # cv2.imshow("window", img)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-
-        # exit()  # DEBUG
 
         # vis = o3d.visualization.Visualizer()
 
@@ -172,32 +153,11 @@ def main():
         # vis.add_geometry(deviation_pc)
         # vis.add_geometry(merged_landscape)  # do not visualize mesh TODO: add transparency
 
-        # MIAN ADJUSTING LOOP
-        # Now adjust the position untill it's in the good spot
-        
         terminal.custom_print(f"When the stone is placed correctly, Press <Escape> to close the tkinter window.")
-        Live = camera_capture.Live_stream(zed,point_cloud,merged_landscape)
+        Live = camera_capture.Live_stream(zed,point_cloud,merged_landscape,low_res_mesh)
         Live.run()
         
         # while(True):
-
-        #     # -----------------------------------------------------------------------
-        #     # [5] Calculate deviation from captured point cloud
-        #     # -----------------------------------------------------------------------
-
-        #     # Get point cloud from camera
-        #     pcd = camera_capture.get_pcd_scene(2000, zed, point_cloud)  #TODO: check param 2000
-
-        #     # Calculate the deviation of the rock from the cloud
-        #     pcd_temp = distance_map.compute(mesh=merged_landscape, pc=pcd)
-            
-        #     # Convert 3D>2D >> image
-        #     img = camera_capture.pcd_to_2D_image(deviation_pc)
-
-        #     # vis.update_geometry(deviation_pc)
-        #     # vis.poll_events()
-        #     # vis.update_renderer()
-
         #     # TODO: implement non-block visualization open3d
         #     # merged_landscape.compute_vertex_normals() # // DEBUG
         #     # visualizer.viualize_wall([deviation_pc, merged_landscape], 'wall view')

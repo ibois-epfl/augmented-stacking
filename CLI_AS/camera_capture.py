@@ -3,6 +3,9 @@ The module opens the camera capture a point cloud and:
 - mesh the point cloud and give back a water-tight mesh
 """
 
+import copy
+
+
 import sys
 if sys.version_info[0] == 2:  # the tkinter library changed it's name from Python 2 to 3.
     import Tkinter
@@ -32,7 +35,7 @@ import cv2
 #TODO: set wall scanning 1.5 x 0.7 m dimension area
 ROI = [0.7,1.5] 
 
-CENTER = [320,750]
+CENTER = [250,750]
 # CENTER = [360,680]
 
 
@@ -139,8 +142,8 @@ def pcd_to_2D_image(pcd):
         Pixls.append(pixels)
         # print(pixels)
         if pixels[1]<1080 and pixels[0]<1920 and pixels[0]>0 and pixels[1]>0:
-            img[int(pixels[1])-1:int(pixels[1])+1,
-                    int(pixels[0])-1:int(pixels[0])+1,:] = np.uint8(npy_pcd_color[i,:]*255)
+            img[int(pixels[1])-2:int(pixels[1])+2,
+                    int(pixels[0])-2:int(pixels[0])+2,:] = np.uint8(npy_pcd_color[i,:]*255)
     Pixls = np.array(Pixls)
 
     return img
@@ -430,11 +433,11 @@ def get_pcd_scene(n_target_downsample, zed, point_cloud):
 
 class Live_stream(object):
     
-    def __init__(self,zed,point_cloud,merged_landscape):
+    def __init__(self,zed,point_cloud,merged_landscape,rock_mesh):
         self.tk = tkinter.Tk()
 
         self.w, self.h = self.tk.winfo_screenwidth(), self.tk.winfo_screenheight()
-        self.tk.geometry("%dx%d+0+0" % (self.w, self.h))
+        self.tk.geometry("%dx%d+-50+-50" % (self.w, self.h))
         self.state = False
         self.tk.attributes('-zoomed', True)  # This just maximizes it so we can see the window. It's nothing to do with fullscreen.
         self.tk.bind('<Escape>', self._end_stream)
@@ -445,6 +448,7 @@ class Live_stream(object):
         self.zed = zed
         self.point_cloud = point_cloud
         self.merged_landscape = merged_landscape
+        self.rock_mesh = rock_mesh
 
     def _end_stream(self,event=None):
         # self.tk.quit()
@@ -471,13 +475,79 @@ class Live_stream(object):
         # Get point cloud from camera
         pcd = get_pcd_scene(2000, self.zed, self.point_cloud)  #TODO: check param 2000
 
-        # Calculate the deviation of the rock from the cloud
-        pcd_temp = distance_map.compute(mesh=self.merged_landscape, pc=pcd)
-        
-        # Convert 3D>2D >> image
-        img = pcd_to_2D_image(pcd_temp)
+        ## Crop the pcd from a column
+        # mesh_down = copy.deepcopy(self.rock_mesh).translate((0, 0, -1))
+        # mesh_up = copy.deepcopy(self.rock_mesh).translate((0, 0, 1))
 
+        # mesh_down_up = mesh_down + mesh_up
+
+        # bbox = mesh_down_up.get_axis_aligned_bounding_box()
+        # bbox = bbox.scale(2.5,bbox.get_center())
+
+        # pcd = pcd.crop(bbox)
+        # cropped_landscape_mesh = self.merged_landscape.crop(bbox)
+        # cropped_landscape_mesh = self.rock_mesh
+
+        # visualizer.viualize_wall([cropped_landscape_mesh], "TESTCROPMESH")
+
+        # Calculate the deviation of the rock from the cloud
+        # pcd_temp = distance_map.compute(mesh=self.rock_mesh, pc=pcd)
+
+        ## WORK IN PROGRESS
+        cropped_pcd = crop_pcd_by_raycasting(pcd,self.rock_mesh)
+
+        pcd_temp = o3d.geometry.PointCloud()
+
+        dist_pcd = np.zeros((2,3), dtype=np.float64)
+        center_pcd = cropped_pcd.get_center()
+        center_mesh = self.rock_mesh.get_center()
+        dist_pcd[0] = center_pcd
+        dist_pcd[1] = center_mesh
+
+        pcd_temp.points = o3d.utility.Vector3dVector(dist_pcd)
+        c = [(1,0,1), (0,1,1)]
+        pcd_temp.colors = o3d.utility.Vector3dVector(c)
+
+        # Show rock mesh projection
+        # pcd_temp = pcd_temp + self.rock_mesh.sample_points_poisson_disk(1000)
+        pcd_temp = pcd_temp + cropped_pcd
+        
+        if pcd_temp !=None:
+            # Convert 3D>2D >> image
+            img = pcd_to_2D_image(pcd_temp)
+        else:
+            # Create error image
+            img = np.ones((1080, 1920, 3),dtype=np.uint8) * np.array([255,0,255],dtype=np.uint8)
         return img
     
 
-        
+def crop_pcd_by_raycasting(pcd,mesh):
+    # Load mesh and convert to open3d.t.geometry.TriangleMesh
+    mesh = o3d.t.geometry.TriangleMesh.from_legacy(mesh)
+    
+    # Scale mesh
+    mesh = mesh.scale(1.5,mesh.get_center())
+    
+    # Create a scene and add the triangle mesh
+    scene = o3d.t.geometry.RaycastingScene()
+    _ = scene.add_triangles(mesh)
+
+    # compute occupancy
+    occupancy = scene.compute_occupancy(np.asarray(pcd.points, dtype=np.float32))
+
+    cropped_pcd = o3d.geometry.PointCloud()
+    inside_points = []
+    colors = []
+    for i,point in enumerate(np.asarray(pcd.points)):
+        if occupancy[i] == 1:
+            inside_points.append(point)
+            colors.append([0,1,0])
+    if len(inside_points) == 0:
+        cropped_pcd.points = o3d.utility.Vector3dVector(np.array([[0,0,-2]]))
+        cropped_pcd.colors = o3d.utility.Vector3dVector([[0,1,0]])
+    else:
+        cropped_pcd.points = o3d.utility.Vector3dVector(np.array(inside_points))
+        cropped_pcd.colors = o3d.utility.Vector3dVector(colors)
+    return cropped_pcd
+
+
