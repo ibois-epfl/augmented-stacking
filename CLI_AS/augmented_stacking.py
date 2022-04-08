@@ -72,7 +72,12 @@ def main():
         # Ask for stone label & download LOW-RES mesh and open it
         name_low_res_mesh, low_res_mesh = dataset_IO.download_github_raw_file(
             is_raw_mesh=True)
-
+        
+        # Ask for o3d visualisation
+        O3D_VISUALISATION = None
+        while O3D_VISUALISATION not in ["y","n"]:
+            O3D_VISUALISATION = terminal.user_input("Do you want to visualize Pcd in O3D ? (y/n)\n>>> ")
+        
         # Check the faces for the download mesh if not downsample
         faces_low_res_mesh = len(np.asarray(low_res_mesh.triangles))
         if (faces_low_res_mesh > _faces_target_low_res_mesh):
@@ -84,7 +89,8 @@ def main():
             terminal.custom_print(f" Number of vertices of the decimated mesh: {new_faces_low_res_mesh}")
         
         # Visual inspection of downloaded mesh
-        # visualizer.viualize_mesh_normal(low_res_mesh, 'Low-res mesh') # TODO: Fix the issue of using both open3d and tkinter
+        if O3D_VISUALISATION == "y":
+            visualizer.viualize_mesh_normal(low_res_mesh, 'Low-res mesh') # TODO: Fix the issue of using both open3d and tkinter
 
         # Write out the mesh (for algorithm to read)
         o3d.io.write_triangle_mesh(name_low_res_mesh, low_res_mesh)
@@ -96,8 +102,9 @@ def main():
         # Capture meshed scene
         landscape_mesh = camera_capture.get_mesh_scene(
             _vertices_target_low_res_scene)
-        visualizer.viualize_wall([landscape_mesh], 'wall view')
-
+        
+        if O3D_VISUALISATION == "y":
+            visualizer.viualize_wall([landscape_mesh], 'wall view')
 
         # Save meshed scene
         print("Writing out the captured mesh from 3d camera")
@@ -123,7 +130,9 @@ def main():
 
         # Transform the low-res mesh for visualization
         low_res_mesh.transform(pose_matrix)
-        visualizer.viualize_wall([low_res_mesh, landscape_mesh], 'wall view')
+        
+        if O3D_VISUALISATION == "y":
+            visualizer.viualize_wall([low_res_mesh, landscape_mesh], 'wall view')
 
         # ---------------------------------------------------------------------------
         # ---------------------------------------------------------------------------
