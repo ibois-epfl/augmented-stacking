@@ -5,7 +5,7 @@
 #2weightPyramid
 0
 #3weightHeight
-1
+2
 #4weightFPFH
 0
 #5weightInt
@@ -37,7 +37,7 @@
 #18 numberIteration
 10
 #19 gridSize
-0.01
+0.001
 #20 stacknumber
 1
 #21 FPFH radius
