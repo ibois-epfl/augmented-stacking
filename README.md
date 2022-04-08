@@ -172,7 +172,7 @@ In order to avoid transformation/calibration processes between the captured coor
 - Andrea: working on the 3d-2d-3d pipeline for indication / point cloud meshing solutions
 - Qianqing: working point cloud meshing solutions + integration of meshed landscape to stacking algorithm
 
-# 2022.04.05 - Finalisation of Live Implementing
+# 2022.04.05 - Implementation of Live Implementing
 
 The image is beeing created and displayed as you can see here:
 <p>
