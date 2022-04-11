@@ -148,23 +148,21 @@ def main():
 
         # Merge transformed stone and landscape mesh
         merged_landscape = low_res_mesh + landscape_mesh
-        
 
         # First open the camera and close at the end
         zed, point_cloud = camera_capture.set_up_zed()
 
-
-        # vis = o3d.visualization.Visualizer()
-
         # # Put background black to avoid camera mis-capture
-
-        # vis.create_window()
-        # vis.add_geometry(deviation_pc)
-        # vis.add_geometry(merged_landscape)  # do not visualize mesh TODO: add transparency
-
-        terminal.custom_print(f"When the stone is placed correctly, Press <Escape> to close the tkinter window.")
-        Live = camera_capture.Live_stream(zed,point_cloud,merged_landscape,low_res_mesh)
-        Live.run()
+        
+        # vis = o3d.visualization.Visualizer()
+            # vis.create_window()
+            # vis.add_geometry(deviation_pc)
+            # vis.add_geometry(merged_landscape)  # do not visualize mesh TODO: add transparency
+        
+        if O3D_VISUALISATION == "n":
+            terminal.custom_print(f"When the stone is placed correctly, Press <Escape> to close the tkinter window.")
+            Live = camera_capture.Live_stream(zed,point_cloud,merged_landscape,low_res_mesh)
+            Live.run()
         
         # while(True):
         #     # TODO: implement non-block visualization open3d
