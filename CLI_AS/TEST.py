@@ -25,9 +25,7 @@ class draw_image(object):
         i,j = pixel[:2]
         if i > 0 and i < self.height and j > 0 and j < self.width:
             self.pixels.append(pixel)
-        # else:
-        #     print("pixel out of bounds")
-
+ 
     def add_pcd(self,pcd,size=2):
         npy_pts = np.asarray(pcd.points)
         npy_colors = np.asarray(pcd.colors)
@@ -53,7 +51,6 @@ class draw_image(object):
             for simplex in self.hull.simplices:
                 cv2.line(self.image,(self.pixels[simplex[0]][:2][1],self.pixels[simplex[0]][:2][0]),(self.pixels[simplex[1]][:2][1],self.pixels[simplex[1]][:2][0]),color,size)
         
-    
     def draw_pixels(self):
         for pixel in self.pixels:
             y,x,color,size = pixel
@@ -64,6 +61,7 @@ class draw_image(object):
 
 
 ## How to use it 
+
 pcd = o3d.geometry.PointCloud()
 pts = np.random.randn(1000,3)
 pcd.points = o3d.utility.Vector3dVector(np.array(pts))
