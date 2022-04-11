@@ -68,3 +68,4 @@ def compute(mesh, pc):
         terminal.error_print("WARN, distance_map.py: captured croped point cloud is empty")
         pc = None
     return pc
+

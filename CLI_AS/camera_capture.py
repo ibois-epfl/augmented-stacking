@@ -17,8 +17,8 @@ else:
 from PIL import Image
 from PIL import ImageTk
 
-import pymeshlab # keep on top as first import (why?)
-import pyzed.sl as sl
+# import pymeshlab # keep on top as first import (why?)
+# import pyzed.sl as sl
 import numpy as np
 import open3d as o3d
 import tifffile
@@ -135,19 +135,34 @@ def pcd_to_2D_image(pcd):
     npy_pcd_color = np.asarray(pcd.colors)
     img = np.zeros((1080, 1920, 3),dtype=np.uint8)
     if not len(npy_pcd) == 0:
-        pointsXYZ = npy_pcd[::1]
-        Pixls = []
-        for i, pt in enumerate(pointsXYZ):
-            X,Y,Z = pt
-            # print(X,Y,Z)
-            # convert XYZ to pixels
-            pixels = np.dot(P, np.array([[X], [Y], [Z],[1]]))
-            Pixls.append(pixels)
-            # print(pixels)
-            if pixels[1]<1080 and pixels[0]<1920 and pixels[0]>0 and pixels[1]>0:
-                img[int(pixels[1])-2:int(pixels[1])+2,
-                        int(pixels[0])-2:int(pixels[0])+2,:] = np.array([1,0,1])# np.uint8(npy_pcd_color[i,:]*255)
-        Pixls = np.array(Pixls)
+        if not len(npy_pcd_color) == 0:
+            pointsXYZ = npy_pcd[::1]
+            Pixls = []
+            for i, pt in enumerate(pointsXYZ):
+                X,Y,Z = pt
+                # print(X,Y,Z)
+                # convert XYZ to pixels
+                pixels = np.dot(P, np.array([[X], [Y], [Z],[1]]))
+                Pixls.append(pixels)
+                # print(pixels)
+                if pixels[1]<1080 and pixels[0]<1920 and pixels[0]>0 and pixels[1]>0:
+                    img[int(pixels[1])-2:int(pixels[1])+2,
+                            int(pixels[0])-2:int(pixels[0])+2,:] = np.uint8(npy_pcd_color[i,:]*255)
+            Pixls = np.array(Pixls)
+        else:
+            pointsXYZ = npy_pcd[::1]
+            Pixls = []
+            for i, pt in enumerate(pointsXYZ):
+                X,Y,Z = pt
+                # print(X,Y,Z)
+                # convert XYZ to pixels
+                pixels = np.dot(P, np.array([[X], [Y], [Z],[1]]))
+                Pixls.append(pixels)
+                # print(pixels)
+                if pixels[1]<1080 and pixels[0]<1920 and pixels[0]>0 and pixels[1]>0:
+                    img[int(pixels[1])-2:int(pixels[1])+2,
+                            int(pixels[0])-2:int(pixels[0])+2,:] = np.array([1,0,1])
+            Pixls = np.array(Pixls)
 
     return img
 
@@ -277,19 +292,6 @@ def get_median_cloud(zed, point_cloud, medianFrames, roi_m,center):
     median = median[~np.isnan(median).any(axis=1)]
 
     return median
-
-    """
-    Convert a numpy vector of shape (n,3) to o3d point cloud format
-    
-    :param np_vector: numpy vector of shape (n,3) of the point cloud
-    
-    return: The point cloud in open3d format
-    """
-    # Convert numpy in o3d format
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(np_vector)
-
-    return pcd
 
 def np_pcd2o3d_mesh(np_pcd, n_target_downasample=None):
     """
@@ -490,7 +492,6 @@ class Live_stream(object):
         list_pcd_clusters, keypoints = _get_cluster(upper_pcd_from_mesh)
         # for cluster in list_pcd_clusters:
         #     visualizer.viualize_wall([cluster],"keypoints")
-        print(keypoints)
 
         ## Get captured pcd clusters
         captured_pcd_clusters = _crop_pcd_on_cluster(cropped_pcd,list_pcd_clusters)
@@ -499,12 +500,10 @@ class Live_stream(object):
 
         ## Get the Z value of the captured pcd clusters
         z_values = _get_z_value_of_pcds(captured_pcd_clusters)
-        print(z_values)
 
         ## Compute distance
         distances = np.abs(np.array(keypoints)[:,2] - z_values)
         
-        print(distances)
         ## Cluster the cropped captured pcd
 
         # cropped_landscape_mesh = self.merged_landscape.crop(bbox)
@@ -657,3 +656,4 @@ def _get_z_value_of_pcds(captured_pcd_clusters):
 #     return cropped_pcd
 
 
+        
