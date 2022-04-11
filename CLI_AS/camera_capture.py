@@ -128,25 +128,26 @@ def pcd_to_2D_image(pcd):
     This function is converting a open3D point cloud into a 2D projection for the projector.
     It is using the results of the calibration function.
     """
+
     P = load_transformation_matrix()
     # Going through the points of the point cloud
     npy_pcd = np.asarray(pcd.points)
     npy_pcd_color = np.asarray(pcd.colors)
     img = np.zeros((1080, 1920, 3),dtype=np.uint8)
-
-    pointsXYZ = npy_pcd[::1]
-    Pixls = []
-    for i, pt in enumerate(pointsXYZ):
-        X,Y,Z = pt
-        # print(X,Y,Z)
-        # convert XYZ to pixels
-        pixels = np.dot(P, np.array([[X], [Y], [Z],[1]]))
-        Pixls.append(pixels)
-        # print(pixels)
-        if pixels[1]<1080 and pixels[0]<1920 and pixels[0]>0 and pixels[1]>0:
-            img[int(pixels[1])-2:int(pixels[1])+2,
-                    int(pixels[0])-2:int(pixels[0])+2,:] = np.uint8(npy_pcd_color[i,:]*255)
-    Pixls = np.array(Pixls)
+    if not len(npy_pcd) == 0:
+        pointsXYZ = npy_pcd[::1]
+        Pixls = []
+        for i, pt in enumerate(pointsXYZ):
+            X,Y,Z = pt
+            # print(X,Y,Z)
+            # convert XYZ to pixels
+            pixels = np.dot(P, np.array([[X], [Y], [Z],[1]]))
+            Pixls.append(pixels)
+            # print(pixels)
+            if pixels[1]<1080 and pixels[0]<1920 and pixels[0]>0 and pixels[1]>0:
+                img[int(pixels[1])-2:int(pixels[1])+2,
+                        int(pixels[0])-2:int(pixels[0])+2,:] = np.array([1,0,1])# np.uint8(npy_pcd_color[i,:]*255)
+        Pixls = np.array(Pixls)
 
     return img
 
@@ -475,25 +476,35 @@ class Live_stream(object):
     def _get_live_stream(self):
         # Get point cloud from camera
         pcd = get_pcd_scene(2000, self.zed, self.point_cloud)  #TODO: check param 2000
+        # visualizer.viualize_wall([pcd,self.rock_mesh],"captured pcd")
 
         ## Crop the pcd from a column
         cropped_pcd = _column_crop(pcd,self.rock_mesh)
+        # visualizer.viualize_wall([cropped_pcd],"cropped pcd")
 
         ## Get upper pcd of the mesh
         upper_pcd_from_mesh = _get_upper_pcd(self.rock_mesh)
+        # visualizer.viualize_wall([upper_pcd_from_mesh,self.rock_mesh],"upper pcd from mesh")
 
         ## Get keypoints and cluster pcd from the upper_pcd_from_mesh
         list_pcd_clusters, keypoints = _get_cluster(upper_pcd_from_mesh)
+        # for cluster in list_pcd_clusters:
+        #     visualizer.viualize_wall([cluster],"keypoints")
+        print(keypoints)
 
         ## Get captured pcd clusters
         captured_pcd_clusters = _crop_pcd_on_cluster(cropped_pcd,list_pcd_clusters)
+        # for cluster in captured_pcd_clusters:
+        #     visualizer.viualize_wall([cluster],"captured pcd cluster")
 
         ## Get the Z value of the captured pcd clusters
         z_values = _get_z_value_of_pcds(captured_pcd_clusters)
+        print(z_values)
 
         ## Compute distance
         distances = np.abs(np.array(keypoints)[:,2] - z_values)
         
+        print(distances)
         ## Cluster the cropped captured pcd
 
         # cropped_landscape_mesh = self.merged_landscape.crop(bbox)
@@ -505,8 +516,6 @@ class Live_stream(object):
         # pcd_temp = distance_map.compute(mesh=self.rock_mesh, pc=pcd)
 
         ## WORK IN PROGRESS
-        cropped_pcd = crop_pcd_by_raycasting(pcd,self.rock_mesh)
-
         pcd_temp = o3d.geometry.PointCloud()
 
         dist_pcd = np.zeros((2,3), dtype=np.float64)
@@ -542,19 +551,22 @@ def _get_cluster(upper_pcd_of_mesh):
     pcd_labels = kmeans.labels_
     
     list_cluster = []
-    for i in range(0,3):
+    for j in range(0,3):
+        pcd_cluster = o3d.geometry.PointCloud()
         cluster = []
-        for label in pcd_labels:
-            if label == i:
+        for i,label in enumerate(pcd_labels):
+            if label == j:
                 cluster.append(Points[i])
-        list_cluster.append(cluster)
+        pcd_cluster.points = o3d.utility.Vector3dVector(np.array(cluster))
+        list_cluster.append(pcd_cluster)
 
     return list_cluster, key_points
     
 def _column_crop(captured_pcd,rock_mesh,scale=1.5):
+    
     # Translate the mesh
-    mesh_down = copy.deepcopy(rock_mesh).translate((0, 0, -1))
-    mesh_up = copy.deepcopy(rock_mesh).translate((0, 0, 1))
+    mesh_down = copy.deepcopy(rock_mesh).translate((0, 0, -10))
+    mesh_up = copy.deepcopy(rock_mesh).translate((0, 0, 10))
 
     # Union of the two meshes
     mesh_down_up = mesh_down + mesh_up
@@ -567,6 +579,8 @@ def _column_crop(captured_pcd,rock_mesh,scale=1.5):
     return crop_captured_pcd
 
 def _crop_pcd_by_occupancy(mesh,pcd):
+    # Load mesh and convert to open3d.t.geometry.TriangleMesh
+    mesh = o3d.t.geometry.TriangleMesh.from_legacy(mesh)
     #Create the scene 
     scene = o3d.t.geometry.RaycastingScene()
     _ = scene.add_triangles(mesh)
@@ -598,7 +612,6 @@ def _get_upper_pcd(mesh):
 def _crop_pcd_on_cluster(crop_captured_pcd,pcd_from_upper_mesh_clusters):
     list_captured_pcd_clusters = []
     for cluster in pcd_from_upper_mesh_clusters:
-        pcd_cluster = o3d.geometry.PointCloud()
         cropped_cluster = _column_crop(crop_captured_pcd,cluster,scale=1.0)
         list_captured_pcd_clusters.append(cropped_cluster)
     return list_captured_pcd_clusters
@@ -611,7 +624,7 @@ def _get_z_value_of_pcds(captured_pcd_clusters):
         z_std = np.std(np.asarray(cluster.points)[:,2])
         Z_mean.append(z_mean)
         Z_std.append(z_std)
-    Z_value = np.asarray(Z_mean) + 1/2*np.asarray(Z_std)**2
+    Z_value = np.asarray(Z_mean) # + 1/2*np.asarray(Z_std)**2
     return Z_value
 
 # def crop_pcd_by_raycasting(pcd,mesh):
