@@ -231,9 +231,9 @@ The idea is to select 3 keypoints from this point cloud. To do so we use K-mean,
 Those are the following separations:
 
 <p>
-    <img src="./img/cluster_1.png" width="300">
-    <img src="./img/cluster_2.png" width="300">
-    <img src="./img/cluster_3.png" width="300">
+    <img src="./img/cluster_1.png" width="265">
+    <img src="./img/cluster_2.png" width="265">
+    <img src="./img/cluster_3.png" width="265">
 </p>
 
 Those clusters on the meshed rock, will give us 3 bounding boxes, which we can use to subsample the captured point cloud.
