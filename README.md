@@ -231,9 +231,9 @@ The idea is to select 3 keypoints from this point cloud. To do so we use K-mean,
 Those are the following separations:
 
 <p>
-    <img src="./img/cluster_1.jpg" width="300">
-    <img src="./img/cluster_2.jpg" width="300">
-    <img src="./img/cluster_3.jpg" width="300">
+    <img src="./img/cluster_1.png" width="300">
+    <img src="./img/cluster_2.png" width="300">
+    <img src="./img/cluster_3.png" width="300">
 </p>
 
 Those clusters on the meshed rock, will give us 3 bounding boxes, which we can use to subsample the captured point cloud.
@@ -253,4 +253,4 @@ TODO:
 - Fix the black points on the convex hull.
 - Catch all errors.
 - Clean up the Test file.
-
+- See why there is only two points visible, overlapping ?
