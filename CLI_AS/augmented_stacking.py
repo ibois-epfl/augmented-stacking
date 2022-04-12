@@ -154,18 +154,15 @@ def main():
         # First open the camera and close at the end
         zed, point_cloud = camera_capture.set_up_zed()
 
-        # Calculate mesh projection, to get convex hull
-        mesh_sheet = camera_capture.draw_rock_mesh(low_res_mesh)
+        # Create the 3D space model
+        live_3D_space = camera_capture.live_3D_space(rock_mesh=low_res_mesh,zed=zed,point_cloud=point_cloud)
 
         # create image object 
-        image_sheet = camera_capture.draw_image()
-        ## Get upper pcd of the mesh
-        upper_pcd_from_mesh = mesh_sheet.get_upper_pcd()
-        image_sheet.add_pcd(upper_pcd_from_mesh,color=[0,0,0])
-        image_sheet.create_hull(color=[0,255,0],size=5)
+        image_sheet = camera_capture.draw_image(live_3D_space=live_3D_space)
+        
         if O3D_VISUALISATION in ["n","yn"]:
             terminal.custom_print(f"When the stone is placed correnctly, Press <Escape> to close the tkinter window.")
-            Live = camera_capture.Live_stream(zed,point_cloud,merged_landscape,low_res_mesh,image_sheet,mesh_sheet)
+            Live = camera_capture.Live_stream(live_3D_space=live_3D_space,image_sheet=image_sheet)
             Live.run()
         
         # while(True):
