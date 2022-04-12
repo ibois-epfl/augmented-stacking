@@ -436,7 +436,7 @@ class Live_stream(object):
         self.live_3D_space.update_3D_space()
 
         # Draw the new image for live stream
-        img = self.image_sheet.draw_from_3D_space(self.live_3D_space)
+        img = self.image_sheet.draw_image_from_3D_space(self.live_3D_space)
        
         return img
 
@@ -444,7 +444,7 @@ class live_3D_space(object):
     def __init__(self,rock_mesh,zed,point_cloud):
         
         self.point_cloud = point_cloud
-        self.mesh = rock_mesh
+        self.rock_mesh = rock_mesh
         self.zed = zed
 
         self.upper_pcd_from_mesh = self._get_upper_pcd()
@@ -454,34 +454,48 @@ class live_3D_space(object):
 
         # Get point cloud from camera
         pcd = get_pcd_scene(2000, self.zed, self.point_cloud)  #TODO: check param 2000
-        # visualizer.viualize_wall([pcd,self.rock_mesh],"captured pcd")
+        visualizer.viualize_wall([pcd,self.rock_mesh],"captured pcd")
 
         ## Crop the pcd from a column
         cropped_pcd = self._column_crop(pcd,self.rock_mesh,scale=1.5)
-        # visualizer.viualize_wall([cropped_pcd],"cropped pcd")
+        visualizer.viualize_wall([cropped_pcd],"cropped pcd")
+
+        ## For visual purposes only: upper pcd of mesh
+        upper_pcd_from_mesh = self._get_upper_pcd()
+        visualizer.viualize_wall([upper_pcd_from_mesh],"upper mesh pcd")
 
         ## Get keypoints and cluster pcd from the upper_pcd_from_mesh
-        list_pcd_clusters, keypoints = self.get_cluster()
-        # for cluster in list_pcd_clusters:
-        #     visualizer.viualize_wall([cluster],"keypoints")
+        list_pcd_clusters, keypoints = self.get_list_mesh_cluster(),self.get_key_points()
+        print(f"The mesh clusters have following centers: {keypoints}")
+        for cluster in list_pcd_clusters:
+            visualizer.viualize_wall([cluster],"keypoints")
 
         ## Get captured pcd clusters
         captured_pcd_clusters,self.centers = self._crop_pcd_on_cluster(cropped_pcd,list_pcd_clusters)
-        # for cluster in captured_pcd_clusters:
-        #     visualizer.viualize_wall([cluster],"captured pcd cluster")
+        print(f"The captured pcd clusters have following centers: {self.centers}")
+        for cluster in captured_pcd_clusters:
+            visualizer.viualize_wall([cluster],"captured pcd cluster")
 
         ## Get the Z value of the captured pcd clusters
         z_values = self._get_z_value_of_pcds(captured_pcd_clusters)
 
         ## Compute distance
-        self.distances = np.abs(np.array(keypoints)[:,2] - z_values)
+        distances = np.abs(np.array(keypoints)[:,2] - z_values)*1000 # To convert in milimeters
+        # clip the distances
+        for i,distance in enumerate(distances):
+            if distance <1:
+                distances[i] = 1
+            if distance > 25:
+                distances[i] = 25
+        self.distances = distances
+        print(f"Distance btw the mesh centers and the captured pcd centers: {self.distances}")
         
     def _get_upper_pcd(self):
         # Create shifted point cloud
-        subsampled_mesh = self.mesh.sample_points_poisson_disk(1000)
+        subsampled_mesh = self.rock_mesh.sample_points_poisson_disk(1000)
         subsampled_mesh = subsampled_mesh.translate((0, 0, 0.01))
         # Crop point cloud
-        cropped_pcd = self._crop_pcd_by_occupancy(self.mesh,subsampled_mesh)
+        cropped_pcd = self._crop_pcd_by_occupancy(self.rock_mesh,subsampled_mesh)
         return cropped_pcd
     
     def _crop_pcd_by_occupancy(self,mesh,pcd):
@@ -559,10 +573,14 @@ class live_3D_space(object):
         Z_mean = []
         Z_std = []
         for cluster in captured_pcd_clusters:
-            z_mean = np.mean(np.asarray(cluster.points)[:,2])
-            z_std = np.std(np.asarray(cluster.points)[:,2])
-            Z_mean.append(z_mean)
-            Z_std.append(z_std)
+            if not len(np.asarray(cluster.points))==0:
+                z_mean = np.mean(np.asarray(cluster.points)[:,2])
+                z_std = np.std(np.asarray(cluster.points)[:,2])
+                Z_mean.append(z_mean)
+                Z_std.append(z_std)
+            else:
+                Z_mean.append(0)
+                Z_std.append(0)                
         Z_value = np.asarray(Z_mean) # + 1/2*np.asarray(Z_std)**2
         return Z_value
 
@@ -596,11 +614,16 @@ class draw_image(object):
         self.live_3D_space = live_3D_space
     
     def _add_3D_pixel(self,x,y,z,color,size):
-        xy1 = np.dot(self.transform_3D_2D, np.array([[x], [y], [z],[1]]))
-        pixel = [int(xy1[1]),int(xy1[0]),color,size]
-        i,j = pixel[:2]
-        if i > 0 and i < self.height and j > 0 and j < self.width:
-            self.pixels.append(pixel)
+        if not np.isnan(x) and not np.isnan(y) and not np.isnan(z):
+            xy1 = np.dot(self.transform_3D_2D, np.array([[x], [y], [z],[1]]))
+            pixel = [int(xy1[1]),int(xy1[0]),color,size]
+            i,j = pixel[:2]
+            if i > 0 and i < self.height and j > 0 and j < self.width:
+                self.pixels.append(pixel)
+            else:
+                print(f"Pixel: {i},{j} is out of bounds")
+        else:
+            print(f"point: [{x},{y},{z}] is not admissible")
  
     def _add_pcd(self,pcd,size=2,color=[255,0,255]):
         npy_pts = np.asarray(pcd.points)
@@ -612,10 +635,10 @@ class draw_image(object):
             if len(npy_colors) < len(npy_pts):
                 print("Not all points of point cloud have a color, using default color: magenta")
                 for _,point in enumerate(npy_pts):
-                    self.add_3D_pixel(point[0],point[1],point[2],color,size)
+                    self._add_3D_pixel(point[0],point[1],point[2],color,size)
             else:
                 for i,point in enumerate(npy_pts):
-                    self.add_3D_pixel(point[0],point[1],point[2],npy_colors[i],size)
+                    self._add_3D_pixel(point[0],point[1],point[2],npy_colors[i],size)
     
     def _create_hull(self,color,size):
         if len(self.pixels) < 3:
@@ -629,8 +652,8 @@ class draw_image(object):
         
     def _draw_pixels(self):
         for pixel in self.pixels:
-            y,x,color,size = pixel
-            self.image[y-size:y+size,x-size:x+size,:] = color
+            i,j,color,size = pixel
+            self.image[i-size:i+size,j-size:j+size,:] = color
     
     def _empty_pixels(self):
         self.pixels = []
@@ -643,7 +666,7 @@ class draw_image(object):
         # Drawing the last convex hull
         upper_pcd = self.live_3D_space.get_upper_pcd()
         self._add_pcd(upper_pcd)
-        self.create_hull(color=[0,255,0],size=4)
+        self._create_hull(color=[0,255,0],size=4)
         # Removing the points to create the convex hull
         self._empty_pixels()
 
@@ -653,8 +676,10 @@ class draw_image(object):
 
         ## Add points to image
         for i,radius in enumerate(distances):
+            print("Adding pcd center points:")
             # Adding points from point cloud (moving)
-            self._add_3D_pixel(centers[i][0],centers[i][1],centers[2][0],(255,0,0),int(radius))
+            self._add_3D_pixel(centers[i][0],centers[i][1],centers[2][0],(255,0,0),int(radius*10))
+            print("Adding keypoints:")
             # Adding points from keypoints (static)
             self._add_3D_pixel(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,255,255),5)
         
