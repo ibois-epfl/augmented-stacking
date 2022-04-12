@@ -219,3 +219,38 @@ TODO LIST:
 - implementation of the described code and visualization
 - adjustments of config file for stacking algorithm
 
+
+# 2022.04.11 - Implementation of the code above
+
+The extraction of the upper point cloud of the mesh is as following:
+
+![upper_point_cloud](./img/upper_pcd.png)
+
+The idea is to select 3 keypoints from this point cloud. To do so we use K-mean, which will give us 3 clusters.
+
+Those are the following separations:
+
+<p>
+    <img src="./img/cluster_1.jpg" width="300">
+    <img src="./img/cluster_2.jpg" width="300">
+    <img src="./img/cluster_3.jpg" width="300">
+</p>
+
+Those clusters on the meshed rock, will give us 3 bounding boxes, which we can use to subsample the captured point cloud.
+
+For now it seems that the stacking algorithm doesn't allow us to get the right position, so it still need to be adjusted.
+
+This is the final image we get on the screen, with:
+- in Green: the convex hull of the projected upper point cloud of the meshed rock.
+- in White: the keypoints of the meshed rock, which don't move.
+- in Red: the position of the centers of the clustered acquired point clouds.
+
+![Projected visualisation](./img/2d_projection.png)
+
+TODO:
+
+- Visualize the clustered captured points.
+- Fix the black points on the convex hull.
+- Catch all errors.
+- Clean up the Test file.
+
