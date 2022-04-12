@@ -106,30 +106,30 @@ def main():
         if O3D_VISUALISATION in ["y","yn"]:
             visualizer.viualize_wall([landscape_mesh], 'wall view')
 
-        # # Save meshed scene
-        print("Writing out the captured mesh from 3d camera")
-        o3d.io.write_triangle_mesh(
-            _name_landscape, landscape_mesh, write_ascii=True)
-        print(f"Mesh out with name {_name_landscape}")
+        # # # Save meshed scene
+        # print("Writing out the captured mesh from 3d camera")
+        # o3d.io.write_triangle_mesh(
+        #     _name_landscape, landscape_mesh, write_ascii=True)
+        # print(f"Mesh out with name {_name_landscape}")
 
-        # TODO: C++ reads from in-memory mesh
-        # Compute stacking pose
-        stacking_algorithm.compute(path_exec='./stacking_algorithm/build/main',
-                                   path_mesh=name_low_res_mesh,
-                                   path_landscape=_name_landscape,  # TODO: param this
-                                   config_file='./stacking_algorithm/data/input.txt',
-                                   name_output='pose',
-                                   dir_output='./temp')
+        # # TODO: C++ reads from in-memory mesh
+        # # Compute stacking pose
+        # stacking_algorithm.compute(path_exec='./stacking_algorithm/build/main',
+        #                            path_mesh=name_low_res_mesh,
+        #                            path_landscape=_name_landscape,  # TODO: param this
+        #                            config_file='./stacking_algorithm/data/input.txt',
+        #                            name_output='pose',
+        #                            dir_output='./temp')
 
-        # TEMP: Delete donwload mesh
-        dataset_IO.delete_file(name_low_res_mesh)
+        # # TEMP: Delete donwload mesh
+        # dataset_IO.delete_file(name_low_res_mesh)
 
-        # read the 6dof pose and store it as numpy array
-        pose_matrix = dataset_IO.read_pose_6dof('./temp/pose.txt')
-        print("Computation done: here's the computed 4x4 Pose Matrix:\n\n", pose_matrix)
+        # # read the 6dof pose and store it as numpy array
+        # pose_matrix = dataset_IO.read_pose_6dof('./temp/pose.txt')
+        # print("Computation done: here's the computed 4x4 Pose Matrix:\n\n", pose_matrix)
 
-        # Transform the low-res mesh for visualization
-        low_res_mesh.transform(pose_matrix)
+        # # Transform the low-res mesh for visualization
+        # low_res_mesh.transform(pose_matrix)
         
         if O3D_VISUALISATION == "y":
             visualizer.viualize_wall([low_res_mesh, landscape_mesh], 'wall view')
@@ -154,10 +154,18 @@ def main():
         # First open the camera and close at the end
         zed, point_cloud = camera_capture.set_up_zed()
 
-        
+        # Calculate mesh projection, to get convex hull
+        mesh_sheet = camera_capture.draw_rock_mesh(low_res_mesh)
+
+        # create image object 
+        image_sheet = camera_capture.draw_image()
+        ## Get upper pcd of the mesh
+        upper_pcd_from_mesh = mesh_sheet.get_upper_pcd()
+        image_sheet.add_pcd(upper_pcd_from_mesh,color=[0,0,0])
+        image_sheet.create_hull(color=[0,255,0],size=5)
         if O3D_VISUALISATION in ["n","yn"]:
             terminal.custom_print(f"When the stone is placed correnctly, Press <Escape> to close the tkinter window.")
-            Live = camera_capture.Live_stream(zed,point_cloud,merged_landscape,low_res_mesh)
+            Live = camera_capture.Live_stream(zed,point_cloud,merged_landscape,low_res_mesh,image_sheet,mesh_sheet)
             Live.run()
         
         # while(True):

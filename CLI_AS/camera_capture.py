@@ -17,12 +17,13 @@ else:
 from PIL import Image
 from PIL import ImageTk
 
-# import pymeshlab # keep on top as first import (why?)
-# import pyzed.sl as sl
+import pymeshlab # keep on top as first import (why?)
+import pyzed.sl as sl
 import numpy as np
 import open3d as o3d
 import tifffile
 from sklearn.cluster import KMeans
+from scipy.spatial import ConvexHull
 import threading
 ## Imports for function: convert_roit_meter_pixel
 import os
@@ -438,7 +439,7 @@ def get_pcd_scene(n_target_downsample, zed, point_cloud):
 
 class Live_stream(object):
     
-    def __init__(self,zed,point_cloud,merged_landscape,rock_mesh):
+    def __init__(self,zed,point_cloud,merged_landscape,rock_mesh,image_sheet,mesh_sheet):
         self.tk = tkinter.Tk()
 
         self.w, self.h = self.tk.winfo_screenwidth(), self.tk.winfo_screenheight()
@@ -455,6 +456,9 @@ class Live_stream(object):
         self.merged_landscape = merged_landscape
         self.rock_mesh = rock_mesh
 
+        self.image_sheet = image_sheet
+        self.mesh_sheet = mesh_sheet
+        
     def _end_stream(self,event=None):
         # self.tk.quit()
         self.tk.quit()
@@ -481,20 +485,20 @@ class Live_stream(object):
         # visualizer.viualize_wall([pcd,self.rock_mesh],"captured pcd")
 
         ## Crop the pcd from a column
-        cropped_pcd = self._column_crop(pcd,self.rock_mesh)
+        cropped_pcd = self._column_crop(pcd,self.rock_mesh,scale=1.5)
         # visualizer.viualize_wall([cropped_pcd],"cropped pcd")
 
         ## Get upper pcd of the mesh
-        upper_pcd_from_mesh = self._get_upper_pcd(self.rock_mesh)
-        # visualizer.viualize_wall([upper_pcd_from_mesh,self.rock_mesh],"upper pcd from mesh")
+    #     upper_pcd_from_mesh = self._get_upper_pcd(self.rock_mesh)
+    #     # visualizer.viualize_wall([upper_pcd_from_mesh,self.rock_mesh],"upper pcd from mesh")
 
         ## Get keypoints and cluster pcd from the upper_pcd_from_mesh
-        list_pcd_clusters, keypoints = self._get_cluster(upper_pcd_from_mesh)
+        list_pcd_clusters, keypoints = self.mesh_sheet.get_cluster()
         # for cluster in list_pcd_clusters:
         #     visualizer.viualize_wall([cluster],"keypoints")
 
         ## Get captured pcd clusters
-        captured_pcd_clusters = self._crop_pcd_on_cluster(cropped_pcd,list_pcd_clusters)
+        captured_pcd_clusters,centers = self._crop_pcd_on_cluster(cropped_pcd,list_pcd_clusters)
         # for cluster in captured_pcd_clusters:
         #     visualizer.viualize_wall([cluster],"captured pcd cluster")
 
@@ -504,65 +508,43 @@ class Live_stream(object):
         ## Compute distance
         distances = np.abs(np.array(keypoints)[:,2] - z_values)
         
-        ## Cluster the cropped captured pcd
+        ## Add points to image
+        for i,radius in enumerate(distances):
+            # Adding points from point cloud (moving)
+            self.image_sheet.add_3D_pixel(centers[i][0],centers[i][1],centers[2][0],(255,0,0),int(radius))
+            # Adding points from mesh (stable)
+            self.image_sheet.add_3D_pixel(keypoints[i][0],keypoints[i][1],keypoints[2][0],(255,255,255),5)
 
-        # cropped_landscape_mesh = self.merged_landscape.crop(bbox)
-        # cropped_landscape_mesh = self.rock_mesh
+        self.image_sheet.draw_pixels()
 
-        # visualizer.viualize_wall([cropped_landscape_mesh], "TESTCROPMESH")
+        img = self.image_sheet.get_image()
+        # ## WORK IN PROGRESS
+        # pcd_temp = o3d.geometry.PointCloud()
 
-        # Calculate the deviation of the rock from the cloud
-        # pcd_temp = distance_map.compute(mesh=self.rock_mesh, pc=pcd)
+        # dist_pcd = np.zeros((2,3), dtype=np.float64)
+        # center_pcd = cropped_pcd.get_center()
+        # center_mesh = self.rock_mesh.get_center()
+        # dist_pcd[0] = center_pcd
+        # dist_pcd[1] = center_mesh
 
-        ## WORK IN PROGRESS
-        pcd_temp = o3d.geometry.PointCloud()
+        # pcd_temp.points = o3d.utility.Vector3dVector(dist_pcd)
+        # c = [(1,0,1), (0,1,1)]
+        # pcd_temp.colors = o3d.utility.Vector3dVector(c)
 
-        dist_pcd = np.zeros((2,3), dtype=np.float64)
-        center_pcd = cropped_pcd.get_center()
-        center_mesh = self.rock_mesh.get_center()
-        dist_pcd[0] = center_pcd
-        dist_pcd[1] = center_mesh
-
-        pcd_temp.points = o3d.utility.Vector3dVector(dist_pcd)
-        c = [(1,0,1), (0,1,1)]
-        pcd_temp.colors = o3d.utility.Vector3dVector(c)
-
-        # Show rock mesh projection
-        # pcd_temp = pcd_temp + self.rock_mesh.sample_points_poisson_disk(1000)
-        pcd_temp = pcd_temp + cropped_pcd
+        # # Show rock mesh projection
+        # # pcd_temp = pcd_temp + self.rock_mesh.sample_points_poisson_disk(1000)
+        # pcd_temp = pcd_temp + cropped_pcd
         
-        if pcd_temp !=None:
-            # Convert 3D>2D >> image
-            img = pcd_to_2D_image(pcd_temp)
-        else:
-            # Create error image
-            img = np.ones((1080, 1920, 3),dtype=np.uint8) * np.array([255,0,255],dtype=np.uint8)
+        # if pcd_temp !=None:
+        #     # Convert 3D>2D >> image
+        #     img = pcd_to_2D_image(pcd_temp)
+        # else:
+        #     # Create error image
+        #     img = np.ones((1080, 1920, 3),dtype=np.uint8) * np.array([255,0,255],dtype=np.uint8)
         return img
 
-    
-    def _get_cluster(upper_pcd_of_mesh):
-        # Get the points of the point cloud
-        Points = np.asarray(upper_pcd_of_mesh.points)
-
-        # Use of K-mean for detecting 3 points in the upper point cloud  
-        kmeans = KMeans(n_clusters=3, random_state=0).fit(Points)
-
-        key_points = kmeans.cluster_centers_
-        pcd_labels = kmeans.labels_
         
-        list_cluster = []
-        for j in range(0,3):
-            pcd_cluster = o3d.geometry.PointCloud()
-            cluster = []
-            for i,label in enumerate(pcd_labels):
-                if label == j:
-                    cluster.append(Points[i])
-            pcd_cluster.points = o3d.utility.Vector3dVector(np.array(cluster))
-            list_cluster.append(pcd_cluster)
-
-        return list_cluster, key_points
-        
-    def _column_crop(captured_pcd,rock_mesh,scale=1.5):
+    def _column_crop(self,captured_pcd,rock_mesh,scale=1.5):
         
         # Translate the mesh
         mesh_down = copy.deepcopy(rock_mesh).translate((0, 0, -10))
@@ -578,7 +560,42 @@ class Live_stream(object):
         crop_captured_pcd = captured_pcd.crop(bbox)
         return crop_captured_pcd
 
-    def _crop_pcd_by_occupancy(mesh,pcd):
+    def _crop_pcd_on_cluster(self,crop_captured_pcd,pcd_from_upper_mesh_clusters):
+        list_captured_pcd_clusters = []
+        centers = []
+        for cluster in pcd_from_upper_mesh_clusters:
+            cropped_cluster = self._column_crop(crop_captured_pcd,cluster,scale=1.0)
+            list_captured_pcd_clusters.append(cropped_cluster)
+            center = cropped_cluster.get_center()
+            centers.append(center)
+        return list_captured_pcd_clusters,centers
+
+    def _get_z_value_of_pcds(self,captured_pcd_clusters):
+        Z_mean = []
+        Z_std = []
+        for cluster in captured_pcd_clusters:
+            z_mean = np.mean(np.asarray(cluster.points)[:,2])
+            z_std = np.std(np.asarray(cluster.points)[:,2])
+            Z_mean.append(z_mean)
+            Z_std.append(z_std)
+        Z_value = np.asarray(Z_mean) # + 1/2*np.asarray(Z_std)**2
+        return Z_value
+
+class draw_rock_mesh(object):
+    def __init__(self,rock_mesh):
+        self.mesh = rock_mesh
+        self.upper_pcd_from_mesh = self._get_upper_pcd()
+        self.list_cluster, self.key_points = self._get_cluster()
+
+    def _get_upper_pcd(self):
+        # Create shifted point cloud
+        subsampled_mesh = self.mesh.sample_points_poisson_disk(1000)
+        subsampled_mesh = subsampled_mesh.translate((0, 0, 0.01))
+        # Crop point cloud
+        cropped_pcd = self._crop_pcd_by_occupancy(self.mesh,subsampled_mesh)
+        return cropped_pcd
+    
+    def _crop_pcd_by_occupancy(self,mesh,pcd):
         # Load mesh and convert to open3d.t.geometry.TriangleMesh
         mesh = o3d.t.geometry.TriangleMesh.from_legacy(mesh)
         #Create the scene 
@@ -601,33 +618,33 @@ class Live_stream(object):
 
         return cropped_pcd
 
-    def _get_upper_pcd(mesh):
-        # Create shifted point cloud
-        subsampled_mesh = mesh.sample_points_poisson_disk(1000)
-        subsampled_mesh = subsampled_mesh.translate((0, 0, 0.01))
-        # Crop point cloud
-        cropped_pcd = _crop_pcd_by_occupancy(mesh,subsampled_mesh)
-        return cropped_pcd
+    def _get_cluster(self):
+        # Get the points of the point cloud
+        Points = np.asarray(self.upper_pcd_from_mesh.points)
 
-    def _crop_pcd_on_cluster(crop_captured_pcd,pcd_from_upper_mesh_clusters):
-        list_captured_pcd_clusters = []
-        for cluster in pcd_from_upper_mesh_clusters:
-            cropped_cluster = _column_crop(crop_captured_pcd,cluster,scale=1.0)
-            list_captured_pcd_clusters.append(cropped_cluster)
-        return list_captured_pcd_clusters
+        # Use of K-mean for detecting 3 points in the upper point cloud  
+        kmeans = KMeans(n_clusters=3, random_state=0).fit(Points)
 
-    def _get_z_value_of_pcds(captured_pcd_clusters):
-        Z_mean = []
-        Z_std = []
-        for cluster in captured_pcd_clusters:
-            z_mean = np.mean(np.asarray(cluster.points)[:,2])
-            z_std = np.std(np.asarray(cluster.points)[:,2])
-            Z_mean.append(z_mean)
-            Z_std.append(z_std)
-        Z_value = np.asarray(Z_mean) # + 1/2*np.asarray(Z_std)**2
-        return Z_value
+        key_points = kmeans.cluster_centers_
+        pcd_labels = kmeans.labels_
+        
+        list_cluster = []
+        for j in range(0,3):
+            pcd_cluster = o3d.geometry.PointCloud()
+            cluster = []
+            for i,label in enumerate(pcd_labels):
+                if label == j:
+                    cluster.append(Points[i])
+            pcd_cluster.points = o3d.utility.Vector3dVector(np.array(cluster))
+            list_cluster.append(pcd_cluster)
 
-
+        return list_cluster, key_points
+    
+    def get_cluster(self):
+        return self.list_cluster,self.key_points
+    
+    def get_upper_pcd(self):
+        return self.upper_pcd_from_mesh
 
 class draw_image(object):
     """   
@@ -649,7 +666,7 @@ class draw_image(object):
         if i > 0 and i < self.height and j > 0 and j < self.width:
             self.pixels.append(pixel)
  
-    def add_pcd(self,pcd,size=2):
+    def add_pcd(self,pcd,size=2,color=[255,0,255]):
         npy_pts = np.asarray(pcd.points)
         npy_colors = np.asarray(pcd.colors)
 
@@ -659,7 +676,7 @@ class draw_image(object):
             if len(npy_colors) < len(npy_pts):
                 print("Not all points of point cloud have a color, using default color: magenta")
                 for _,point in enumerate(npy_pts):
-                    self.add_3D_pixel(point[0],point[1],point[2],(255,0,255),size)
+                    self.add_3D_pixel(point[0],point[1],point[2],color,size)
             else:
                 for i,point in enumerate(npy_pts):
                     self.add_3D_pixel(point[0],point[1],point[2],npy_colors[i],size)
