@@ -9,7 +9,7 @@
 #4weightFPFH
 0
 #5weightInt
-0
+1
 #6weightPre
 0
 #7weightVoidZ
@@ -51,6 +51,6 @@ no
 #25 tempdir
 ../temp/
 #26 weightTri
-1
+0
 #27 triangulation file
 placeTriangulation
