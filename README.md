@@ -286,6 +286,11 @@ In this case, one box is cropping an empty point cloud, this is probably due to 
 </p>
 
 
+TODO:
+
+- Adapt the size of the pcd cluster centers: e.g: (2-25 pixels) --> (0-500mm)
+
+
 
 
 
