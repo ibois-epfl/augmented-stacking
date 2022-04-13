@@ -33,7 +33,7 @@
 #16angleMax
 3.14
 #17populationSize
-10000
+1000
 #18 numberIteration
 10
 #19 gridSize
