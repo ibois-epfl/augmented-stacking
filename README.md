@@ -231,9 +231,9 @@ The idea is to select 3 keypoints from this point cloud. To do so we use K-mean,
 Those are the following separations:
 
 <p>
-    <img src="./img/cluster_1.png" width="265">
-    <img src="./img/cluster_2.png" width="265">
-    <img src="./img/cluster_3.png" width="265">
+    <img src="./img/mesh_cluster_1.png" width="265">
+    <img src="./img/mesh_cluster_2.png" width="265">
+    <img src="./img/mesh_cluster_3.png" width="265">
 </p>
 
 Those clusters on the meshed rock, will give us 3 bounding boxes, which we can use to subsample the captured point cloud.
@@ -249,8 +249,43 @@ This is the final image we get on the screen, with:
 
 TODO:
 
-- Visualize the clustered captured points.
-- Fix the black points on the convex hull.
-- Catch all errors.
-- Clean up the Test file.
-- See why there is only two points visible, overlapping ?
+- Visualize the clustered captured points - See following
+- Fix the black points on the convex hull - Fixed by removing the pixels after drawing the convex hull.
+- Catch all errors - Fixed 
+- Clean up the Test file. - Removed and added to camera capture
+- See why there is only two points visible, overlapping ? - Have to wait the correction of stacking algorithm, probably because the stone is out of ROI.
+
+# 2022.04.12 - Correction and visuals of the clustered point clouds
+
+The following scene is beeing treated:
+
+![Scene](./img/scene.png)
+
+Here an over view of the upper pcd of the mesh:
+
+![Upper pcd from mesh](./img/upper_mesh.png)
+
+Then going through K-mean we get those clusters:
+
+<p>
+    <img src="./img/cluster_1.png" width="265">
+    <img src="./img/cluster_2.png" width="265">
+    <img src="./img/cluster_3.png" width="265">
+</p>
+
+From the position of the rock, we cropp the pcd:
+
+![Cropped pcd](./img/cropped_pcd.png)
+
+This point cloud is then cropped using the bounding boxes of the mesh clusters:
+In this case, one box is cropping an empty point cloud, this is probably due to the fact that the stone is outside of the roi.
+
+<p>
+    <img src="./img/pcd_cluster_1.png" width="400">
+    <img src="./img/pcd_cluster_2.png" width="400">
+</p>
+
+
+
+
+
