@@ -17,13 +17,13 @@
 #8weightVoidY
 0
 #9xMin
--0.3
+0
 #10xMax
-0.3
+0.7
 #11yMin
--0.1
+0.2
 #12yMax
-0.3
+0.6
 #13zMin
 -2.1
 #14zMax
