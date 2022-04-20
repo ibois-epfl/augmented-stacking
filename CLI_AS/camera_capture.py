@@ -454,27 +454,27 @@ class live_3D_space(object):
 
         # Get point cloud from camera
         pcd = get_pcd_scene(2000, self.zed, self.point_cloud)  #TODO: check param 2000
-        visualizer.viualize_wall([pcd,self.rock_mesh],"captured pcd")
+        # visualizer.viualize_wall([pcd,self.rock_mesh],"captured pcd")
 
         ## Crop the pcd from a column
-        cropped_pcd = self._column_crop(pcd,self.rock_mesh,scale=1.5)
-        visualizer.viualize_wall([cropped_pcd],"cropped pcd")
+        cropped_pcd = self._column_crop(pcd,self.rock_mesh,scale=3)
+        # visualizer.viualize_wall([cropped_pcd],"cropped pcd")
 
         ## For visual purposes only: upper pcd of mesh
-        upper_pcd_from_mesh = self._get_upper_pcd()
-        visualizer.viualize_wall([upper_pcd_from_mesh],"upper mesh pcd")
+        # upper_pcd_from_mesh = self._get_upper_pcd()
+        # visualizer.viualize_wall([upper_pcd_from_mesh],"upper mesh pcd")
 
         ## Get keypoints and cluster pcd from the upper_pcd_from_mesh
         list_pcd_clusters, keypoints = self.get_list_mesh_cluster(),self.get_key_points()
-        print(f"The mesh clusters have following centers: {keypoints}")
-        for cluster in list_pcd_clusters:
-            visualizer.viualize_wall([cluster],"keypoints")
+        # print(f"The mesh clusters have following centers: {keypoints}")
+        # for cluster in list_pcd_clusters:
+        #     visualizer.viualize_wall([cluster],"keypoints")
 
         ## Get captured pcd clusters
         captured_pcd_clusters,self.centers = self._crop_pcd_on_cluster(cropped_pcd,list_pcd_clusters)
-        print(f"The captured pcd clusters have following centers: {self.centers}")
-        for cluster in captured_pcd_clusters:
-            visualizer.viualize_wall([cluster],"captured pcd cluster")
+        # print(f"The captured pcd clusters have following centers: {self.centers}")
+        # for cluster in captured_pcd_clusters:
+        #     visualizer.viualize_wall([cluster],"captured pcd cluster")
 
         ## Get the Z value of the captured pcd clusters
         z_values = self._get_z_value_of_pcds(captured_pcd_clusters)
@@ -485,17 +485,19 @@ class live_3D_space(object):
         for i,distance in enumerate(distances):
             if distance <1:
                 distances[i] = 1
-            if distance > 25:
-                distances[i] = 25
+            if distance > 15:
+                distances[i] = 15
         self.distances = distances
-        print(f"Distance btw the mesh centers and the captured pcd centers: {self.distances}")
+        # print(f"Distance btw the mesh centers and the captured pcd centers: {self.distances}")
         
     def _get_upper_pcd(self):
         # Create shifted point cloud
-        subsampled_mesh = self.rock_mesh.sample_points_poisson_disk(1000)
+        mesh  = copy.deepcopy(self.rock_mesh)
+        subsampled_mesh = mesh.sample_points_poisson_disk(1000)
         subsampled_mesh = subsampled_mesh.translate((0, 0, 0.01))
+        
         # Crop point cloud
-        cropped_pcd = self._crop_pcd_by_occupancy(self.rock_mesh,subsampled_mesh)
+        cropped_pcd = self._crop_pcd_by_occupancy(mesh.scale(1.1,mesh.get_center()),subsampled_mesh)
         return cropped_pcd
     
     def _crop_pcd_by_occupancy(self,mesh,pcd):
@@ -620,8 +622,14 @@ class draw_image(object):
             i,j = pixel[:2]
             if i > 0 and i < self.height and j > 0 and j < self.width:
                 self.pixels.append(pixel)
+            # elif force:
+            #     if i > 0 and i < self.height:
+            #         pixel[1] = self.width
+            #     else:
+            #         pixel[0] = self.height
+            #     self.pixels.append(pixel)
             else:
-                print(f"Pixel: {i},{j} is out of bounds")
+                print(f"X,Y,Z: {x},{y},{z}, giving Pixel: {i}, {j} are out of bounds for image of size {self.height}, {self.width}")
         else:
             print(f"point: [{x},{y},{z}] is not admissible")
  
@@ -633,7 +641,7 @@ class draw_image(object):
             print("pcd is empty")
         else:
             if len(npy_colors) < len(npy_pts):
-                print("Not all points of point cloud have a color, using default color: magenta")
+                # print("Not all points of point cloud have a color, using default color: magenta")
                 for _,point in enumerate(npy_pts):
                     self._add_3D_pixel(point[0],point[1],point[2],color,size)
             else:
@@ -657,12 +665,17 @@ class draw_image(object):
     
     def _empty_pixels(self):
         self.pixels = []
+        
+    def clear_image(self):
+        self.image = np.zeros((self.height, self.width, 3),dtype=np.uint8) 
 
     def draw_image_from_3D_space(self,live_3D_space):
         # Taking the updated version of the 3D space
         self.live_3D_space = live_3D_space
         # Clearing all old pixels
         self._empty_pixels()
+        # Empty the image
+        self.clear_image()
         # Drawing the last convex hull
         upper_pcd = self.live_3D_space.get_upper_pcd()
         self._add_pcd(upper_pcd)
@@ -671,18 +684,17 @@ class draw_image(object):
         self._empty_pixels()
 
         centers = self.live_3D_space.get_centers()
-        distances = self.live_3D_space.get_distances()
         keypoints = self.live_3D_space.get_key_points()
+        distances = self.live_3D_space.get_distances()
 
         ## Add points to image
+        # print(f"Adding pcd center points: {centers}")
+        # print(f"Adding keypoints: {keypoints}")
         for i,radius in enumerate(distances):
-            print("Adding pcd center points:")
             # Adding points from point cloud (moving)
-            self._add_3D_pixel(centers[i][0],centers[i][1],centers[2][0],(255,0,0),int(radius*10))
-            print("Adding keypoints:")
+            self._add_3D_pixel(centers[i][0],centers[i][1],centers[i][2],(255,0,0),int(radius))
             # Adding points from keypoints (static)
             self._add_3D_pixel(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,255,255),5)
-        
         self._draw_pixels()
         return self.image
 
