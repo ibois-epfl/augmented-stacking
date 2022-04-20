@@ -312,6 +312,6 @@ Since the stone is supposed to be underground, the closest we can get, is withou
 
 TODO:
 - Fix stacking Algorithme
-- Find a function wich adapts the size more smoothly
+- Find a function wich adapts the size of the points more smoothly
 
 
