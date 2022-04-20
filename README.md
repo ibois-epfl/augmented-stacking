@@ -291,6 +291,27 @@ TODO:
 - Adapt the size of the pcd cluster centers: e.g: (2-25 pixels) --> (0-500mm)
 
 
+# 2022.04.20 - Checked the pcd points
 
+For now the result seems good, the size of the points are changing respecting the change of altitude.
+
+Here an example:
+
+## View of how the stone should be put - stacking algorithm
+
+![stacking algorithm result](./img/stacking_algorithm.png)
+
+## Results of the projection
+<p>
+    <img src="./img/pcd_position_empty_scene.jpg" width="400">
+    <img src="./img/pcd_position_with_stone.jpg" width="400">
+</p>
+
+Remark:
+Since the stone is supposed to be underground, the closest we can get, is without placing anystone, which can be seen with the changing of the size of the points.
+
+TODO:
+- Fix stacking Algorithme
+- Find a function wich adapts the size more smoothly
 
 
