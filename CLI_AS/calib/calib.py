@@ -96,6 +96,7 @@ def main(OLD_ACQUISITION,CALIB_Z_THRESHOLD_M,RADIUS_PERI_THRESHOLD_PX,STARTING_P
     print(f"This calibration will create a folder {_utils_path} where every thing will be stored.")
     print("\nThe number of calibration points have to be at least 8, otherwise the calibration wont be precise enough.")
     print("The more points you have the better the calibration. I suggest you to take 3*3 or 4*3 points.")
+    print("Once the grid will be displayed, remember that the order is from left to right, following top towards lower rows")
     print("For more precision: use the distortion option of the projector and make the corners angle right.")
     _nb_lines_X = int(terminal.user_input("Number of points in X direction:"))
     _nb_lines_Y = int(terminal.user_input("Number of points in Y direction:"))
