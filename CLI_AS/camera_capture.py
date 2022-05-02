@@ -396,7 +396,7 @@ def get_pcd_scene(n_target_downsample, zed, point_cloud):
 
 class Live_stream(object):
     
-    def __init__(self,live_3D_space,image_sheet):
+    def __init__(self,Live_3D_space,image_sheet):
         self.tk = tkinter.Tk()
 
         self.w, self.h = self.tk.winfo_screenwidth(), self.tk.winfo_screenheight()
@@ -408,7 +408,7 @@ class Live_stream(object):
         self.lmain = tkinter.Label(self.tk)
         self.lmain.pack()
 
-        self.live_3D_space = live_3D_space
+        self.Live_3D_space = Live_3D_space
         self.image_sheet = image_sheet
         
     def _end_stream(self,event=None):
@@ -433,14 +433,14 @@ class Live_stream(object):
         
     def _get_live_stream(self):
         # Update the 3D space, with new capture points and all the distance measures
-        self.live_3D_space.update_3D_space()
+        self.Live_3D_space.update_3D_space()
 
         # Draw the new image for live stream
-        img = self.image_sheet.draw_image_from_3D_space(self.live_3D_space)
+        img = self.image_sheet.draw_image_from_3D_space(self.Live_3D_space)
        
         return img
 
-class live_3D_space(object):
+class Live_3D_space(object):
     def __init__(self,rock_mesh,zed,point_cloud):
         
         self.point_cloud = point_cloud
@@ -483,11 +483,12 @@ class live_3D_space(object):
         distances = np.abs(np.array(keypoints)[:,2] - z_values)*1000 # To convert in milimeters
         # clip the distances
         for i,distance in enumerate(distances):
-            if distance <1:
-                distances[i] = 1
-            if distance > 15:
-                distances[i] = 15
+            if distance <5:
+                distances[i] = 5
+            if distance > 400:
+                distances[i] = 400
         self.distances = distances
+
         # print(f"Distance btw the mesh centers and the captured pcd centers: {self.distances}")
         
     def _get_upper_pcd(self):
@@ -607,13 +608,13 @@ class draw_image(object):
     with different caracteristiques, that we can at the end get into a 2D image.
     """
 
-    def __init__(self,live_3D_space):
+    def __init__(self,Live_3D_space):
         self.width = 1920
         self.height = 1080
         self.image = np.zeros((self.height, self.width, 3),dtype=np.uint8)
         self.pixels = []
         self.transform_3D_2D = load_transformation_matrix()
-        self.live_3D_space = live_3D_space
+        self.Live_3D_space = Live_3D_space
     
     def _add_3D_pixel(self,x,y,z,color,size):
         if not np.isnan(x) and not np.isnan(y) and not np.isnan(z):
@@ -665,34 +666,46 @@ class draw_image(object):
     
     def _empty_pixels(self):
         self.pixels = []
-        
+    
+    def _mm_2_pxl(self,distance):
+        min_pxl_length = 5
+        MAX_pxl_length = 50
+        min_mm_length = 5
+        MAX_mm_length = 400
+        a = (MAX_pxl_length-min_pxl_length)/(MAX_mm_length - min_mm_length)
+        b = min_pxl_length -a*min_mm_length
+
+        return a*distance +b
+
+
     def clear_image(self):
         self.image = np.zeros((self.height, self.width, 3),dtype=np.uint8) 
 
-    def draw_image_from_3D_space(self,live_3D_space):
+    def draw_image_from_3D_space(self,Live_3D_space):
         # Taking the updated version of the 3D space
-        self.live_3D_space = live_3D_space
+        self.Live_3D_space = Live_3D_space
         # Clearing all old pixels
         self._empty_pixels()
         # Empty the image
         self.clear_image()
         # Drawing the last convex hull
-        upper_pcd = self.live_3D_space.get_upper_pcd()
+        upper_pcd = self.Live_3D_space.get_upper_pcd()
         self._add_pcd(upper_pcd)
         self._create_hull(color=[0,255,0],size=4)
         # Removing the points to create the convex hull
         self._empty_pixels()
 
-        centers = self.live_3D_space.get_centers()
-        keypoints = self.live_3D_space.get_key_points()
-        distances = self.live_3D_space.get_distances()
+        centers = self.Live_3D_space.get_centers()
+        keypoints = self.Live_3D_space.get_key_points()
+        distances = self.Live_3D_space.get_distances()
 
         ## Add points to image
         # print(f"Adding pcd center points: {centers}")
         # print(f"Adding keypoints: {keypoints}")
-        for i,radius in enumerate(distances):
+        for i,distance in enumerate(distances):
+            radius = self._mm_2_pxl(distance)//2
             # Adding points from point cloud (moving)
-            self._add_3D_pixel(centers[i][0],centers[i][1],centers[i][2],(255,0,0),int(radius))
+            self._add_3D_pixel(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,0,0),int(radius))
             # Adding points from keypoints (static)
             self._add_3D_pixel(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,255,255),5)
         self._draw_pixels()

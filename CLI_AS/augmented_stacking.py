@@ -78,6 +78,8 @@ def main():
         while O3D_VISUALISATION not in ["y","n","yn"]:
             O3D_VISUALISATION = terminal.user_input("Do you want to visualize Pcd in O3D ? (y/n)\n>>> ")
         
+        #TODO: add a checker for meter or mm scale of the imported stone
+
         # Check the faces for the download mesh if not downsample
         faces_low_res_mesh = len(np.asarray(low_res_mesh.triangles))
         if (faces_low_res_mesh > _faces_target_low_res_mesh):
