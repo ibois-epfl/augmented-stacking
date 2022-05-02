@@ -164,7 +164,7 @@ def main():
         
         if O3D_VISUALISATION in ["n","yn"]:
             terminal.custom_print(f"When the stone is placed correnctly, Press <Escape> to close the tkinter window.")
-            Live = camera_capture.Live_stream(Live_3D_space=Live_3D_space,image_sheet=image_drawer)
+            Live = camera_capture.Live_stream(Live_3D_space=Live_3D_space,image_drawer=image_drawer)
             Live.run()
         
         # while(True):

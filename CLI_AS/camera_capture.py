@@ -41,10 +41,9 @@ ROI = [0.7,1.5]
 CENTER = [250,750]
 # CENTER = [360,680]
 
-
+# Number of frames taken for the point cloud acquisition.
 NUMBER_OF_AVERAGE_FRAMES = 1
 
-IS_DOWNSAMPLED = True
 
 
 def rotationMatrix(r):
@@ -83,10 +82,8 @@ def rotationMatrix(r):
 def load_transformation_matrix():
 
     _root_file = os.path.dirname(__file__)
-    if _root_file == "":
-        _calib_information_path = _root_file + "calib/utils/calibration_info.yaml"
-    else:
-        _calib_information_path = _root_file + "/calib/utils/calibration_info.yaml"
+    _calib_information_path = os.path.join(_root_file, "calib/utils/calibration_info.yaml")
+
     # Test if the file exist as it is supposed when runing calib function entirely
     if not os.path.exists(_calib_information_path):
         terminal.error_print(
@@ -130,13 +127,12 @@ def convert_roi_meter_pixel(roi,center):
     And take as an input an array of the width and the length of the ROI in meters.
 
     :param roi: Array of the width and the length of the ROI in meters.
+        center: center of the image in pixel.
     """
 
     _root_file = os.path.dirname(__file__)
-    if _root_file == "":
-        _calib_information_path = _root_file + "calib/utils/calibration_info.yaml"
-    else:
-        _calib_information_path = _root_file + "/calib/utils/calibration_info.yaml"
+    _calib_information_path = os.path.join(_root_file, "calib/utils/calibration_info.yaml")
+
     # Test if the file exist as it is supposed when runing calib function entirely
     if not os.path.exists(_calib_information_path):
         terminal.error_print(f"No Calibration Data has been found in: {_calib_information_path}")
@@ -395,8 +391,12 @@ def get_pcd_scene(n_target_downsample, zed, point_cloud):
     return pcd
 
 class Live_stream(object):
+
+    """
+    This is the class creating the tkinter window with the live stream of the position of the stone.
+    """
     
-    def __init__(self,Live_3D_space,image_sheet):
+    def __init__(self,Live_3D_space,image_drawer):
         self.tk = tkinter.Tk()
 
         self.w, self.h = self.tk.winfo_screenwidth(), self.tk.winfo_screenheight()
@@ -409,38 +409,54 @@ class Live_stream(object):
         self.lmain.pack()
 
         self.Live_3D_space = Live_3D_space
-        self.image_sheet = image_sheet
-        
+        self.image_sheet = image_drawer
+  
     def _end_stream(self,event=None):
-        # self.tk.quit()
+        """
+        Function to end the stream, linked with the escape key in __init__.
+        """
         self.tk.quit()
         self.tk.destroy()
 
     def _toggle_fullscreen(self, event=None):
+        """
+        Function to toggle fullscreen, linked with the F11 key in __init__.
+        """
         self.state = not self.state  # Just toggling the boolean
         self.tk.attributes("-fullscreen", self.state)
-        return "break"
-
-    def run(self):
-        self._show_frame()
-        self.tk.mainloop()
 
     def _show_frame(self):
+        """
+        Function which is called in the run function, whihch is the loop of tkinter.
+        It updates the tkinter image with the acquired live stream image.
+        """
         self.frame = self._get_live_stream()
         self.imgtk = ImageTk.PhotoImage(image=Image.fromarray(self.frame, mode="RGB"))
         self.lmain.configure(image=self.imgtk)
         self.lmain.after(10, self._show_frame) 
         
     def _get_live_stream(self):
+        """
+        Function which updates the new image, by getting an update of the 3D Space.
+        This function is using the class Live_3D_space.
+        """
         # Update the 3D space, with new capture points and all the distance measures
         self.Live_3D_space.update_3D_space()
 
         # Draw the new image for live stream
-        img = self.image_sheet.Image_drawer_from_3D_space(self.Live_3D_space)
+        img = self.image_sheet.draw_image_from_3D_space(self.Live_3D_space)
        
         return img
 
+    def run(self):
+        self._show_frame()
+        self.tk.mainloop()
+
 class Live_3D_space(object):
+    """
+    This class is containing the 3D space, where the acquired pcd is processed.
+    It allows us to process the convex hull once and then update the pcd distances.
+    """
     def __init__(self,rock_mesh,zed,point_cloud):
         
         self.point_cloud = point_cloud
@@ -449,50 +465,11 @@ class Live_3D_space(object):
 
         self.upper_pcd_from_mesh = self._get_upper_pcd()
         self.list_mesh_cluster, self.key_points = self._get_cluster()
-
-    def update_3D_space(self):
-
-        # Get point cloud from camera
-        pcd = get_pcd_scene(2000, self.zed, self.point_cloud)  #TODO: check param 2000
-        # visualizer.viualize_wall([pcd,self.rock_mesh],"captured pcd")
-
-        ## Crop the pcd from a column
-        cropped_pcd = self._column_crop(pcd,self.rock_mesh,scale=1)
-        # visualizer.viualize_wall([cropped_pcd],"cropped pcd")
-
-        ## For visual purposes only: upper pcd of mesh
-        # upper_pcd_from_mesh = self._get_upper_pcd()
-        # visualizer.viualize_wall([upper_pcd_from_mesh],"upper mesh pcd")
-
-        ## Get keypoints and cluster pcd from the upper_pcd_from_mesh
-        list_mesh_clusters = self.get_list_mesh_cluster()
-        keypoints = self.get_key_points()
-        # print(f"The mesh clusters have following centers: {keypoints}")
-        # for cluster in list_mesh_clusters:
-        #     visualizer.viualize_wall([cluster],"keypoints")
-
-        ## Get captured pcd clusters
-        captured_pcd_clusters,self.centers = self._crop_pcd_on_cluster(cropped_pcd,list_mesh_clusters)
-        # print(f"The captured pcd clusters have following centers: {self.centers}")
-        # for cluster in captured_pcd_clusters:
-        #     visualizer.viualize_wall([cluster],"captured pcd cluster")
-
-        ## Get the Z value of the captured pcd clusters
-        z_values = self._get_z_value_of_pcds(captured_pcd_clusters)
-
-        ## Compute distance
-        distances = (np.array(keypoints)[:,2] - z_values)*1000 # To convert in milimeters
-        # clip the distances
-        for i,distance in enumerate(distances):
-            if np.abs(distance) < 5:
-                distances[i] = np.sign(distance)*5
-            if np.abs(distance) > 400:
-                distances[i] = np.sign(distance)*400
-        self.distances = distances
-
-        # print(f"Distance btw the mesh centers and the captured pcd centers: {self.distances}")
         
     def _get_upper_pcd(self):
+        """
+        This function returns the upper pcd from the rock_mesh.
+        """
         # Create shifted point cloud
         mesh  = copy.deepcopy(self.rock_mesh)
         subsampled_mesh = mesh.sample_points_poisson_disk(1000)
@@ -503,6 +480,11 @@ class Live_3D_space(object):
         return cropped_pcd
     
     def _crop_pcd_by_occupancy(self,mesh,pcd):
+        """
+        This function is returning a cropped point cloud.
+        It will return the inverse of a crop of the pcd, using the mesh as the bounding box.
+        If the points are inside the mesh, they will be removed.
+        """
         # Load mesh and convert to open3d.t.geometry.TriangleMesh
         mesh = o3d.t.geometry.TriangleMesh.from_legacy(mesh)
         #Create the scene 
@@ -525,7 +507,12 @@ class Live_3D_space(object):
 
         return cropped_pcd
 
-    def _get_cluster(self):
+    def _get_mesh_cluster(self):
+        """
+        This function returns both the clusters and the centers of the clusters, of the rock mesh.
+        Those centers are our fixed keypoints.
+        This function is using the K-mean algorithm, which give random results.
+        """
         # Get the points of the point cloud
         Points = np.asarray(self.upper_pcd_from_mesh.points)
 
@@ -547,11 +534,14 @@ class Live_3D_space(object):
 
         return list_cluster, key_points
 
-    def _column_crop(self,captured_pcd,rock_mesh,scale=1.5):
-        
+    def _column_crop(self,captured_pcd,mesh,scale=1.5):
+        """
+        This function is returning a cropped point cloud, using as a bounding box, 
+        the boundig box of the mesh, scaled with a given scale, and tranlsated along z axis.
+        """
         # Translate the mesh
-        mesh_down = copy.deepcopy(rock_mesh).translate((0, 0, -10))
-        mesh_up = copy.deepcopy(rock_mesh).translate((0, 0, 10))
+        mesh_down = copy.deepcopy(mesh).translate((0, 0, -10))
+        mesh_up = copy.deepcopy(mesh).translate((0, 0, 10))
 
         # Union of the two meshes
         mesh_down_up = mesh_down + mesh_up
@@ -563,31 +553,39 @@ class Live_3D_space(object):
         crop_captured_pcd = captured_pcd.crop(bbox)
         return crop_captured_pcd
 
-    def _crop_pcd_on_cluster(self,crop_captured_pcd,pcd_from_upper_mesh_clusters):
-        list_captured_pcd_clusters = []
+    def _crop_pcd_on_cluster(self,pcd,list_of_mesh):
+        """
+        This function is returing a list of cropped points, and the centers of all the cropped point clouds.
+        Each cropped point cloud is cropped using a given mesh.
+        """
+        list_pcds = []
         centers = []
-        for cluster in pcd_from_upper_mesh_clusters:
-            cropped_cluster = self._column_crop(crop_captured_pcd,cluster,scale=0.7)
-            list_captured_pcd_clusters.append(cropped_cluster)
+        for mesh in list_of_mesh:
+            cropped_cluster = self._column_crop(pcd,mesh,scale=0.7)
+            list_pcds.append(cropped_cluster)
             center = cropped_cluster.get_center()
             centers.append(center)
-        return list_captured_pcd_clusters,centers
+        return list_pcds,centers
 
-    def _get_z_value_of_pcds(self,captured_pcd_clusters):
-        Z_mean = []
-        Z_std = []
-        for cluster in captured_pcd_clusters:
-            if not len(np.asarray(cluster.points))==0:
-                z_mean = np.mean(np.asarray(cluster.points)[:,2])
-                z_std = np.std(np.asarray(cluster.points)[:,2])
-                Z_mean.append(z_mean)
-                Z_std.append(z_std)
-            else:
-                Z_mean.append(0)
-                Z_std.append(0)                
-        Z_value = np.asarray(Z_mean) # + 1/2*np.asarray(Z_std)**2
-        return Z_value
+    # def _get_z_value_of_pcds(self,list_pcds):
+    #     """
+    #     This function returns the distance along z axis, between the center of the point cloud and the keypoints.
+    #     """
+    #     Z_mean = []
+    #     Z_std = []
+    #     for pcd in list_pcds:
+    #         if not len(np.asarray(pcd.points))==0:
+    #             z_mean = np.mean(np.asarray(pcd.points)[:,2])
+    #             z_std = np.std(np.asarray(pcd.points)[:,2])
+    #             Z_mean.append(z_mean)
+    #             Z_std.append(z_std)
+    #         else:
+    #             Z_mean.append(0)
+    #             Z_std.append(0)                
+    #     Z_value = np.asarray(Z_mean) # + 1/2*np.asarray(Z_std)**2
+    #     return Z_value
 
+    ## Getters
     def get_list_mesh_cluster(self):
         return self.list_mesh_cluster
     
@@ -603,6 +601,35 @@ class Live_3D_space(object):
     def get_key_points(self):
         return self.key_points
     
+    def update_3D_space(self):
+
+        # Get point cloud from camera
+        pcd = get_pcd_scene(2000, self.zed, self.point_cloud)  #TODO: check param 2000
+
+        ## Crop the pcd from a column
+        cropped_pcd = self._column_crop(pcd,self.rock_mesh,scale=1)
+
+        ## Get keypoints and cluster pcd from the upper_pcd_from_mesh
+        list_mesh_clusters = self.get_list_mesh_cluster()
+        keypoints = self.get_key_points()
+
+        ## Get captured pcd clusters
+        captured_pcd_clusters,self.centers = self._crop_pcd_on_cluster(cropped_pcd,list_mesh_clusters)
+        
+        ## Get the Z value of the captured pcd clusters
+        # z_values = self._get_z_value_of_pcds(captured_pcd_clusters)
+
+        ## Compute distance
+        distances = (np.array(keypoints)[:,2] - self.centers[:,2])*1000 # To convert in milimeters
+        # clip the distances
+        for i,distance in enumerate(distances):
+            if np.abs(distance) < 5:
+                distances[i] = np.sign(distance)*5
+            if np.abs(distance) > 400:
+                distances[i] = np.sign(distance)*400
+        self.distances = distances
+
+    
 class Image_drawer(object):
     """   
     This class is creating an object which will allow us to list a certain number of pixels,
@@ -616,12 +643,27 @@ class Image_drawer(object):
         self.pixels = []
         self.transform_3D_2D = load_transformation_matrix()
         self.Live_3D_space = Live_3D_space
-    
-    def _3D_point_2_pxl(self,x,y,z,color,size):
+
+    def _3D_to_2D(self,x,y,z):
+        """
+        This function is transforming a 3D point into a 2D point.
+        """
+        
+        point_2D = np.dot(self.transform_3D_2D, np.array([[x], [y], [z],[1]]))
+        point_2D = point_2D[0:2]
+        return point_2D
+        
+    def _add_3D_point_to_image(self,x,y,z,color,size):
+        """
+        This function is taking as an input x,y,z coordinates from a point in space, 
+        and caracteristiques of the pixel, like color and size.
+        And if the coordinate is in the image range, we add the pixel to the list of pixels.
+        """
+
         if not np.isnan(x) and not np.isnan(y) and not np.isnan(z):
-            xy1 = np.dot(self.transform_3D_2D, np.array([[x], [y], [z],[1]]))
-            pixel = [int(xy1[1]),int(xy1[0]),color,size]
-            i,j = pixel[:2]
+            pixel_coord = self._3D_to_2D(x,y,z)
+            pixel = [pixel_coord[0],pixel_coord[1],color,size]
+            i,j = pixel_coord
             if i > 0 and i < self.height and j > 0 and j < self.width:
                 self.pixels.append(pixel)
             else:
@@ -629,7 +671,12 @@ class Image_drawer(object):
         else:
             print(f"point: [{x},{y},{z}] is not admissible")
  
-    def _add_pcd(self,pcd,size=2,color=[255,0,255]):
+    def _add_pcd_to_image(self,pcd,size=2,color=[255,0,255]):
+
+        """
+        This function is adding an entire point cloud to the image.
+        It takes as an input an o3d point cloud, and the caracteristiques of the pixel, like color and size.
+        """
         npy_pts = np.asarray(pcd.points)
         npy_colors = np.asarray(pcd.colors)
 
@@ -637,14 +684,17 @@ class Image_drawer(object):
             print("pcd is empty")
         else:
             if len(npy_colors) < len(npy_pts):
-                # print("Not all points of point cloud have a color, using default color: magenta")
                 for _,point in enumerate(npy_pts):
-                    self._3D_point_2_pxl(point[0],point[1],point[2],color,size)
+                    self._add_3D_point_to_image(point[0],point[1],point[2],color,size)
             else:
                 for i,point in enumerate(npy_pts):
-                    self._3D_point_2_pxl(point[0],point[1],point[2],npy_colors[i],size)
+                    self._add_3D_point_to_image(point[0],point[1],point[2],npy_colors[i],size)
     
-    def _create_hull(self,color,size):
+    def _draw_convex_hull_on_image(self,color,size):
+        """
+        This function is creating a convex hull out of all the pixels added in the pixels list.
+        It will draw the convex hull on the image using cv2.line.
+        """
         if len(self.pixels) < 3:
             print("Not enough points to create hull")
             exit()
@@ -655,57 +705,72 @@ class Image_drawer(object):
                 cv2.line(self.image,(self.pixels[simplex[0]][:2][1],self.pixels[simplex[0]][:2][0]),(self.pixels[simplex[1]][:2][1],self.pixels[simplex[1]][:2][0]),color,size)
         
     def _draw_pixels(self):
+        """
+        This function is drawing all the pixels declared in pixel list on the image.
+        """
         for pixel in self.pixels:
             i,j,color,size = pixel
             self.image[i-size:i+size,j-size:j+size,:] = color
     
     def _empty_pixels(self):
+        """
+        This function is emptying the pixels list.
+        """
         self.pixels = []
     
     def _mm_2_pxl(self,distance):
+        """
+        This function is converting the distance in milimeters to pixels.
+        It is doing a linear transformation, with a slope of:
+            a = (MAX_pxl_length-min_pxl_length)/(MAX_mm_length - min_mm_length)
+        """
+        ## PARAMS:
         min_pxl_length = 5
         MAX_pxl_length = 50
         min_mm_length = 5
         MAX_mm_length = 400
+
         a = (MAX_pxl_length-min_pxl_length)/(MAX_mm_length - min_mm_length)
         b = min_pxl_length -a*min_mm_length
         return a*distance +b
 
-
     def clear_image(self):
+        """
+        This funcion is setting the image to black.
+        """
         self.image = np.zeros((self.height, self.width, 3),dtype=np.uint8) 
 
-    def Image_drawer_from_3D_space(self,Live_3D_space):
+    def draw_image_from_3D_space(self,Live_3D_space):
+        """
+        This function is drawing the image from the 3D space.
+        """
         # Taking the updated version of the 3D space
         self.Live_3D_space = Live_3D_space
         # Clearing all old pixels
         self._empty_pixels()
         # Empty the image
         self.clear_image()
-        # Drawing the last convex hull
+        # Drawing the convex hull
         upper_pcd = self.Live_3D_space.get_upper_pcd()
-        self._add_pcd(upper_pcd)
-        self._create_hull(color=[0,255,0],size=4)
-        # Removing the points to create the convex hull
+        self._add_pcd_to_image(upper_pcd)
+        self._draw_convex_hull_on_image(color=[0,255,0],size=4)
+        # Removing the points used to create the convex hull
         self._empty_pixels()
 
-        centers = self.Live_3D_space.get_centers()
         keypoints = self.Live_3D_space.get_key_points()
         distances = self.Live_3D_space.get_distances()
 
         ## Add points to image
-        # print(f"Adding pcd center points: {centers}")
-        # print(f"Adding keypoints: {keypoints}")
         for i,distance in enumerate(distances):
             radius = self._mm_2_pxl(np.abs(distance))
-            # Adding points from point cloud (moving)
+            # Adding points from point cloud with updated distance
             if distance > 0:
-                self._3D_point_2_pxl(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,0,0),int(radius))
+                self._add_3D_point_to_image(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,0,0),int(radius))
             else:
-                self._3D_point_2_pxl(keypoints[i][0],keypoints[i][1],keypoints[i][2],(0,0,255),int(radius))
+                self._add_3D_point_to_image(keypoints[i][0],keypoints[i][1],keypoints[i][2],(0,0,255),int(radius))
 
-            # Adding points from keypoints (static)
-            self._3D_point_2_pxl(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,255,255),5)
+            # Adding points from keypoints
+            self._add_3D_point_to_image(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,255,255),5)
         self._draw_pixels()
         return self.image
 
