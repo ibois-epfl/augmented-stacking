@@ -5,8 +5,10 @@
 Created on Thu Feb 26 15:20:00 2022
 CLI main file for Augmented Stacking:
 The main file is used to run the augmented stacking algorithm to guide an operator in
-correctly placing stones following a stacking algorithm.
+correctly placing stones following a stacking algorithm and an AR system composed by a 
+projector and 3D camera (ZEDi2)
 """
+
 
 import os
 import sys
@@ -30,6 +32,9 @@ import colorama as cr
 
 
 
+# TODO: implement non-block visualization open3d
+
+# Path where the landscape is overwritten
 _name_landscape = './landscape.ply'
 
 # Set a target of mesh faces for the low-res mesh
@@ -38,19 +43,11 @@ _faces_target_low_res_mesh = 500
 # Set a target of max vertices for the captured scene mesh
 _vertices_target_low_res_scene = 2000
 
+#TODO: solve the conflict between o3d visualizer and tkinter, temp var
+_is_o3d_vis_active = False
 
 
 def main():
-
-    # [0] Decorator for CLI
-    # V - [1] Download the low-res mesh
-    # V - [2] Compute the mesh 6dof pose and update landscape
-    # V - [3] Store/save the 6dof pose locally
-    # V - [4] Load the high-res mesh
-    # >>> [5] Capture scan with correct orientation to point cloud
-    # [6] Calculate deviation
-    # [7] Colored captured point cloud with rgb deviation values
-    # [8] Pass it to the 3D-2D pipeline
 
     # -----------------------------------------------------------------------
     # [0] Decorator
@@ -69,33 +66,36 @@ def main():
         # [1] Download the low-res mesh
         # -----------------------------------------------------------------------
 
-        # Ask for stone label & download LOW-RES mesh and open it
-        name_low_res_mesh, low_res_mesh = dataset_IO.download_github_raw_file(
-            is_raw_mesh=True)
-        
-        # Ask for o3d visualisation
-        O3D_VISUALISATION = None
-        while O3D_VISUALISATION not in ["y","n","yn"]:
-            O3D_VISUALISATION = terminal.user_input("Do you want to visualize Pcd in O3D ? (y/n)\n>>> ")
-        
-        #TODO: add a checker for meter or mm scale of the imported stone
+        while(True):
+            # Ask for stone label & download LOW-RES mesh and open it
+            name_low_res_mesh, low_res_mesh = dataset_IO.download_github_raw_file()
+            
+            #TODO: solve the conflict between o3d visualizer and tkinter, temp
+            i_o3d_vis_active = terminal.user_input('Do you want to visualize Pcd in O3D ? (y/n)\n>>> ')
+            if i_o3d_vis_active in ["y","yn"]: _is_o3d_vis_active = True
 
-        # Check the faces for the download mesh if not downsample
-        faces_low_res_mesh = len(np.asarray(low_res_mesh.triangles))
-        if (faces_low_res_mesh > _faces_target_low_res_mesh):
-            terminal.custom_print(f"The mesh needs to be decimate for the stacking algorithms.\n"
-                                  f" Number of vertices for downloaded mesh: {faces_low_res_mesh}")
-            low_res_mesh = low_res_mesh.simplify_quadric_decimation(
-                target_number_of_triangles=_faces_target_low_res_mesh)
-            new_faces_low_res_mesh = len(np.asarray(low_res_mesh.triangles))
-            terminal.custom_print(f" Number of vertices of the decimated mesh: {new_faces_low_res_mesh}")
-        
-        # Visual inspection of downloaded mesh
-        if O3D_VISUALISATION in ["y","yn"]:
-            visualizer.viualize_mesh_normal(low_res_mesh, 'Low-res mesh') # TODO: Fix the issue of using both open3d and tkinter
+            # Check the n faces for the download mesh if not downsample
+            faces_low_res_mesh = len(np.asarray(low_res_mesh.triangles))
+            if (faces_low_res_mesh > _faces_target_low_res_mesh):
+                terminal.custom_print(f"The mesh needs to be decimate for the stacking algorithms.\n"
+                                    f" Number of vertices for downloaded mesh: {faces_low_res_mesh}")
+                low_res_mesh = low_res_mesh.simplify_quadric_decimation(
+                    target_number_of_triangles=_faces_target_low_res_mesh)
+                new_faces_low_res_mesh = len(np.asarray(low_res_mesh.triangles))
+                terminal.custom_print(f" Number of vertices of the decimated mesh: {new_faces_low_res_mesh}")
+            
+            # Visual inspection of downloaded mesh
+            if _is_o3d_vis_active:
+                visualizer.viualize_mesh_normal(low_res_mesh, 'Low-res mesh') # TODO: Fix the issue of using both open3d and tkinter
+            
+            # Ask if you want to select stone or chose another one
+            i_is_stone_correct = terminal.user_input('Do you confirm this stone (if n you will enter the label again)? (y/n)\n>>> ')
+            if i_is_stone_correct in ['Y', 'y']: break
 
         # Write out the mesh (for algorithm to read)
         o3d.io.write_triangle_mesh(name_low_res_mesh, low_res_mesh)
+
+        exit()
 
         # -----------------------------------------------------------------------
         # [2-3] Capture the scene mesh + compute the mesh 6dof pose
@@ -105,7 +105,7 @@ def main():
         landscape_mesh = camera_capture.get_mesh_scene(
             _vertices_target_low_res_scene)
         
-        if O3D_VISUALISATION in ["y","yn"]:
+        if _is_o3d_vis_active:
             visualizer.viualize_wall([landscape_mesh], 'wall view')
 
         # # Save meshed scene
@@ -133,25 +133,17 @@ def main():
         # Transform the low-res mesh for visualization
         low_res_mesh.transform(pose_matrix)
         
-        if O3D_VISUALISATION == "y":
+        if _is_o3d_vis_active:
             visualizer.viualize_wall([low_res_mesh, landscape_mesh], 'wall view')
 
-        # ---------------------------------------------------------------------------
-        # ---------------------------------------------------------------------------
         # -----------------------------------------------------------------------
         # [4] Load the high-res mesh + apply 4x4 transformation
         # -----------------------------------------------------------------------
 
-        # # Download the HIGH-RES mesh file and open it
-        # name_highres_mesh, high_res_mesh = dataset_IO.download_github_raw_file(is_raw_mesh=False)
-
-        # # Apply transformation to mesh
-        # high_res_mesh.transform(pose_matrix)
-
         # Merge transformed stone and landscape mesh
         merged_landscape = low_res_mesh + landscape_mesh
 
-        if O3D_VISUALISATION in ["y","yn"]:
+        if _is_o3d_vis_active:
             visualizer.viualize_wall([merged_landscape],"merged landscape")
         # First open the camera and close at the end
         zed, point_cloud = camera_capture.set_up_zed()
@@ -162,21 +154,13 @@ def main():
         # create image object 
         image_drawer = camera_capture.Image_drawer(Live_3D_space=Live_3D_space)
         
-        if O3D_VISUALISATION in ["n","yn"]:
+        if _is_o3d_vis_active:
             terminal.custom_print(f"When the stone is placed correnctly, Press <Escape> to close the tkinter window.")
             Live = camera_capture.Live_stream(Live_3D_space=Live_3D_space,image_drawer=image_drawer)
             Live.run()
         
-        # while(True):
-        #     # TODO: implement non-block visualization open3d
-        #     # merged_landscape.compute_vertex_normals() # // DEBUG
-        #     # visualizer.viualize_wall([deviation_pc, merged_landscape], 'wall view')
-        
-        # # Destroy non-blocking visualizator
-        # vis.destroy_window()
-
         # Now that the loop is closed, close the camera
-        zed.close()
+        zed.close()  #TODO: check if we need to close the zed each time or we can continue
 
     # -----------------------------------------------------------------------
     # TODO LIST
