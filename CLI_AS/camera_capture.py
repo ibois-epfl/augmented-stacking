@@ -409,7 +409,7 @@ class Live_stream(object):
         self.lmain.pack()
 
         self.Live_3D_space = Live_3D_space
-        self.image_sheet = image_drawer
+        self.image_drawer = image_drawer
   
     def _end_stream(self,event=None):
         """
@@ -444,7 +444,7 @@ class Live_stream(object):
         self.Live_3D_space.update_3D_space()
 
         # Draw the new image for live stream
-        img = self.image_sheet.draw_image_from_3D_space(self.Live_3D_space)
+        img = self.image_drawer.draw_image_from_3D_space(self.Live_3D_space)
        
         return img
 
@@ -464,7 +464,7 @@ class Live_3D_space(object):
         self.zed = zed
 
         self.upper_pcd_from_mesh = self._get_upper_pcd()
-        self.list_mesh_cluster, self.key_points = self._get_cluster()
+        self.list_mesh_cluster, self.key_points = self._get_mesh_cluster()
         
     def _get_upper_pcd(self):
         """
@@ -565,7 +565,7 @@ class Live_3D_space(object):
             list_pcds.append(cropped_cluster)
             center = cropped_cluster.get_center()
             centers.append(center)
-        return list_pcds,centers
+        return list_pcds,np.array(centers)
 
     # def _get_z_value_of_pcds(self,list_pcds):
     #     """
@@ -659,10 +659,9 @@ class Image_drawer(object):
         and caracteristiques of the pixel, like color and size.
         And if the coordinate is in the image range, we add the pixel to the list of pixels.
         """
-
         if not np.isnan(x) and not np.isnan(y) and not np.isnan(z):
             pixel_coord = self._3D_to_2D(x,y,z)
-            pixel = [pixel_coord[0],pixel_coord[1],color,size]
+            pixel = [int(pixel_coord[0][0]),int(pixel_coord[1][0]),color,size]
             i,j = pixel_coord
             if i > 0 and i < self.height and j > 0 and j < self.width:
                 self.pixels.append(pixel)
