@@ -157,14 +157,14 @@ def main():
         zed, point_cloud = camera_capture.set_up_zed()
 
         # Create the 3D space model
-        live_3D_space = camera_capture.live_3D_space(rock_mesh=low_res_mesh,zed=zed,point_cloud=point_cloud)
+        Live_3D_space = camera_capture.Live_3D_space(rock_mesh=low_res_mesh,zed=zed,point_cloud=point_cloud)
 
         # create image object 
-        image_sheet = camera_capture.draw_image(live_3D_space=live_3D_space)
+        image_drawer = camera_capture.Image_drawer(Live_3D_space=Live_3D_space)
         
         if O3D_VISUALISATION in ["n","yn"]:
             terminal.custom_print(f"When the stone is placed correnctly, Press <Escape> to close the tkinter window.")
-            Live = camera_capture.Live_stream(live_3D_space=live_3D_space,image_sheet=image_sheet)
+            Live = camera_capture.Live_stream(Live_3D_space=Live_3D_space,image_sheet=image_drawer)
             Live.run()
         
         # while(True):

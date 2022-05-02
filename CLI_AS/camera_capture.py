@@ -404,7 +404,7 @@ class Live_stream(object):
         self.state = False
         self.tk.attributes('-zoomed', True)  # This just maximizes it so we can see the window. It's nothing to do with fullscreen.
         self.tk.bind('<Escape>', self._end_stream)
-        self.tk.bind("<F11>", self._toggle_fullscreen)
+        self.tk.attributes("-fullscreen", True)
         self.lmain = tkinter.Label(self.tk)
         self.lmain.pack()
 
@@ -436,7 +436,7 @@ class Live_stream(object):
         self.Live_3D_space.update_3D_space()
 
         # Draw the new image for live stream
-        img = self.image_sheet.draw_image_from_3D_space(self.Live_3D_space)
+        img = self.image_sheet.Image_drawer_from_3D_space(self.Live_3D_space)
        
         return img
 
@@ -457,7 +457,7 @@ class Live_3D_space(object):
         # visualizer.viualize_wall([pcd,self.rock_mesh],"captured pcd")
 
         ## Crop the pcd from a column
-        cropped_pcd = self._column_crop(pcd,self.rock_mesh,scale=3)
+        cropped_pcd = self._column_crop(pcd,self.rock_mesh,scale=1)
         # visualizer.viualize_wall([cropped_pcd],"cropped pcd")
 
         ## For visual purposes only: upper pcd of mesh
@@ -465,13 +465,14 @@ class Live_3D_space(object):
         # visualizer.viualize_wall([upper_pcd_from_mesh],"upper mesh pcd")
 
         ## Get keypoints and cluster pcd from the upper_pcd_from_mesh
-        list_pcd_clusters, keypoints = self.get_list_mesh_cluster(),self.get_key_points()
+        list_mesh_clusters = self.get_list_mesh_cluster()
+        keypoints = self.get_key_points()
         # print(f"The mesh clusters have following centers: {keypoints}")
-        # for cluster in list_pcd_clusters:
+        # for cluster in list_mesh_clusters:
         #     visualizer.viualize_wall([cluster],"keypoints")
 
         ## Get captured pcd clusters
-        captured_pcd_clusters,self.centers = self._crop_pcd_on_cluster(cropped_pcd,list_pcd_clusters)
+        captured_pcd_clusters,self.centers = self._crop_pcd_on_cluster(cropped_pcd,list_mesh_clusters)
         # print(f"The captured pcd clusters have following centers: {self.centers}")
         # for cluster in captured_pcd_clusters:
         #     visualizer.viualize_wall([cluster],"captured pcd cluster")
@@ -480,13 +481,13 @@ class Live_3D_space(object):
         z_values = self._get_z_value_of_pcds(captured_pcd_clusters)
 
         ## Compute distance
-        distances = np.abs(np.array(keypoints)[:,2] - z_values)*1000 # To convert in milimeters
+        distances = (np.array(keypoints)[:,2] - z_values)*1000 # To convert in milimeters
         # clip the distances
         for i,distance in enumerate(distances):
-            if distance <5:
-                distances[i] = 5
-            if distance > 400:
-                distances[i] = 400
+            if np.abs(distance) < 5:
+                distances[i] = np.sign(distance)*5
+            if np.abs(distance) > 400:
+                distances[i] = np.sign(distance)*400
         self.distances = distances
 
         # print(f"Distance btw the mesh centers and the captured pcd centers: {self.distances}")
@@ -566,7 +567,7 @@ class Live_3D_space(object):
         list_captured_pcd_clusters = []
         centers = []
         for cluster in pcd_from_upper_mesh_clusters:
-            cropped_cluster = self._column_crop(crop_captured_pcd,cluster,scale=1.0)
+            cropped_cluster = self._column_crop(crop_captured_pcd,cluster,scale=0.7)
             list_captured_pcd_clusters.append(cropped_cluster)
             center = cropped_cluster.get_center()
             centers.append(center)
@@ -602,7 +603,7 @@ class Live_3D_space(object):
     def get_key_points(self):
         return self.key_points
     
-class draw_image(object):
+class Image_drawer(object):
     """   
     This class is creating an object which will allow us to list a certain number of pixels,
     with different caracteristiques, that we can at the end get into a 2D image.
@@ -616,19 +617,13 @@ class draw_image(object):
         self.transform_3D_2D = load_transformation_matrix()
         self.Live_3D_space = Live_3D_space
     
-    def _add_3D_pixel(self,x,y,z,color,size):
+    def _3D_point_2_pxl(self,x,y,z,color,size):
         if not np.isnan(x) and not np.isnan(y) and not np.isnan(z):
             xy1 = np.dot(self.transform_3D_2D, np.array([[x], [y], [z],[1]]))
             pixel = [int(xy1[1]),int(xy1[0]),color,size]
             i,j = pixel[:2]
             if i > 0 and i < self.height and j > 0 and j < self.width:
                 self.pixels.append(pixel)
-            # elif force:
-            #     if i > 0 and i < self.height:
-            #         pixel[1] = self.width
-            #     else:
-            #         pixel[0] = self.height
-            #     self.pixels.append(pixel)
             else:
                 print(f"X,Y,Z: {x},{y},{z}, giving Pixel: {i}, {j} are out of bounds for image of size {self.height}, {self.width}")
         else:
@@ -644,10 +639,10 @@ class draw_image(object):
             if len(npy_colors) < len(npy_pts):
                 # print("Not all points of point cloud have a color, using default color: magenta")
                 for _,point in enumerate(npy_pts):
-                    self._add_3D_pixel(point[0],point[1],point[2],color,size)
+                    self._3D_point_2_pxl(point[0],point[1],point[2],color,size)
             else:
                 for i,point in enumerate(npy_pts):
-                    self._add_3D_pixel(point[0],point[1],point[2],npy_colors[i],size)
+                    self._3D_point_2_pxl(point[0],point[1],point[2],npy_colors[i],size)
     
     def _create_hull(self,color,size):
         if len(self.pixels) < 3:
@@ -674,14 +669,13 @@ class draw_image(object):
         MAX_mm_length = 400
         a = (MAX_pxl_length-min_pxl_length)/(MAX_mm_length - min_mm_length)
         b = min_pxl_length -a*min_mm_length
-
         return a*distance +b
 
 
     def clear_image(self):
         self.image = np.zeros((self.height, self.width, 3),dtype=np.uint8) 
 
-    def draw_image_from_3D_space(self,Live_3D_space):
+    def Image_drawer_from_3D_space(self,Live_3D_space):
         # Taking the updated version of the 3D space
         self.Live_3D_space = Live_3D_space
         # Clearing all old pixels
@@ -703,11 +697,15 @@ class draw_image(object):
         # print(f"Adding pcd center points: {centers}")
         # print(f"Adding keypoints: {keypoints}")
         for i,distance in enumerate(distances):
-            radius = self._mm_2_pxl(distance)//2
+            radius = self._mm_2_pxl(np.abs(distance))
             # Adding points from point cloud (moving)
-            self._add_3D_pixel(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,0,0),int(radius))
+            if distance > 0:
+                self._3D_point_2_pxl(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,0,0),int(radius))
+            else:
+                self._3D_point_2_pxl(keypoints[i][0],keypoints[i][1],keypoints[i][2],(0,0,255),int(radius))
+
             # Adding points from keypoints (static)
-            self._add_3D_pixel(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,255,255),5)
+            self._3D_point_2_pxl(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,255,255),5)
         self._draw_pixels()
         return self.image
 
