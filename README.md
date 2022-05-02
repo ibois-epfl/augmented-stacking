@@ -219,3 +219,99 @@ TODO LIST:
 - implementation of the described code and visualization
 - adjustments of config file for stacking algorithm
 
+
+# 2022.04.11 - Implementation of the code above
+
+The extraction of the upper point cloud of the mesh is as following:
+
+![upper_point_cloud](./img/upper_pcd.png)
+
+The idea is to select 3 keypoints from this point cloud. To do so we use K-mean, which will give us 3 clusters.
+
+Those are the following separations:
+
+<p>
+    <img src="./img/mesh_cluster_1.png" width="265">
+    <img src="./img/mesh_cluster_2.png" width="265">
+    <img src="./img/mesh_cluster_3.png" width="265">
+</p>
+
+Those clusters on the meshed rock, will give us 3 bounding boxes, which we can use to subsample the captured point cloud.
+
+For now it seems that the stacking algorithm doesn't allow us to get the right position, so it still need to be adjusted.
+
+This is the final image we get on the screen, with:
+- in Green: the convex hull of the projected upper point cloud of the meshed rock.
+- in White: the keypoints of the meshed rock, which don't move.
+- in Red: the position of the centers of the clustered acquired point clouds.
+
+![Projected visualisation](./img/2d_projection.png)
+
+TODO:
+
+- Visualize the clustered captured points - See following
+- Fix the black points on the convex hull - Fixed by removing the pixels after drawing the convex hull.
+- Catch all errors - Fixed 
+- Clean up the Test file. - Removed and added to camera capture
+- See why there is only two points visible, overlapping ? - Have to wait the correction of stacking algorithm, probably because the stone is out of ROI.
+
+# 2022.04.12 - Correction and visuals of the clustered point clouds
+
+The following scene is beeing treated:
+
+![Scene](./img/scene.png)
+
+Here an over view of the upper pcd of the mesh:
+
+![Upper pcd from mesh](./img/upper_mesh.png)
+
+Then going through K-mean we get those clusters:
+
+<p>
+    <img src="./img/cluster_1.png" width="265">
+    <img src="./img/cluster_2.png" width="265">
+    <img src="./img/cluster_3.png" width="265">
+</p>
+
+From the position of the rock, we cropp the pcd:
+
+![Cropped pcd](./img/cropped_pcd.png)
+
+This point cloud is then cropped using the bounding boxes of the mesh clusters:
+In this case, one box is cropping an empty point cloud, this is probably due to the fact that the stone is outside of the roi.
+
+<p>
+    <img src="./img/pcd_cluster_1.png" width="400">
+    <img src="./img/pcd_cluster_2.png" width="400">
+</p>
+
+
+TODO:
+
+- Adapt the size of the pcd cluster centers: e.g: (2-25 pixels) --> (0-500mm)
+
+
+# 2022.04.20 - Checked the pcd points
+
+For now the result seems good, the size of the points are changing respecting the change of altitude.
+
+Here an example:
+
+## View of how the stone should be put - stacking algorithm
+
+![stacking algorithm result](./img/stacking_algorithm.png)
+
+## Results of the projection
+<p>
+    <img src="./img/pcd_position_empty_scene.jpg" width="400">
+    <img src="./img/pcd_position_with_stone.jpg" width="400">
+</p>
+
+Remark:
+Since the stone is supposed to be underground, the closest we can get, is without placing anystone, which can be seen with the changing of the size of the points.
+
+TODO:
+- Fix stacking Algorithme
+- Find a function wich adapts the size of the points more smoothly
+
+

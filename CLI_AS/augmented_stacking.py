@@ -75,7 +75,7 @@ def main():
         
         # Ask for o3d visualisation
         O3D_VISUALISATION = None
-        while O3D_VISUALISATION not in ["y","n"]:
+        while O3D_VISUALISATION not in ["y","n","yn"]:
             O3D_VISUALISATION = terminal.user_input("Do you want to visualize Pcd in O3D ? (y/n)\n>>> ")
         
         # Check the faces for the download mesh if not downsample
@@ -89,7 +89,7 @@ def main():
             terminal.custom_print(f" Number of vertices of the decimated mesh: {new_faces_low_res_mesh}")
         
         # Visual inspection of downloaded mesh
-        if O3D_VISUALISATION == "y":
+        if O3D_VISUALISATION in ["y","yn"]:
             visualizer.viualize_mesh_normal(low_res_mesh, 'Low-res mesh') # TODO: Fix the issue of using both open3d and tkinter
 
         # Write out the mesh (for algorithm to read)
@@ -103,10 +103,10 @@ def main():
         landscape_mesh = camera_capture.get_mesh_scene(
             _vertices_target_low_res_scene)
         
-        if O3D_VISUALISATION == "y":
+        if O3D_VISUALISATION in ["y","yn"]:
             visualizer.viualize_wall([landscape_mesh], 'wall view')
 
-        # Save meshed scene
+        # # Save meshed scene
         print("Writing out the captured mesh from 3d camera")
         o3d.io.write_triangle_mesh(
             _name_landscape, landscape_mesh, write_ascii=True)
@@ -149,19 +149,20 @@ def main():
         # Merge transformed stone and landscape mesh
         merged_landscape = low_res_mesh + landscape_mesh
 
+        if O3D_VISUALISATION in ["y","yn"]:
+            visualizer.viualize_wall([merged_landscape],"merged landscape")
         # First open the camera and close at the end
         zed, point_cloud = camera_capture.set_up_zed()
 
-        # # Put background black to avoid camera mis-capture
+        # Create the 3D space model
+        live_3D_space = camera_capture.live_3D_space(rock_mesh=low_res_mesh,zed=zed,point_cloud=point_cloud)
+
+        # create image object 
+        image_sheet = camera_capture.draw_image(live_3D_space=live_3D_space)
         
-        # vis = o3d.visualization.Visualizer()
-            # vis.create_window()
-            # vis.add_geometry(deviation_pc)
-            # vis.add_geometry(merged_landscape)  # do not visualize mesh TODO: add transparency
-        
-        if O3D_VISUALISATION == "n":
-            terminal.custom_print(f"When the stone is placed correctly, Press <Escape> to close the tkinter window.")
-            Live = camera_capture.Live_stream(zed,point_cloud,merged_landscape,low_res_mesh)
+        if O3D_VISUALISATION in ["n","yn"]:
+            terminal.custom_print(f"When the stone is placed correnctly, Press <Escape> to close the tkinter window.")
+            Live = camera_capture.Live_stream(live_3D_space=live_3D_space,image_sheet=image_sheet)
             Live.run()
         
         # while(True):
