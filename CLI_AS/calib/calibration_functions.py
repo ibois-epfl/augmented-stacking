@@ -145,7 +145,7 @@ def calculate_3D_2D_matrix(PROJECTOR_PIXEL_PTS_PATH,CALIB_PTS_XYZ):
     output = scipy.optimize.minimize(optimise_me,
                                      x0,
                                      args=(calib_points_XYZ,proj_xy),
-                                     method='L-BFGS-B',
+                                     method='Powell',
                                      options={'disp': True,
                                               'gtol': 0.000000000000001,
                                               'ftol': 0.000000000000001,
@@ -439,10 +439,10 @@ def get_Disk_Position(imageZoffset, newImageXYZ,ROI,CALIB_Z_THRESHOLD_M,RADIUS_T
             coordsXYZm.append(D_position)
     elif circlesBool.sum() == 0:
         print("No suitable objects found")
-        return None
+        coordsXYZm,centroidPx = None,None
     else:
         print("More than one suitable object found, need to select best one...")
-        return None
+        coordsXYZm,centroidPx = None,None
     print(f"Found your disk at (x,y,z in meters): {coordsXYZm}")
     return coordsXYZm,centroidPx
 
