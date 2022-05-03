@@ -44,6 +44,8 @@ CENTER = [250,750]
 # Number of frames taken for the point cloud acquisition.
 NUMBER_OF_AVERAGE_FRAMES = 1
 
+# Scaling factor when cropping the live stream cloud on keypoints
+CLUSTER_REDUCTION_FACTOR = 0.4
 
 
 def rotationMatrix(r):
@@ -390,6 +392,7 @@ def get_pcd_scene(n_target_downsample, zed, point_cloud):
 
     return pcd
 
+
 class Live_stream(object):
 
     """
@@ -561,7 +564,7 @@ class Live_3D_space(object):
         list_pcds = []
         centers = []
         for mesh in list_of_mesh:
-            cropped_cluster = self._column_crop(pcd,mesh,scale=0.7)
+            cropped_cluster = self._column_crop(pcd,mesh,scale=CLUSTER_REDUCTION_FACTOR)
             list_pcds.append(cropped_cluster)
             center = cropped_cluster.get_center()
             centers.append(center)
@@ -629,7 +632,6 @@ class Live_3D_space(object):
                 distances[i] = np.sign(distance)*400
         self.distances = distances
 
-    
 class Image_drawer(object):
     """   
     This class is creating an object which will allow us to list a certain number of pixels,
@@ -661,14 +663,17 @@ class Image_drawer(object):
         """
         if not np.isnan(x) and not np.isnan(y) and not np.isnan(z):
             pixel_coord = self._3D_to_2D(x,y,z)
-            pixel = [int(pixel_coord[0][0]),int(pixel_coord[1][0]),color,size]
-            i,j = pixel_coord
+            pixel = [int(pixel_coord[1][0]),int(pixel_coord[0][0]),color,size]
+            j,i = pixel_coord
             if i > 0 and i < self.height and j > 0 and j < self.width:
                 self.pixels.append(pixel)
+                return 1
             else:
                 print(f"X,Y,Z: {x},{y},{z}, giving Pixel: {i}, {j} are out of bounds for image of size {self.height}, {self.width}")
+                return 0
         else:
             print(f"point: [{x},{y},{z}] is not admissible")
+            return 0
  
     def _add_pcd_to_image(self,pcd,size=2,color=[255,0,255]):
 
@@ -679,16 +684,22 @@ class Image_drawer(object):
         npy_pts = np.asarray(pcd.points)
         npy_colors = np.asarray(pcd.colors)
 
+        pixl_count = 0
         if len(npy_pts) == 0:
             print("pcd is empty")
         else:
             if len(npy_colors) < len(npy_pts):
                 for _,point in enumerate(npy_pts):
-                    self._add_3D_point_to_image(point[0],point[1],point[2],color,size)
+                    pixl_count +=self._add_3D_point_to_image(point[0],point[1],point[2],color,size)
             else:
                 for i,point in enumerate(npy_pts):
-                    self._add_3D_point_to_image(point[0],point[1],point[2],npy_colors[i],size)
-    
+                    pixl_count +=self._add_3D_point_to_image(point[0],point[1],point[2],npy_colors[i],size)
+        
+        if pixl_count > 0.1*len(npy_pts):
+            return True
+        else:
+            return False
+
     def _draw_convex_hull_on_image(self,color,size):
         """
         This function is creating a convex hull out of all the pixels added in the pixels list.
@@ -696,13 +707,16 @@ class Image_drawer(object):
         """
         if len(self.pixels) < 3:
             print("Not enough points to create hull")
-            exit()
+            return False
         else:
-            YX = np.asarray(self.pixels,dtype=object)[:,:2]
-            self.hull = ConvexHull(YX)
+            Y = np.asarray(self.pixels,dtype=object)[:,0]
+            X = np.asarray(self.pixels,dtype=object)[:,1]
+            YX = np.array([Y,X])
+            self.hull = ConvexHull(YX.T)
             for simplex in self.hull.simplices:
                 cv2.line(self.image,(self.pixels[simplex[0]][:2][1],self.pixels[simplex[0]][:2][0]),(self.pixels[simplex[1]][:2][1],self.pixels[simplex[1]][:2][0]),color,size)
-        
+            return True
+
     def _draw_pixels(self):
         """
         This function is drawing all the pixels declared in pixel list on the image.
@@ -751,25 +765,31 @@ class Image_drawer(object):
         self.clear_image()
         # Drawing the convex hull
         upper_pcd = self.Live_3D_space.get_upper_pcd()
-        self._add_pcd_to_image(upper_pcd)
-        self._draw_convex_hull_on_image(color=[0,255,0],size=4)
+        is_pcd_valid = self._add_pcd_to_image(upper_pcd)
+        is_convex_valid = self._draw_convex_hull_on_image(color=[0,255,0],size=4)
         # Removing the points used to create the convex hull
         self._empty_pixels()
+        
+        if is_convex_valid and is_pcd_valid:
+            keypoints = self.Live_3D_space.get_key_points()
+            distances = self.Live_3D_space.get_distances()
 
-        keypoints = self.Live_3D_space.get_key_points()
-        distances = self.Live_3D_space.get_distances()
+            ## Add points to image
+            for i,distance in enumerate(distances):
+                radius = self._mm_2_pxl(np.abs(distance))
+                # Adding points from point cloud with updated distance
+                if distance > 0:
+                    self._add_3D_point_to_image(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,0,0),int(radius))
+                else:
+                    self._add_3D_point_to_image(keypoints[i][0],keypoints[i][1],keypoints[i][2],(0,0,255),int(radius))
 
-        ## Add points to image
-        for i,distance in enumerate(distances):
-            radius = self._mm_2_pxl(np.abs(distance))
-            # Adding points from point cloud with updated distance
-            if distance > 0:
-                self._add_3D_point_to_image(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,0,0),int(radius))
-            else:
-                self._add_3D_point_to_image(keypoints[i][0],keypoints[i][1],keypoints[i][2],(0,0,255),int(radius))
-
-            # Adding points from keypoints
-            self._add_3D_point_to_image(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,255,255),5)
+                # Adding points from keypoints
+                self._add_3D_point_to_image(keypoints[i][0],keypoints[i][1],keypoints[i][2],(255,255,255),5)
+        else:
+            # Draw magenta image
+            self.image = np.ones((self.height, self.width, 3),dtype=np.uint8)*[255,0,255]
+            terminal.error_print("ERROR: the stone is outside the 3D scene")
+            terminal.error_print('Press Esc to continue ... /n)\n>>> ')
         self._draw_pixels()
         return self.image
 
