@@ -314,4 +314,24 @@ TODO:
 - Fix stacking Algorithme
 - Find a function wich adapts the size of the points more smoothly
 
+# 2022.05.03 - Test of the stacking CLI
+
+Fixed the stacking algorithm underground stone issue, due to branch issues.
+
+The results are satisfying, the convex hull give a rough information of the position.
+And the 3 keypoints give us a 6D pose estimation of the stone with real time feedback.
+
+Following information are given:
+- Size changing give the distance in Z direction.
+- The color give us the direction. (Red: up, Blue: down)
+
+Here a visual of the projected image on the placed stone:
+
+![stacking algorithm result](./img/stone_stacking.jpg)
+
+TODO:
+- Find a 3D visualizer compatible with Tkinter (run in another shell)
+
+
+
 
