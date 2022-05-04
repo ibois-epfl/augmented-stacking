@@ -31,9 +31,6 @@ import open3d as o3d
 import colorama as cr
 
 
-
-# TODO: implement non-block visualization open3d
-
 # Path where the landscape is overwritten
 _name_landscape = './landscape.ply'
 
@@ -47,9 +44,7 @@ _vertices_target_low_res_scene = 2000
 DIR_AS_BUILT_ASSEMBLY = './as_built_status'
 
 
-
 def main():
-
     # -----------------------------------------------------------------------
     # [0] Decorator
     # -----------------------------------------------------------------------
@@ -76,84 +71,94 @@ def main():
 
     while(True):
 
-        # -----------------------------------------------------------------------
-        # [2] Download the stone mesh from dataset
-        # -----------------------------------------------------------------------
-
         while(True):
-            # Ask for stone label & download mesh and open it
-            name_stone_mesh, stone_mesh = dataset_IO.download_github_raw_file()
+
+            while(True):
+
+                # -----------------------------------------------------------------------
+                # [2] Download the stone mesh from dataset
+                # -----------------------------------------------------------------------
+
+                # Ask for stone label & download mesh and open it
+                name_stone_mesh, stone_mesh = dataset_IO.download_github_raw_file()
+                
+                # Check the n faces for the download mesh if not downsample
+                faces_stone_mesh = len(np.asarray(stone_mesh.triangles))
+                if (faces_stone_mesh > _faces_target_stone_mesh):
+                    terminal.custom_print(f"The mesh needs to be decimate for the stacking algorithms.\n"
+                                        f" Number of vertices for downloaded mesh: {faces_stone_mesh}")
+                    stone_mesh = stone_mesh.simplify_quadric_decimation(
+                        target_number_of_triangles=_faces_target_stone_mesh)
+                    new_faces_stone_mesh = len(np.asarray(stone_mesh.triangles))
+                    terminal.custom_print(f" Number of vertices of the decimated mesh: {new_faces_stone_mesh}")
+                
+                # Check if the mesh is out of scale or not watertight, and confirm
+                try:
+                    if stone_mesh.get_volume() > 1.0:  # 1m3
+                        stone_mesh = stone_mesh.scale(scale=1/1000, 
+                                                    center=stone_mesh.get_center())
+                    break
+                except:
+                    terminal.error_print("ERROR: the imported mesh is corrupted or not water tight.\n"
+                                        "Choose another stone from dataset ...")
+                    continue
+
+            # Write out the mesh (for algorithm to read)
+            o3d.io.write_triangle_mesh(name_stone_mesh, stone_mesh)
+
+
+            # -----------------------------------------------------------------------
+            # [3] Capture the scene mesh + compute the mesh 6dof pose
+            # -----------------------------------------------------------------------
+
+            # Capture meshed scene
+            landscape_mesh = camera_capture.get_mesh_scene(
+                _vertices_target_low_res_scene)
             
-            # Check the n faces for the download mesh if not downsample
-            faces_stone_mesh = len(np.asarray(stone_mesh.triangles))
-            if (faces_stone_mesh > _faces_target_stone_mesh):
-                terminal.custom_print(f"The mesh needs to be decimate for the stacking algorithms.\n"
-                                      f" Number of vertices for downloaded mesh: {faces_stone_mesh}")
-                stone_mesh = stone_mesh.simplify_quadric_decimation(
-                    target_number_of_triangles=_faces_target_stone_mesh)
-                new_faces_stone_mesh = len(np.asarray(stone_mesh.triangles))
-                terminal.custom_print(f" Number of vertices of the decimated mesh: {new_faces_stone_mesh}")
-            
-            # Check if the mesh is out of scale or not watertight, and confirm
-            try:
-                if stone_mesh.get_volume() > 1.0:  # 1m3
-                    stone_mesh = stone_mesh.scale(scale=1/1000, 
-                                                center=stone_mesh.get_center())
-                break
-            except:
-                terminal.error_print("ERROR: the imported mesh is corrupted or not water tight.\n"
-                                     "Choose another stone from dataset ...")
+            # # Save meshed scene
+            print("Writing out the captured mesh from 3d camera")
+            o3d.io.write_triangle_mesh(
+                _name_landscape, landscape_mesh, write_ascii=True)
+            print(f"Mesh out with name {_name_landscape}")
+
+            # Compute stacking pose
+            stacking_algorithm.compute(path_exec='./stacking_algorithm/build/main',
+                                    path_mesh=name_stone_mesh,
+                                    path_landscape=_name_landscape,  # TODO: param this
+                                    config_file='./stacking_algorithm/data/input.txt',
+                                    name_output='pose',
+                                    dir_output='./temp')
+
+            # Delete donwloaded mesh
+            dataset_IO.delete_file(name_stone_mesh)
+
+            # read the 6dof pose and store it as numpy array
+            pose_matrix = dataset_IO.read_pose_6dof('./temp/pose.txt')
+            print("Computation done: here's the computed 4x4 Pose Matrix:\n\n", pose_matrix)
+
+            # Transform the low-res mesh for visualization
+            stone_mesh.transform(pose_matrix)
+
+            # Merge transformed stone and landscape mesh
+            merged_landscape = stone_mesh + landscape_mesh
+            visualizer.viualize_wall([merged_landscape], 'wall view')  # DEBUG
+
+            # Check if the the stone is out of scope of the scene
+            bbox_landscape = landscape_mesh.get_axis_aligned_bounding_box()
+            bbox_merged_landscape = merged_landscape.get_axis_aligned_bounding_box()
+            if bbox_merged_landscape.volume() > bbox_landscape.volume()*2:
+                terminal.error_print("The stacking algorithm failed (stone far from scene)"
+                                    "You will be redirected to choose another stone ...")
                 continue
-
-        # Write out the mesh (for algorithm to read)
-        o3d.io.write_triangle_mesh(name_stone_mesh, stone_mesh)
-
-
-        # -----------------------------------------------------------------------
-        # [3] Capture the scene mesh + compute the mesh 6dof pose
-        # -----------------------------------------------------------------------
-
-        # Capture meshed scene
-        landscape_mesh = camera_capture.get_mesh_scene(
-            _vertices_target_low_res_scene)
-        
-        # if i_o3d_vis_active in ["y","yn"]:
-            # visualizer.viualize_wall([landscape_mesh], 'wall view')
-
-        # # Save meshed scene
-        print("Writing out the captured mesh from 3d camera")
-        o3d.io.write_triangle_mesh(
-            _name_landscape, landscape_mesh, write_ascii=True)
-        print(f"Mesh out with name {_name_landscape}")
-
-        # Compute stacking pose
-        stacking_algorithm.compute(path_exec='./stacking_algorithm/build/main',
-                                   path_mesh=name_stone_mesh,
-                                   path_landscape=_name_landscape,  # TODO: param this
-                                   config_file='./stacking_algorithm/data/input.txt',
-                                   name_output='pose',
-                                   dir_output='./temp')
-
-        # TEMP: Delete donwload mesh
-        dataset_IO.delete_file(name_stone_mesh)
-
-        # read the 6dof pose and store it as numpy array
-        pose_matrix = dataset_IO.read_pose_6dof('./temp/pose.txt')
-        print("Computation done: here's the computed 4x4 Pose Matrix:\n\n", pose_matrix)
-
-        # Transform the low-res mesh for visualization
-        stone_mesh.transform(pose_matrix)
-        
+            else:
+                break
 
         # -----------------------------------------------------------------------
         # [4] Augmented feedback loop
         # -----------------------------------------------------------------------
 
-        # Merge transformed stone and landscape mesh
-        merged_landscape = stone_mesh + landscape_mesh
+        # visualizer.viualize_wall([merged_landscape], 'wall view')  # DEBUG
 
-        # if i_o3d_vis_active in ["y","yn"]:
-        #     visualizer.viualize_wall([merged_landscape],"merged landscape")
         # First open the camera and close at the end
         zed, point_cloud = camera_capture.set_up_zed()
 
