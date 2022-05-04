@@ -92,10 +92,10 @@ def main():
                                                 center=stone_mesh.get_center())
                 
                 i_is_stone_correct = terminal.user_input('Do you confirm this stone (if n you will enter the label again)? (y/n)\n>>> ')
-                    if i_is_stone_correct in ['Y', 'y']: break
+                if i_is_stone_correct in ['Y', 'y']: break
 
             except:
-                terminal.error_print("ERROR: the imported mesh is corrupted or not water tight.\n",
+                terminal.error_print("ERROR: the imported mesh is corrupted or not water tight.\n"
                                      "Choose another stone from dataset ...")
                 continue
 
@@ -139,7 +139,7 @@ def main():
         # Transform the low-res mesh for visualization
         stone_mesh.transform(pose_matrix)
         
-        
+
         # -----------------------------------------------------------------------
         # [3] Augmented feedback loop
         # -----------------------------------------------------------------------
