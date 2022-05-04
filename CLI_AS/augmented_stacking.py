@@ -72,41 +72,40 @@ def main():
         # -----------------------------------------------------------------------
 
         while(True):
-            # Ask for stone label & download LOW-RES mesh and open it
+            # Ask for stone label & download mesh and open it
             name_stone_mesh, stone_mesh = dataset_IO.download_github_raw_file()
             
             # Check the n faces for the download mesh if not downsample
             faces_stone_mesh = len(np.asarray(stone_mesh.triangles))
             if (faces_stone_mesh > _faces_target_stone_mesh):
                 terminal.custom_print(f"The mesh needs to be decimate for the stacking algorithms.\n"
-                                    f" Number of vertices for downloaded mesh: {faces_stone_mesh}")
+                                      f" Number of vertices for downloaded mesh: {faces_stone_mesh}")
                 stone_mesh = stone_mesh.simplify_quadric_decimation(
                     target_number_of_triangles=_faces_target_stone_mesh)
                 new_faces_stone_mesh = len(np.asarray(stone_mesh.triangles))
                 terminal.custom_print(f" Number of vertices of the decimated mesh: {new_faces_stone_mesh}")
             
-            # TODO: check for watertught mesh -> just catch execption of mesh.get_volume()
-            # Check if the mesh is out of scale (i.e. bigger than 1m3)
-            if stone_mesh.get_volume() > 1.0:
-                stone_mesh = stone_mesh.scale(scale=1/1000,
-                                            center=[0.,0.,0.])
+            # Check if the mesh is out of scale or not watertight, and confirm
+            try:
+                if stone_mesh.get_volume() > 1.0:  # 1m3
+                    stone_mesh = stone_mesh.scale(scale=1/1000, 
+                                                center=stone_mesh.get_center())
+                
+                i_is_stone_correct = terminal.user_input('Do you confirm this stone (if n you will enter the label again)? (y/n)\n>>> ')
+                    if i_is_stone_correct in ['Y', 'y']: break
 
-            # Visual inspection of downloaded mesh
-            #TODO: solve the conflict between o3d visualizer  and tkinter, temp
-            i_o3d_vis_active = terminal.user_input('Do you want to visualize Pcd in O3D ? (y/n)\n>>> ')
-            if i_o3d_vis_active in ["y","yn"]:
-                visualizer.viualize_mesh_normal(stone_mesh, 'Low-res mesh') # TODO: Fix the issue of using both open3d and tkinter
-            
-            # Ask if you want to select stone or chose another one
-            i_is_stone_correct = terminal.user_input('Do you confirm this stone (if n you will enter the label again)? (y/n)\n>>> ')
-            if i_is_stone_correct in ['Y', 'y']: break
+            except:
+                terminal.error_print("ERROR: the imported mesh is corrupted or not water tight.\n",
+                                     "Choose another stone from dataset ...")
+                continue
+
 
         # Write out the mesh (for algorithm to read)
         o3d.io.write_triangle_mesh(name_stone_mesh, stone_mesh)
 
 
         # -----------------------------------------------------------------------
-        # [2-3] Capture the scene mesh + compute the mesh 6dof pose
+        # [2] Capture the scene mesh + compute the mesh 6dof pose
         # -----------------------------------------------------------------------
 
         # Capture meshed scene
@@ -140,8 +139,9 @@ def main():
         # Transform the low-res mesh for visualization
         stone_mesh.transform(pose_matrix)
         
+        
         # -----------------------------------------------------------------------
-        # [4] Load the high-res mesh + apply 4x4 transformation
+        # [3] Augmented feedback loop
         # -----------------------------------------------------------------------
 
         # Merge transformed stone and landscape mesh
