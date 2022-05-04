@@ -9,6 +9,7 @@ import sys
 import tqdm
 import numpy as np
 from util import terminal
+import datetime
 
 import open3d as o3d
 
@@ -107,3 +108,39 @@ def read_pose_6dof(filename):
         pose_6dof[i, :] = [float(x) for x in lines[i].split()]
 
     return pose_6dof
+
+def save_current_built_layer(landscape_mesh,
+                             stone_mesh,
+                             stone_label:str,
+                             sub_dir:os.path) -> None:
+    """
+    Save all the geometries of the as-built wall status for later inspection 
+    or live visualization.
+
+    :param landscape_mesh: scene of the building landscape prior to stacking algorithm
+    :param stone_mesh: stone mesh placed by stacking algorithm
+    :param stone_label: label of the stone from dataset
+    :param sub_dir: recording session subdir
+    """
+
+    # Write out placed stone mesh on stacking algorithm
+    stone_label = stone_label.split('_')[-1].split('.')[0]
+    path_stone_mesh = os.path.join(sub_dir, f"stone_mesh_{stone_label}.ply")
+    o3d.io.write_triangle_mesh(path_stone_mesh, stone_mesh)
+    terminal.custom_print(f"Dropped placed stone {stone_label} on folder {sub_dir}")
+
+    # Scene of the building landscape prior to stacking algorithm
+    path_landscape_mesh = os.path.join(sub_dir, f"pcd_scene_{stone_label}.ply")
+    o3d.io.write_triangle_mesh(path_landscape_mesh, landscape_mesh)
+    terminal.custom_print(f"Dropped corresponding scene capture on folder {sub_dir}")
+
+
+def create_record_session_subdir(dir_name:os.path) -> os.path:
+    if os.path.exists(dir_name):
+        current_date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        subdir = os.path.join(dir_name, current_date)
+        os.mkdir(subdir)
+        return subdir
+    else:
+        terminal.error_print(f"The dir {dir_name} does not exist.")
+        return None

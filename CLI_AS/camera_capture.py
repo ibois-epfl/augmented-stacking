@@ -570,24 +570,6 @@ class Live_3D_space(object):
             centers.append(center)
         return list_pcds,np.array(centers)
 
-    # def _get_z_value_of_pcds(self,list_pcds):
-    #     """
-    #     This function returns the distance along z axis, between the center of the point cloud and the keypoints.
-    #     """
-    #     Z_mean = []
-    #     Z_std = []
-    #     for pcd in list_pcds:
-    #         if not len(np.asarray(pcd.points))==0:
-    #             z_mean = np.mean(np.asarray(pcd.points)[:,2])
-    #             z_std = np.std(np.asarray(pcd.points)[:,2])
-    #             Z_mean.append(z_mean)
-    #             Z_std.append(z_std)
-    #         else:
-    #             Z_mean.append(0)
-    #             Z_std.append(0)                
-    #     Z_value = np.asarray(Z_mean) # + 1/2*np.asarray(Z_std)**2
-    #     return Z_value
-
     ## Getters
     def get_list_mesh_cluster(self):
         return self.list_mesh_cluster
@@ -619,9 +601,6 @@ class Live_3D_space(object):
         ## Get captured pcd clusters
         captured_pcd_clusters,self.centers = self._crop_pcd_on_cluster(cropped_pcd,list_mesh_clusters)
         
-        ## Get the Z value of the captured pcd clusters
-        # z_values = self._get_z_value_of_pcds(captured_pcd_clusters)
-
         ## Compute distance
         distances = (np.array(keypoints)[:,2] - self.centers[:,2])*1000 # To convert in milimeters
         # clip the distances

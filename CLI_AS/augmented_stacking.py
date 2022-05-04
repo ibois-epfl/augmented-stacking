@@ -43,6 +43,9 @@ _faces_target_stone_mesh = 500
 # Set a target of max vertices for the captured scene mesh
 _vertices_target_low_res_scene = 2000
 
+# Set dir to store validated stone and landscape of each captured
+DIR_AS_BUILT_ASSEMBLY = './as_built_status'
+
 
 
 def main():
@@ -63,12 +66,18 @@ def main():
     print('You have a second screen with the same resolution as your main machine')
 
 
+    # -----------------------------------------------------------------------
+    # [1] Create as-built dir + start 3D visualizer
+    # -----------------------------------------------------------------------
+
+    # Create sub-dir for current session
+    dir_as_built = dataset_IO.create_record_session_subdir(DIR_AS_BUILT_ASSEMBLY)
 
 
     while(True):
 
         # -----------------------------------------------------------------------
-        # [1] Download the low-res mesh
+        # [2] Download the stone mesh from dataset
         # -----------------------------------------------------------------------
 
         while(True):
@@ -90,30 +99,26 @@ def main():
                 if stone_mesh.get_volume() > 1.0:  # 1m3
                     stone_mesh = stone_mesh.scale(scale=1/1000, 
                                                 center=stone_mesh.get_center())
-                
-                i_is_stone_correct = terminal.user_input('Do you confirm this stone (if n you will enter the label again)? (y/n)\n>>> ')
-                if i_is_stone_correct in ['Y', 'y']: break
-
+                break
             except:
                 terminal.error_print("ERROR: the imported mesh is corrupted or not water tight.\n"
                                      "Choose another stone from dataset ...")
                 continue
-
 
         # Write out the mesh (for algorithm to read)
         o3d.io.write_triangle_mesh(name_stone_mesh, stone_mesh)
 
 
         # -----------------------------------------------------------------------
-        # [2] Capture the scene mesh + compute the mesh 6dof pose
+        # [3] Capture the scene mesh + compute the mesh 6dof pose
         # -----------------------------------------------------------------------
 
         # Capture meshed scene
         landscape_mesh = camera_capture.get_mesh_scene(
             _vertices_target_low_res_scene)
         
-        if i_o3d_vis_active in ["y","yn"]:
-            visualizer.viualize_wall([landscape_mesh], 'wall view')
+        # if i_o3d_vis_active in ["y","yn"]:
+            # visualizer.viualize_wall([landscape_mesh], 'wall view')
 
         # # Save meshed scene
         print("Writing out the captured mesh from 3d camera")
@@ -141,14 +146,14 @@ def main():
         
 
         # -----------------------------------------------------------------------
-        # [3] Augmented feedback loop
+        # [4] Augmented feedback loop
         # -----------------------------------------------------------------------
 
         # Merge transformed stone and landscape mesh
         merged_landscape = stone_mesh + landscape_mesh
 
-        if i_o3d_vis_active in ["y","yn"]:
-            visualizer.viualize_wall([merged_landscape],"merged landscape")
+        # if i_o3d_vis_active in ["y","yn"]:
+        #     visualizer.viualize_wall([merged_landscape],"merged landscape")
         # First open the camera and close at the end
         zed, point_cloud = camera_capture.set_up_zed()
 
@@ -166,14 +171,19 @@ def main():
         # Now that the loop is closed, close the camera
         zed.close()
 
-        # Ask to validate the stone pose and terminate cli
+        # Ask to validate the stone and store current layer results
         i_is_pose_stone_valid = terminal.user_input('Do you validate the stone position? (y/n)\n>>> ')
         if i_is_pose_stone_valid in ['Y', 'y']:
-            #TODO: add the stone pose/matrix to a list of validated poses
+            dataset_IO.save_current_built_layer(landscape_mesh=landscape_mesh,
+                                                stone_mesh=stone_mesh,
+                                                stone_label=name_stone_mesh,
+                                                sub_dir=dir_as_built)
+
+            # Ask to place another stone or terminate CLI
             i_continue_stacking = terminal.user_input('Do you want to stack another stone? y/n)\n>>> ')
             if i_continue_stacking in ['N', 'n']:
                 terminal.custom_print("The augmented stacking is shuting down ...")
-                exit()
+                exit() 
 
 
 if __name__ == "__main__":
