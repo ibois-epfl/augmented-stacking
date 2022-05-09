@@ -1,8 +1,0 @@
-PyOpenGL
-numpy
-pyzed
-progressbar2
-tifffile
-scipy
-matplotlib
-scikit-image

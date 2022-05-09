@@ -1,2 +1,8 @@
 # Exclude virtual environment
 /venv
+
+# Exclude temp files
+__pycache__/
+
+# Exclude meshes recorded
+as_built_status/
