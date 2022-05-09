@@ -24,6 +24,7 @@ class AsBuiltVisualizer():
         self.mesh_stones = o3d.geometry.TriangleMesh()
         self.pcd_scene = o3d.geometry.PointCloud()
         self.dump_dir = dump_dir
+        self.fps = 1
 
         self.nb_visualizer = o3d.visualization.Visualizer()
         self.refresh()
@@ -32,10 +33,7 @@ class AsBuiltVisualizer():
     def __del__(self):
         self.nb_visualizer.destroy_window()
 
-    def run(self):
-        while(True):
-            self.update_np_visualizer()
-
+    
     def refresh(self):
         """
         Read the dump folder and store the data and update the geometries in the
@@ -102,9 +100,12 @@ class AsBuiltVisualizer():
         self.nb_visualizer.update_geometry(self.mesh_stones)
         if not self.nb_visualizer.poll_events(): sys.exit() #TODO: or exit thread
         self.nb_visualizer.update_renderer()
-        time.sleep(1)  # set 1fps
+        time.sleep(self.fps)  # set 1fps
 
-
+    def run(self):
+        while(True):
+            self.update_np_visualizer()
+        
     def _set_nb_visualizer(self) -> None:
             # Get monitor sizes and set visualizer
             self.nb_visualizer = o3d.visualization.Visualizer()

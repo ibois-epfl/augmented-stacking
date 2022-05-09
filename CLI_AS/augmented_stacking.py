@@ -46,15 +46,12 @@ DIR_AS_BUILT_ASSEMBLY = './as_built_status/'
 
 
 def task_nb_visualizer(dump_dir:str):
-
-    # DIR_AS_BUILT_STATE = './as_built_status/20220504113604/'  # DEBUG
+    """
+    Thread function to contain the non-blocking visualizer and don't stop the 
+    main thread.
+    """
     as_built_visualizer = visualizer.AsBuiltVisualizer(dump_dir)
     as_built_visualizer.run()
-
-    # while(True):
-    #     as_built_visualizer.update_np_visualizer()
-
-
 
 def main():
     # -----------------------------------------------------------------------
@@ -69,8 +66,8 @@ def main():
     print('<<<<<<<< INFORMATION PROJECT >>>>>>>>')
 
     print('Before to start make sure that:')
-    print('You have done a calibration')
-    print('You have a second screen with the same resolution as your main machine')
+    print('-> You have done a calibration')
+    print('-> You have a second screen with the same resolution as your main machine')
 
 
     # -----------------------------------------------------------------------
@@ -81,16 +78,10 @@ def main():
     dir_as_built = dataset_IO.create_record_session_subdir(DIR_AS_BUILT_ASSEMBLY)
     terminal.custom_print(dir_as_built)
 
-    DIR_AS_BUILT_STATE = './as_built_status/20220504113604/'  # DEBUG
-    # as_built_visualizer = visualizer.AsBuiltVisualizer(DIR_AS_BUILT_STATE)
-
-    # thread = Thread(target=as_built_visualizer.run)
-    # thread.start()
-
+    # Start non-blocking visualizer on different thread
+    DIR_AS_BUILT_STATE = './as_built_status/20220504113604/'
     thread = Thread(target=task_nb_visualizer, args=(DIR_AS_BUILT_STATE,))
     thread.start()
-    
-
 
     # Set stone stacked counter for recording
     STONE_COUNTER = 0
@@ -167,16 +158,7 @@ def main():
 
             # Merge transformed stone and landscape mesh
             merged_landscape = stone_mesh + landscape_mesh
-            # visualizer.viualize_wall([merged_landscape], 'wall view')  # DEBUG
 
-            # # Check if the the stone is out of scope of the scene
-            # bbox_landscape = landscape_mesh.get_axis_aligned_bounding_box()
-            # bbox_merged_landscape = merged_landscape.get_axis_aligned_bounding_box()
-            # if bbox_merged_landscape.volume() > bbox_landscape.volume()*2:
-            #     terminal.error_print("The stacking algorithm failed (stone far from scene)"
-            #                         "You will be redirected to choose another stone ...")
-            #     continue
-            # else:
             break
 
         # -----------------------------------------------------------------------
