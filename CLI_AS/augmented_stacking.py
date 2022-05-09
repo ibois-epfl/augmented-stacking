@@ -44,7 +44,7 @@ _vertices_target_low_res_scene = 2000
 # Set dir to store validated stone and landscape of each captured
 DIR_AS_BUILT_ASSEMBLY = './as_built_status/'
 
-
+# Thread for non-blocking visualizer
 def task_nb_visualizer(dump_dir:str):
     """
     Thread function to contain the non-blocking visualizer and don't stop the 
@@ -76,11 +76,11 @@ def main():
 
     # Create sub-dir for current session
     dir_as_built = dataset_IO.create_record_session_subdir(DIR_AS_BUILT_ASSEMBLY)
-    terminal.custom_print(dir_as_built)
+    # terminal.custom_print(dir_as_built)
 
-    # Start non-blocking visualizer on different thread
-    thread = Thread(target=task_nb_visualizer, args=(dir_as_built,))
-    thread.start()
+    # # Start non-blocking visualizer on different thread
+    # thread = Thread(target=task_nb_visualizer, args=(dir_as_built,))
+    # thread.start()
 
     # Set stone stacked counter for recording
     STONE_COUNTER = 0
@@ -139,11 +139,11 @@ def main():
 
             # Compute stacking pose
             stacking_algorithm.compute(path_exec='./stacking_algorithm/build/main',
-                                    path_mesh=name_stone_mesh,
-                                    path_landscape=_name_landscape,  # TODO: param this
-                                    config_file='./stacking_algorithm/data/input.txt',
-                                    name_output='pose',
-                                    dir_output='./temp')
+                                       path_mesh=name_stone_mesh,
+                                       path_landscape=_name_landscape,  # TODO: param this
+                                       config_file='./stacking_algorithm/data/input.txt',
+                                       name_output='pose',
+                                       dir_output='./temp')
 
             # Delete donwloaded mesh
             dataset_IO.delete_file(name_stone_mesh)
@@ -193,6 +193,7 @@ def main():
         i_is_pose_stone_valid = terminal.user_input('Do you validate the stone position? (y/n)\n>>> ')
         if i_is_pose_stone_valid not in ['Y', 'y']:
             # If the stones are not validated erase them from recording folder
+            terminal.custom_print("Erasing the stone and scene from recording folder")
             os.remove(path_stone_mesh)
             os.remove(path_landscape_mesh)
 
@@ -201,6 +202,8 @@ def main():
             if i_continue_stacking in ['N', 'n']:
                 terminal.custom_print("The augmented stacking is shuting down ...")
                 exit() 
+        terminal.custom_print("Validating the stone and scene in recording folder ...")
+        
 
 
 if __name__ == "__main__":
