@@ -334,7 +334,7 @@ TODO:
 
 # 2022.05.09 - Implementation of Non-Blocking Visualizer + general repo refactoring
 
-Implementation of a non-blocking visualizer for following the as-built status of the construction. 
+Implementation of a non-blocking visualizer for following the as-built status of the construction. The visualizer reads a recording directory which contains the captured scene and the stones as a meshes. The current stone is highlighted in red. 
 
 <p>
     <img src="./img/nonblockingvis.png" width="600">
