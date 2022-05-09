@@ -332,6 +332,21 @@ Here a visual of the projected image on the placed stone:
 TODO:
 - Find a 3D visualizer compatible with Tkinter (run in another shell)
 
+# 2022.05.09 - Implementation of Non-Blocking Visualizer + general repo refactoring
+
+Implementation of a non-blocking visualizer for following the as-built status of the construction. 
+
+<p>
+    <img src="./img/nonblockingvis.png" width="600">
+</p>
+
+TODO:
+- catching bugs and errors per stone
+- double check the 3d>2d transform (still unstable with scale inconsistency)
+- general code refactoring and class reorganisation
+- docker shipping (Optional?)
+
+
 
 
 
