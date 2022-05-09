@@ -20,21 +20,21 @@ WALL_VIS_H = 700 # px
 
 class AsBuiltVisualizer():
 
-    def __init__(self, dump_dir):
+    def __init__(self, dump_dir) -> None:
         self.mesh_stones = o3d.geometry.TriangleMesh()
         self.pcd_scene = o3d.geometry.PointCloud()
         self.dump_dir = dump_dir
         self.fps = 1
 
         self.nb_visualizer = o3d.visualization.Visualizer()
-        self.refresh()
+        self.update_geometries()
         self._set_nb_visualizer()
     
-    def __del__(self):
+    def __del__(self) -> None:
         self.nb_visualizer.destroy_window()
 
     
-    def refresh(self):
+    def update_geometries(self) -> None:
         """
         Read the dump folder and store the data and update the geometries in the
         non-blocking visualizer.
@@ -72,13 +72,14 @@ class AsBuiltVisualizer():
         dict_scenes = {k: dict_scenes[k] for k in sorted(dict_scenes)}
 
         # Update stones: merge all the stones
-        mesh = list(dict_stones.values())[0]
-        for i, item in enumerate(list(dict_stones.values())):
-            if i != len(list(dict_stones.values()))-1:
-                item.paint_uniform_color([1, 0.706, 0])  # prev stones: yellow
-            else:
-                item.paint_uniform_color([1, 0, 0])  # last stone: red
-            mesh += item
+        if len(list(dict_stones.values())) != 0:
+            mesh = list(dict_stones.values())[0]
+            for i, item in enumerate(list(dict_stones.values())):
+                if i != len(list(dict_stones.values()))-1:
+                    item.paint_uniform_color([1, 0.706, 0])  # prev stones: yellow
+                else:
+                    item.paint_uniform_color([1, 0, 0])  # last stone: red
+                mesh += item
 
         # Update scene: refresh point cloud
         pcd = list(dict_scenes.values())[-1]
@@ -91,22 +92,30 @@ class AsBuiltVisualizer():
         self.mesh_stones.vertex_colors = mesh.vertex_colors
         self.mesh_stones.triangles = mesh.triangles
 
-    def update_np_visualizer(self) -> None:
-        # Refresh geometries
-        self.refresh()
+    def run(self) -> None:
+        """
+        The main rendering loop
+        """
+        while(True):
+            self.update_geometries()
+            self._update_np_visualizer()
+    
 
+    def _update_np_visualizer(self) -> None:
+        """
+        Refresh the visualizer with the updated geometries
+        """
         # Refresh visualizer
         self.nb_visualizer.update_geometry(self.pcd_scene)
         self.nb_visualizer.update_geometry(self.mesh_stones)
         if not self.nb_visualizer.poll_events(): sys.exit() #TODO: or exit thread
         self.nb_visualizer.update_renderer()
-        time.sleep(self.fps)  # set 1fps
-
-    def run(self):
-        while(True):
-            self.update_np_visualizer()
+        time.sleep(self.fps)
         
     def _set_nb_visualizer(self) -> None:
+            """
+            Instantiate the non-blocking visualizer from Open3D
+            """
             # Get monitor sizes and set visualizer
             self.nb_visualizer = o3d.visualization.Visualizer()
             monitors_size = self._get_monitors_size()
@@ -128,16 +137,16 @@ class AsBuiltVisualizer():
             self.nb_visualizer.add_geometry(self.mesh_stones, reset_bounding_box=False)
     
     def _rotate_mesh(self, mesh) -> None:
-        R = mesh.get_rotation_matrix_from_xyz((np.pi / -8, 0, 0))
-        mesh = mesh.rotate(R, center=(0.,0.,0.))
+        """
+        The rotation is only to simulate an axonometric view in the visualizer
+        """
+        R_1 = mesh.get_rotation_matrix_from_xyz((np.pi / -4, 0, 0))
+        mesh = mesh.rotate(R_1, center=(0.,0.,0.))
     
     def _rgb_2_norm(self, rgb:list) -> list:
         return [val/255 for val in rgb]
     
     def _get_monitors_size(self) -> list:
-        """
-        :return the main monitor size and width + second monitor's height
-        """
         root = tk.Tk()
         root.update_idletasks()
         root.attributes('-fullscreen', True)

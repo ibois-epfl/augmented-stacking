@@ -79,8 +79,7 @@ def main():
     terminal.custom_print(dir_as_built)
 
     # Start non-blocking visualizer on different thread
-    DIR_AS_BUILT_STATE = './as_built_status/20220504113604/'
-    thread = Thread(target=task_nb_visualizer, args=(DIR_AS_BUILT_STATE,))
+    thread = Thread(target=task_nb_visualizer, args=(dir_as_built,))
     thread.start()
 
     # Set stone stacked counter for recording
@@ -156,6 +155,14 @@ def main():
             # Transform the low-res mesh for visualization
             stone_mesh.transform(pose_matrix)
 
+            # Temporary store landscape and stone for visualization
+            terminal.custom_print("Temporary storing the landscape and stone mesh before validation ...")
+            STONE_COUNTER, path_stone_mesh, path_landscape_mesh = dataset_IO.save_current_built_layer(landscape_mesh=landscape_mesh,
+                                                                                                      stone_mesh=stone_mesh,
+                                                                                                      stone_label=name_stone_mesh,
+                                                                                                      sub_dir=dir_as_built,
+                                                                                                      stone_counter=STONE_COUNTER)
+
             # Merge transformed stone and landscape mesh
             merged_landscape = stone_mesh + landscape_mesh
 
@@ -184,12 +191,10 @@ def main():
 
         # Ask to validate the stone and store current layer results
         i_is_pose_stone_valid = terminal.user_input('Do you validate the stone position? (y/n)\n>>> ')
-        if i_is_pose_stone_valid in ['Y', 'y']:
-            STONE_COUNTER = dataset_IO.save_current_built_layer(landscape_mesh=landscape_mesh,
-                                                                stone_mesh=stone_mesh,
-                                                                stone_label=name_stone_mesh,
-                                                                sub_dir=dir_as_built,
-                                                                stone_counter=STONE_COUNTER)
+        if i_is_pose_stone_valid not in ['Y', 'y']:
+            # If the stones are not validated erase them from recording folder
+            os.remove(path_stone_mesh)
+            os.remove(path_landscape_mesh)
 
             # Ask to place another stone or terminate CLI
             i_continue_stacking = terminal.user_input('Do you want to stack another stone? y/n)\n>>> ')
