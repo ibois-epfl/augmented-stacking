@@ -13,6 +13,7 @@ projector and 3D camera (ZEDi2)
 import os
 import sys
 import subprocess
+from threading import Thread
 
 # TODO: the package opencv is not found in virtual env, solve
 # the issue without importing the sys.path here. With this it works
@@ -43,6 +44,18 @@ _vertices_target_low_res_scene = 2000
 # Set dir to store validated stone and landscape of each captured
 DIR_AS_BUILT_ASSEMBLY = './as_built_status/'
 
+
+def task_nb_visualizer(dump_dir:str):
+
+    # DIR_AS_BUILT_STATE = './as_built_status/20220504113604/'  # DEBUG
+    as_built_visualizer = visualizer.AsBuiltVisualizer(dump_dir)
+    as_built_visualizer.run()
+
+    # while(True):
+    #     as_built_visualizer.update_np_visualizer()
+
+
+
 def main():
     # -----------------------------------------------------------------------
     # [0] Decorator
@@ -66,7 +79,19 @@ def main():
 
     # Create sub-dir for current session
     dir_as_built = dataset_IO.create_record_session_subdir(DIR_AS_BUILT_ASSEMBLY)
+    terminal.custom_print(dir_as_built)
+
+    DIR_AS_BUILT_STATE = './as_built_status/20220504113604/'  # DEBUG
+    # as_built_visualizer = visualizer.AsBuiltVisualizer(DIR_AS_BUILT_STATE)
+
+    # thread = Thread(target=as_built_visualizer.run)
+    # thread.start()
+
+    thread = Thread(target=task_nb_visualizer, args=(DIR_AS_BUILT_STATE,))
+    thread.start()
     
+
+
     # Set stone stacked counter for recording
     STONE_COUNTER = 0
 
