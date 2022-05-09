@@ -7,6 +7,8 @@ import time
 
 
 
+
+
 def rotate_mesh(mesh) -> None:
     R = mesh.get_rotation_matrix_from_xyz((np.pi / -8, 0, 0))
     mesh = mesh.rotate(R, center=(0.,0.,0.))
@@ -89,7 +91,7 @@ def update_built_state(name_dir : str,
 def main():
 
     # Dir where stones are droped
-    DIR_AS_BUILT_STATE = './as_built_status/20220504113604/'
+    DIR_AS_BUILT_STATE = './as_built_status/20220506183912/'
 
     # Get recorded stones
     mesh_stones = o3d.geometry.TriangleMesh()
