@@ -70,6 +70,9 @@ def main():
     # Set stone stacked counter for recording
     STONE_COUNTER = 0
 
+    # Launch non-blocking visualizer
+    subprocess.Popen(['python', './util/non_block_visualizer.py'])
+
     while(True):
 
         while(True):

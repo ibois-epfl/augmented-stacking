@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import os, glob
 import open3d as o3d
