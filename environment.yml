@@ -1,0 +1,7 @@
+name: augmented_stacking_camera
+channels:
+    - conda-forge
+dependencies:
+    - python==3.8
+    - pip:
+        - opencv-python
