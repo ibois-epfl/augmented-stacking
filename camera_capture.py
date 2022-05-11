@@ -400,6 +400,7 @@ class Live_stream(object):
     
     def __init__(self,Live_3D_space,image_drawer):
         self.tk = tkinter.Tk()
+        self.tk.title('projector_window')
 
         self.w, self.h = self.tk.winfo_screenwidth(), self.tk.winfo_screenheight()
         self.tk.geometry("%dx%d+-50+-50" % (self.w, self.h))
@@ -648,10 +649,10 @@ class Image_drawer(object):
                 self.pixels.append(pixel)
                 return 1
             else:
-                print(f"X,Y,Z: {x},{y},{z}, giving Pixel: {i}, {j} are out of bounds for image of size {self.height}, {self.width}")
+                # print(f"X,Y,Z: {x},{y},{z}, giving Pixel: {i}, {j} are out of bounds for image of size {self.height}, {self.width}")
                 return 0
         else:
-            print(f"point: [{x},{y},{z}] is not admissible")
+            # print(f"point: [{x},{y},{z}] is not admissible")
             return 0
  
     def _add_pcd_to_image(self,pcd,size=2,color=[255,0,255]):
@@ -685,7 +686,7 @@ class Image_drawer(object):
         It will draw the convex hull on the image using cv2.line.
         """
         if len(self.pixels) < 3:
-            print("Not enough points to create hull")
+            # print("Not enough points to create hull")
             return False
         else:
             Y = np.asarray(self.pixels,dtype=object)[:,0]
@@ -768,7 +769,7 @@ class Image_drawer(object):
             # Draw magenta image
             self.image = np.ones((self.height, self.width, 3),dtype=np.uint8)*[255,0,255]
             terminal.error_print("ERROR: the stone is outside the 3D scene")
-            terminal.error_print('Press Esc to continue ... /n)\n>>> ')
+            terminal.error_print('Press Esc on the projector_window to continue ... /n)\n>>> ')
         self._draw_pixels()
         return self.image
 

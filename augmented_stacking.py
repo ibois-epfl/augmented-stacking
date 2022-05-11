@@ -178,18 +178,23 @@ def main():
         zed.close()
 
         # Ask to validate the stone and store current layer results
-        i_is_pose_stone_valid = terminal.user_input('Do you validate the stone position? (y/n)\n>>> ')
+        i_is_pose_stone_valid = None
+        while not i_is_pose_stone_valid in ['Y','y','n','N']:
+            i_is_pose_stone_valid = terminal.user_input('Do you validate the stone position? (y/n)\n>>> ')
+        
         if i_is_pose_stone_valid not in ['Y', 'y']:
             # If the stones are not validated erase them from recording folder
             terminal.custom_print("Erasing the stone and scene from recording folder")
             os.remove(path_stone_mesh)
             os.remove(path_landscape_mesh)
 
-            # Ask to place another stone or terminate CLI
-            i_continue_stacking = terminal.user_input('Do you want to stack another stone? y/n)\n>>> ')
-            if i_continue_stacking in ['N', 'n']:
-                terminal.custom_print("The augmented stacking is shuting down ...")
-                exit() 
+        # Ask to place another stone or terminate CLI
+        i_continue_stacking = None
+        while not i_continue_stacking in ['Y','y','n','N']:
+            i_continue_stacking = terminal.user_input('Do you want to stack another stone? (y/n)\n>>> ')
+        if i_continue_stacking in ['N', 'n']:
+            terminal.custom_print("The augmented stacking is shuting down ...")
+            exit() 
         terminal.custom_print("Validating the stone and scene in recording folder ...")
         
 
