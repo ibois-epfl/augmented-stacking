@@ -332,6 +332,7 @@ Here a visual of the projected image on the placed stone:
 TODO:
 - Find a 3D visualizer compatible with Tkinter (run in another shell)
 
+
 # 2022.05.09 - Implementation of Non-Blocking Visualizer + general repo refactoring
 
 Implementation of a non-blocking visualizer for following the as-built status of the construction. The visualizer reads a recording directory which contains the captured scene and the stones as a meshes. The current stone is highlighted in red. 
@@ -346,6 +347,23 @@ TODO:
 - general code refactoring and class reorganisation
 - docker shipping (Optional?)
 
+
+# 2022.13.09 - Fabrication test and adjustments
+
+Session to test the AR system. The stacking algorithm engine will implement the following improvements:
+- placing the stones ortoghonally to their axis
+- the stacking will be uniformly filled by height to avoid empty spaces and high concentrated stacking.
+
+For the AR guidance we remarked the following behaviour for the contour:
+<p>
+    <img src="./img/contour_improov.PNG" width="600">
+</p>
+
+The contour on the ground is bigger than the stone. But on higher positions the contour becomes tighter.
+
+TODO:
+- find a way to scale the contour based on the position in height (i.e. scale less at lvl 0, but scale more at e.g. +30 cm)
+- add features to stacking algorithm
 
 
 
