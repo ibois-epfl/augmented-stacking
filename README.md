@@ -1,5 +1,4 @@
 # Branch for camera sets software
-
 Secondary branch for time-lapse code for recording augmented-stacking session:
 use config.txt to set the directory as output.
 
@@ -11,4 +10,11 @@ conda env create --file=environment.yml
 To simply update the conda use:
 ```terminal
 conda env update --name myenv --file local.yml --prune
+```
+
+## To run the camera programs
+There are two programs: one to run the timelapse and one to run the direct camera.
+To run do this:
+```terminal
+python .\code\<namefile>.py
 ```
