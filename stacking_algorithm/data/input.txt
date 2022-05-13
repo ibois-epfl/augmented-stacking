@@ -37,7 +37,7 @@
 #18 numberIteration
 10
 #19 gridSize
-0.001
+0.01
 #20 stacknumber
 1
 #21 FPFH radius

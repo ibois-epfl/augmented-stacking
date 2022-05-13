@@ -73,11 +73,16 @@ def main():
     # Launch non-blocking visualizer
     subprocess.Popen(['python', './util/non_block_visualizer.py'])
 
-    while(True):
+    # ADD-ON: clean out preavious stone center record
+    record_stone_file = './temp/placedStones.txt'
+    dataset_IO.delete_file(record_stone_file)
+    terminal.custom_print("[INFO]: stone record pose delted.")
 
-        while(True):
+    while(True):  # For each stone - loop
 
-            while(True):
+        while(True):  # Guide the pose - loop
+
+            while(True):  # Find the pose - loop
 
                 # -----------------------------------------------------------------------
                 # [2] Download the stone mesh from dataset

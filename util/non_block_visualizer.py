@@ -130,7 +130,7 @@ class AsBuiltVisualizer():
         """
         The rotation is only to simulate an axonometric view in the visualizer
         """
-        R_1 = mesh.get_rotation_matrix_from_xyz((np.pi / -4, 0, 0))
+        R_1 = mesh.get_rotation_matrix_from_xyz((np.pi / -4, 0, np.pi))
         mesh = mesh.rotate(R_1, center=(0.,0.,0.))
     
     def _rgb_2_norm(self, rgb:list) -> list:
