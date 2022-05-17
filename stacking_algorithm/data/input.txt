@@ -26,12 +26,12 @@
 0.6
 #13zMin
 -2.1
-#14zMax
+#14zMax=> not used in the algo
 0
 #15angleMin
--3.14
+-0.1
 #16angleMax
-3.14
+0.1
 #17populationSize
 1000
 #18 numberIteration
@@ -49,10 +49,14 @@ no
 #24 usercheck
 no
 #25 tempdir
-../temp/
+../../temp/
 #26 weightTri
 0
 #27 triangulation file
 placeTriangulation
 #28 update foundation mesh and write
+no
+#29 weight to penalize non-90 rotation
+0
+# whether to use the defined bounding box
 no
