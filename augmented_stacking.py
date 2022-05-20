@@ -43,6 +43,9 @@ _vertices_target_low_res_scene = 2000
 # Set dir to store validated stone and landscape of each captured
 DIR_AS_BUILT_ASSEMBLY = './as_built_status/'
 
+# Stone poses recorder path
+stone_pose_record_path = './temp/placedStones.txt'
+
 def main():
     # -----------------------------------------------------------------------
     # [0] Decorator
@@ -192,6 +195,10 @@ def main():
             terminal.custom_print("Erasing the stone and scene from recording folder")
             os.remove(path_stone_mesh)
             os.remove(path_landscape_mesh)
+
+            # Erase stone's pose record
+            dataset_IO.erase_last_pose_stone(stone_pose_record_path)
+            terminal.custom_print("[INFO]: The current stone pose is erased from the algorithm pose recorder")
 
         # Ask to place another stone or terminate CLI
         i_continue_stacking = None
