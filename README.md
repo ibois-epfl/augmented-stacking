@@ -348,7 +348,7 @@ TODO:
 - docker shipping (Optional?)
 
 
-# 2022.13.09 - Fabrication test and adjustments
+# 2022.05.13 - Fabrication test and adjustments
 
 Session to test the AR system. The stacking algorithm engine will implement the following improvements:
 - placing the stones ortoghonally to their axis
@@ -366,5 +366,20 @@ TODO:
 - add features to stacking algorithm
 
 
+# 2022.05.23 - Tuning of the stacking algorithm + preliminary demo
+
+The stacking algorithm has been modified to cover first the entirety of the scene and than proposes stone poses on upper heights. 
+
+For the AR guidance we remarked the following behaviour for the contour:
+<p>
+    <img src="./img/IMG_20220520_182302.jpg" width="500">
+    <img src="./img/IMG_20220520_181723.jpg" width="500">
+</p>
+
+Some errors in the outline of the stones still persist. This might be due to the projection of the systeme and our transformation. It is possible that AR maquillage operations are needed such as scaling the contour based on the height. The heigher the stone it's placed, the larger the contour to compensate for the transformation (3D>>2D) tolerances.
+
+TODO:
+- investigare the AR contours occasional errors
+- preparation of the final demo
 
 
