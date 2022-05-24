@@ -383,7 +383,7 @@ TODO:
 - preparation of the final demo
 
 
-# 2022.05.25 - Credits and CLI decorators
+# 2022.05.25 - Credits and CLI decorator
 
 Add the credits heads for the CLI application and new logo.
 
