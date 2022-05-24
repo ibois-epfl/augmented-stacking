@@ -11,8 +11,6 @@ CLR_USER_INPUT = cr.Fore.YELLOW
 CLR_GENERAL_MSG = cr.Fore.GREEN
 CLR_ERROR_MSG = cr.Fore.RED
 
-PATH_LOGO = './logo/logoascii'
-
 
 def user_input(terminal_msg):
     """
@@ -55,12 +53,12 @@ def custom_print(terminal_msg):
     print(cr.Style.RESET_ALL)
     cr.deinit()
 
-def display_logo():
+def cat(path_file):
     """
-    Display the logo of augmented stacking
+    Used for display logo and credits.
     """
     if 'Linux' in platform.system():
-        cmd = f'cat {PATH_LOGO}'
+        cmd = f'cat {path_file}'
         p = subprocess.Popen(cmd, shell=True)
         out, err = p.communicate()
     else:

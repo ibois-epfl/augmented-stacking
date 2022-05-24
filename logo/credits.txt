@@ -1,4 +1,4 @@
-Augmented Stacking V 1.0
+AUGMENTED STACKING 1.0 ------------------------------------------------------------------------------------------------------
 
 
 Augmented Stacking is an augmented system designed to guide unexperienced users through the stacking of complex and irregular 
@@ -7,7 +7,7 @@ Stacking is composed of two components: the stacking algorithm (which calculates
 feeded to the system) and the augmented pipeline to display the information. 
 
 
-Augmented Stacking credits:
+Augmented Stacking credits: -------------------------------------------------------------------------------------------------
 
 *   IBOIS, the Laboratory for Timber Construction
 
@@ -28,10 +28,9 @@ Augmented Stacking credits:
 	Edwardo Ando (technicien, hardware development, image analysis)
 
 
-Augmented Stacking was funded by the Cluster ENAC initiative 2021-2022.
+Augmented Stacking was funded by the Cluster ENAC initiative 2021-2022. -----------------------------------------------------
 
-
-For any questions on the Augmented Stacking Project, please send us an email at andrea.settimi@epfl.ch
+For any questions on the Augmented Stacking Project, please send us an email at andrea.settimi@epfl.ch ----------------------
 
 
 

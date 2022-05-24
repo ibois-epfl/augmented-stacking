@@ -383,3 +383,20 @@ TODO:
 - preparation of the final demo
 
 
+# 2022.05.25 - Credits and CLI decorators
+
+Add the credits heads for the CLI application and new logo.
+
+<p>
+    <img src="./img/credits.png" width="500">
+</p>
+
+
+
+TODO:
+- investigare the AR contours occasional errors (see before)
+- preparation of the final demo (see before)
+- container for docker
+
+
+
