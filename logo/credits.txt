@@ -1,0 +1,37 @@
+Augmented Stacking V 1.0
+
+
+Augmented Stacking is an augmented system designed to guide unexperienced users through the stacking of complex and irregular 
+geometries. This digital fabrication system was applied to the assembly of one layer of half-timber dry-stone wall. Augmented 
+Stacking is composed of two components: the stacking algorithm (which calculates the pose for each stone or irregular object 
+feeded to the system) and the augmented pipeline to display the information. 
+
+
+Augmented Stacking credits:
+
+*   IBOIS, the Laboratory for Timber Construction
+
+        Andrea Settimi (PhD researcher, conceptualization, software&hardware development, AR interface design)
+	David Rebiffe (intern, software development)
+	Julien Gamerro (Post-Doc, conceptualization, supervision)
+	Yves Weinand (Lab head, supervision)
+
+
+*   EESD, the group Earthquake Engineering and Structural Dynamics
+
+	Qianqing Wang (PhD researcher, stacking algorithm)
+	Katrin Beyer (Lab head, supervision)
+
+
+*   Image HUB, the support group for imaging analysis
+
+	Edwardo Ando (technicien, hardware development, image analysis)
+
+
+Augmented Stacking was funded by the Cluster ENAC initiative 2021-2022.
+
+
+For any questions on the Augmented Stacking Project, please send us an email at andrea.settimi@epfl.ch
+
+
+
