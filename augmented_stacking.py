@@ -54,15 +54,10 @@ def main():
     terminal.cat('./logo/logoascii')
     terminal.cat('./logo/credits.txt')
 
-
-
-
     print('Before to start make sure that:')
     print('-> You have done a calibration')
     print('-> You have a second screen with the same resolution as your main machine')
     exit()
-
-
 
     # -----------------------------------------------------------------------
     # [1] Create as-built dir + start 3D visualizer
