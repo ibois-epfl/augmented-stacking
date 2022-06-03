@@ -405,7 +405,7 @@ We are building a new wall with just wastes from sawing operations (more blocky 
 We are also planning to scan the artifact to have comparative data with the recorded pose stones model. The problem we are encountering is the referencing between the two model, the captured and the pose model (how do you register them on the same coordinate system?).
 
 <p>
-    <img src="./img/onbuildingsnap.png" width="500">
+    <img src="./img/onbuildingsnap.png" width="700">
 </p>
 
 TODO:
