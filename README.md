@@ -398,5 +398,20 @@ TODO:
 - preparation of the final demo (see before)
 - container for docker
 
+# 2022.06.01 - Demo session 
+We did a first demo session with the irregular stones and we successfully build one layer of wall. We pushed the augmented system to the limit until the transformation and projection were too off to continue. We are generally satisfied with the system and the user can correctly follows the computed feedbacks.
+We are building a new wall with just wastes from sawing operations (more blocky and less irregular than all the others). We are interested to see the difference in terms of stacking algorithm performance.
+
+We are also planning to scan the artifact to have comparative data with the recorded pose stones model. The problem we are encountering is the referencing between the two model, the captured and the pose model (how do you register them on the same coordinate system?).
+
+<p>
+    <img src="./img/onbuildingsnap.png" width="500">
+</p>
+
+TODO:
+- containarize docker
+- building a second wall with sawn stones
+
+
 
 
