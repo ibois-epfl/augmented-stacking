@@ -399,6 +399,11 @@ TODO:
 - container for docker
 
 # 2022.06.01 - Demo session 
+
+<p>
+    <img src="./img/demo_placing_example_light.gif" width="700">
+</p>
+
 We did a first demo session with the irregular stones and we successfully build one layer of wall. We pushed the augmented system to the limit until the transformation and projection were too off to continue. We are generally satisfied with the system and the user can correctly follows the computed feedbacks.
 We are building a new wall with just wastes from sawing operations (more blocky and less irregular than all the others). We are interested to see the difference in terms of stacking algorithm performance.
 
