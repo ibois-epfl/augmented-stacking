@@ -37,8 +37,12 @@ Augmented Stacking is an augmented system designed to guide unexperienced users 
     <img src="./img/demo_placing_example_light.gif" width="600">
 </p>
 
+## How it works
 
-# To run the code
+<tofinish>
+
+
+## To run the code
 
 **[0]** The software is made to be used with any type of LED projector. Nevertheless you will need a camera [ZED2i](https://www.stereolabs.com/zed-2i/) to work with the current version. The code can be easily adapted to any type of 3D sensor. The address of your digitized library of digital-twins to assemble need to be replaced in ``
 
@@ -59,7 +63,7 @@ python ./calib/calib.py
 python ./calib/calib.py
 ```
 
-# Credits
+## Credits
 ```
 *   IBOIS, the Laboratory for Timber Construction
 
