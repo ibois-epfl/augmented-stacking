@@ -2,16 +2,16 @@
 
 
 <div align = "center">
-    <a href = "https://app.travis-ci.com/github/kzampog/cilantro">
+    <a href = "https://github.com/ibois-epfl/augmented-stacking">
         <img src = "https://app.travis-ci.com/kzampog/cilantro.svg?branch=master" alt = "Build Status" />
     </a>
-    <a href = "https://ibois-epfl.github.io/Cockroach-documentation/">
+    <a href = "https://github.com/ibois-epfl/augmented-stacking">
         <img src = "https://img.shields.io/badge/documentation-preliminary-orange" alt = "Documentation Status" />
     </a>
-    <a href = "https://github.com/ibois-epfl/Cockroach">
-        <img src = "https://img.shields.io/badge/platform-win-green" alt = "Platform" />
+    <a href = "https://github.com/ibois-epfl/augmented-stacking">
+        <img src = "https://img.shields.io/badge/platform-linux--64-green--gray" alt = "Platform" />
     </a>
-    <a href = "https://github.com/ibois-epfl/Cockroach/blob/Cockroach/LICENSE">
+    <a href = "https://github.com/ibois-epfl/augmented-stacking">
         <img src = "https://img.shields.io/github/license/ibois-epfl/Cockroach" alt = "License" />
     </a>
 </div>
