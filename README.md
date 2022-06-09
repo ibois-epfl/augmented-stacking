@@ -12,7 +12,7 @@
         <img src = "https://img.shields.io/badge/platform-linux--64-green--gray" alt = "Platform" />
     </a>
     <a href = "https://github.com/ibois-epfl/augmented-stacking">
-        <img src = "https://img.shields.io/github/license/ibois-epfl/Cockroach" alt = "License" />
+        <img src = "https://img.shields.io/badge/license-MIT-green--gray" alt = "License" />
     </a>
 </div>
 <br/>
