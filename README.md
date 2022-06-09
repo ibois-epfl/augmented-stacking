@@ -16,7 +16,7 @@ Augmented Stacking is an augmented system designed to guide unexperienced users 
 </p>
 
 <p>
-    <img src="./img/demo_placing_example_light.gif" width="600">
+    <img src="./img/augmented_stones_finalShot_v1.png" width="600">
 </p>
 
 
