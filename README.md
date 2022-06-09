@@ -1,6 +1,23 @@
 # augmented-stacking
 
 
+<div align = "center">
+    <a href = "https://app.travis-ci.com/github/kzampog/cilantro">
+        <img src = "https://app.travis-ci.com/kzampog/cilantro.svg?branch=master" alt = "Build Status" />
+    </a>
+    <a href = "https://ibois-epfl.github.io/Cockroach-documentation/">
+        <img src = "https://img.shields.io/badge/documentation-preliminary-orange" alt = "Documentation Status" />
+    </a>
+    <a href = "https://github.com/ibois-epfl/Cockroach">
+        <img src = "https://img.shields.io/badge/platform-win-green" alt = "Platform" />
+    </a>
+    <a href = "https://github.com/ibois-epfl/Cockroach/blob/Cockroach/LICENSE">
+        <img src = "https://img.shields.io/github/license/ibois-epfl/Cockroach" alt = "License" />
+    </a>
+</div>
+<br/>
+
+
 <p align="center">
     <img src="./logo/whitelogo.png" width="300">
 </p>
@@ -11,12 +28,13 @@ Development code for an `dry-stone` and `-timber` stacking technique in AR. `Aug
 
 Augmented Stacking is an augmented system designed to guide unexperienced users through the stacking of complex and irregular geometries. This digital fabrication system was applied to the assembly of one layer of half-timber dry-stone wall. Augmented Stacking is composed of two components: the stacking algorithm (which calculates the pose for each stone or irregular object feeded to the system) and the augmented pipeline to display the information. 
 
-<p>
-    <img src="./img/demo_placing_example_light.gif" width="600">
-</p>
 
 <p>
     <img src="./img/augmented_stones_finalShot_v1.png" width="600">
+</p>
+
+<p>
+    <img src="./img/demo_placing_example_light.gif" width="600">
 </p>
 
 
