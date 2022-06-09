@@ -413,10 +413,6 @@ We are also planning to scan the artifact to have comparative data with the reco
     <img src="./img/onbuildingsnap.png" width="700">
 </p>
 
-TODO:
-- containarize docker
-- building a second wall with sawn stones
-
 
 
 
