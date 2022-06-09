@@ -15,7 +15,7 @@ import sys
 import subprocess
 from threading import Thread
 
-# # TODO: the package opencv is not found in virtual env, solve
+# # The package opencv is not found in virtual env, solve
 # # the issue without importing the sys.path here. With this it works
 sys.path.append('/usr/local/lib/python3.8/dist-packages')
 import cv2
