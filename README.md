@@ -3,7 +3,7 @@
 
 <div align = "center">
     <a href = "https://app.travis-ci.com/github/kzampog/cilantro">
-        <img src = "[https://app.travis-ci.com/kzampog/cilantro.svg?branch=master](https://img.shields.io/badge/build-passing-brightgreen)" alt = "Build Status" />
+        <img src = "https://app.travis-ci.com/kzampog/cilantro.svg?branch=master" alt = "Build Status" />
     </a>
     <a href = "https://ibois-epfl.github.io/Cockroach-documentation/">
         <img src = "https://img.shields.io/badge/documentation-preliminary-orange" alt = "Documentation Status" />
