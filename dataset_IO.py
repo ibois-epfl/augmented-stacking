@@ -152,3 +152,20 @@ def create_record_session_subdir(dir_name:os.path) -> os.path:
     else:
         terminal.error_print(f"The dir {dir_name} does not exist.")
         return None
+
+def erase_last_pose_stone(path : str) -> None:
+    """
+    Erase the last line from the .txt file recording the stone poses
+    """
+
+    if os.path.isfile(path):
+        with open(path, "r+") as f:
+            lines = f.readlines()
+            f.truncate(0)
+            for i, line in enumerate(lines):
+                if i != (len(lines)-1):
+                    f.write(line)
+    else:
+        terminal.custom_print(f"[WARN] {path} does not exist.")
+        
+        
