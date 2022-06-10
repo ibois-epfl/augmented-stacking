@@ -40,9 +40,9 @@ For more info contact [andrea.settimi@epfl.ch](andrea.settimi@epfl.ch).
 
 ## To run the code
 
-**[0]** The software is made to be used with any type of LED projector. Nevertheless you will need a camera [ZED2i](https://www.stereolabs.com/zed-2i/) to work with the current version. The code can be easily adapted to any type of 3D sensor. 
+**[00]** The software is made to be used with any type of LED projector. Nevertheless you will need a camera [ZED2i](https://www.stereolabs.com/zed-2i/) to work with the current version. The code can be easily adapted to any type of 3D sensor. 
 
-The address of your digitized library of digital-twins to assemble need to be replaced in `dataset_IO.py`, our dataset is [here](https://github.com/ibois-epfl/augmented-stacking-dataset):
+**[0]** The address of your digitized library of digital-twins to assemble need to be replaced in `dataset_IO.py`, our dataset is [here](https://github.com/ibois-epfl/augmented-stacking-dataset):
 
 https://github.com/ibois-epfl/augmented-stacking/blob/ad33e2c7a78ad0c0e8843e94f3ad093bb4c10f47/dataset_IO.py#L28-L72
 
