@@ -19,7 +19,7 @@
 
 
 <p align="center">
-    <img src="./logo/whitelogo.png" width="450">
+    <img src="./logo/whitelogo.png" width="400">
 </p>
 <br/>
 
