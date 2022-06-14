@@ -25,10 +25,10 @@
 
 <div align = "center">
     <a>
-        <img src = "./img/ibosiTraspBlack.png" height="200"/>
+        <img src = "./img/ibosiTraspBlack.png" height="50"/>
     </a>
     <a>
-        <img src = "./img/logoEPFLblack.png" height="200"/>
+        <img src = "./img/logoEPFLblack.png" height="50"/>
     </a>
 </div>
 
