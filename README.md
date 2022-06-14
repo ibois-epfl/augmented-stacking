@@ -1,5 +1,5 @@
-# augmented-stacking
 
+<h1 align="center">augmented-stacking</h1>
 
 <div align = "center">
     <a href = "https://github.com/ibois-epfl/augmented-stacking">
