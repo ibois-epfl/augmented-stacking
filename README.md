@@ -21,6 +21,18 @@
 <p align="center">
     <img src="./logo/whitelogo.png" width="450">
 </p>
+<br/>
+
+<div align = "center">
+    <a>
+        <img src = "./img/ibosiTraspBlack.png" height="200"/>
+    </a>
+    <a>
+        <img src = "./img/logoEPFLblack.png" height="200"/>
+    </a>
+</div>
+
+
 
 <br />
 
