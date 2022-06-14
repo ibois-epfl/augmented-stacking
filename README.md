@@ -28,14 +28,15 @@
         <img src = "./img/ibosiTraspBlack.png" height="30"/>
     </a>
     <a>
+        <img src = "./img/50x50-00000000.png" height="30"/>
+    </a>
+    <a>
         <img src = "./img/eesd_logo_black.png" height="30"/>
     </a>
     <a>
         <img src = "./img/logoEPFLblack.png" height="30"/>
     </a>
 </div>
-
-
 
 <br />
 
