@@ -43,6 +43,7 @@
 
 <br />
 
+![Alt](https://repobeats.axiom.co/api/embed/d8c1521749d2bb0caae0af25f47fd9810f148f71.svg "Repobeats analytics image")
 
 Development code for an `dry-stone` and `-timber` stacking technique in AR. `Augmented Stacking` is a `CLI` software developed and tested on `Ubuntu 20.04 LTS`.
 
@@ -107,5 +108,5 @@ python ./calib/calib.py
 Augmented Stacking was funded by the Cluster ENAC initiative 2021-2022.
 ```
 
-![Alt](https://repobeats.axiom.co/api/embed/d8c1521749d2bb0caae0af25f47fd9810f148f71.svg "Repobeats analytics image")
+
 
