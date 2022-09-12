@@ -85,20 +85,20 @@ python ./calib/calib.py
 ```
 
 ## Credits
-*   IBOIS, the Laboratory for Timber Construction
-        Andrea Settimi (PhD researcher, conceptualization, software&hardware development, AR interface design)
-	David Rebiffe (intern, software development)
-	Julien Gamerro (Post-Doc, conceptualization, supervision)
-	Yves Weinand (Lab head, supervision)
+*   IBOIS, the Laboratory for Timber Construction:
+        **Andrea Settimi** (PhD researcher, conceptualization, software&hardware development, AR interface design)
+	**David Rebiffe** (intern, software development)
+	**Julien Gamerro** (Post-Doc, conceptualization, supervision)
+	**Yves Weinand** (Lab head, supervision)
 
 
-*   EESD, the group Earthquake Engineering and Structural Dynamics
-	Qianqing Wang (PhD researcher, stacking algorithm)
-	Katrin Beyer (Lab head, supervision)
+*   EESD, the group Earthquake Engineering and Structural Dynamics:
+	**Qianqing Wang** (PhD researcher, stacking algorithm)
+	**Katrin Beyer** (Lab head, supervision)
 
 
-*   Image HUB, the support group for imaging analysis
-	Edwardo Ando (technicien, hardware development, image analysis)
+*   Image HUB, the support group for imaging analysis:
+	**Edwardo Ando** (technicien, hardware development, image analysis)
 
 
 Augmented Stacking was funded by the Cluster ENAC initiative 2021-2022.
