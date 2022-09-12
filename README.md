@@ -85,7 +85,6 @@ python ./calib/calib.py
 ```
 
 ## Credits
-```
 *   IBOIS, the Laboratory for Timber Construction
 
         Andrea Settimi (PhD researcher, conceptualization, software&hardware development, AR interface design)
@@ -106,7 +105,6 @@ python ./calib/calib.py
 
 
 Augmented Stacking was funded by the Cluster ENAC initiative 2021-2022.
-```
 
 
 
