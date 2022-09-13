@@ -17,7 +17,6 @@
 </div>
 <br/>
 
-  [![HitCount](https://hits.dwyl.com/ibois-epfl/augmented-stacking.svg?style=flat-square)](http://hits.dwyl.com/ibois-epfl/augmented-stacking)
 <p align="center">
     <img src="./logo/whitelogo.png" width="400">
 </p>
