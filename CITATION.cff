@@ -1,0 +1,10 @@
+@software{andrea_settimi_2022_7181087,
+  author       = {Andrea Settimi and David Rebiffé and Qianqing Wang and Edward Andò},
+  title        = {{ibois-epfl/augmented-stacking: Augmented-stacking}},
+  month        = oct,
+  year         = 2022,
+  publisher    = {Zenodo},
+  version      = {v1.0.1},
+  doi          = {10.5281/zenodo.7181087},
+  url          = {https://doi.org/10.5281/zenodo.7181087}
+}
