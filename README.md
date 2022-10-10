@@ -47,9 +47,9 @@
 
 ![Alt](https://repobeats.axiom.co/api/embed/d8c1521749d2bb0caae0af25f47fd9810f148f71.svg "Repobeats analytics image")
 
-Development code for an `dry-stone` and `-timber` stacking technique in AR. `Augmented Stacking` is a `CLI` software developed and tested on `Ubuntu 20.04 LTS`.
+Development code for a dry-stone and -timber stacking technique in AR. Augmented Stacking is a CLI software developed and tested on Ubuntu 20.04 LTS.
 
-Augmented Stacking is an augmented system designed to guide unexperienced users through the stacking of complex and irregular geometries. This digital fabrication system was applied to the assembly of one layer of half-timber dry-stone wall. Augmented Stacking is composed of two components: the stacking algorithm (which calculates the pose for each stone or irregular object feeded to the system) and the augmented pipeline to display the information. 
+Augmented Stacking is an augmented system designed to guide inexperienced users through the stacking of complex and irregular geometries. This digital fabrication system was applied to the assembly of one layer of a half-timber dry-stone wall. Augmented Stacking is composed of two components: the stacking algorithm (which calculates the pose for each stone or irregular object fed to the system) and the augmented pipeline to display the information.
 
 For more info contact [andrea.settimi@epfl.ch](andrea.settimi@epfl.ch).
 
