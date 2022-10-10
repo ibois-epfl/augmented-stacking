@@ -2,6 +2,9 @@
 <h1 align="center">augmented-stacking</h1>
 
 <div align = "center">
+    <a href="https://zenodo.org/badge/latestdoi/452384523">
+        <img src="https://zenodo.org/badge/452384523.svg" alt="DOI">
+    </a>
     <a href = "https://github.com/ibois-epfl/augmented-stacking">
         <img src = "https://app.travis-ci.com/kzampog/cilantro.svg?branch=master" alt = "Build Status" />
     </a>
