@@ -1,4 +1,4 @@
-@software{settimiARStack2022,
+@software{settimistack2022,
   author       = {Andrea Settimi and Qianqing Wang and Edward Andò and Julien Gamerro and Katrin Beyer and Yves Weinand},
   title        = {{ibois-epfl/augmented-stacking: Augmented-stacking}},
   month        = oct,
