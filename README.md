@@ -105,5 +105,10 @@ python ./calib/calib.py
 
 Augmented Stacking was funded by the Cluster ENAC initiative 2021-2022.
 
-
+## How to cite (to come)
+```bibitex
+@article{
+  ..
+}
+```
 
