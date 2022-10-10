@@ -110,8 +110,19 @@ Augmented Stacking was funded by the Cluster ENAC initiative 2021-2022.
 
 ## How to cite (to come)
 ```bibitex
-@article{
-  ..
+@software{andrea_settimi_2022_7181087,
+  author       = {Andrea Settimi and
+                  David Rebiffé and
+                  qianqing-wanggg and
+                  Edward Andò},
+  title        = {{ibois-epfl/augmented-stacking: Augmented-stacking- 
+                   publication-release}},
+  month        = oct,
+  year         = 2022,
+  publisher    = {Zenodo},
+  version      = {v1.0.1},
+  doi          = {10.5281/zenodo.7181087},
+  url          = {https://doi.org/10.5281/zenodo.7181087}
 }
 ```
 
