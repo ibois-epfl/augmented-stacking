@@ -53,11 +53,11 @@ Augmented Stacking is an augmented system designed to guide unexperienced users 
 
 For more info contact [andrea.settimi@epfl.ch](andrea.settimi@epfl.ch).
 
-<p>
+<p align="center">
     <img src="./img/augmented_stones_finalShot_v1.png" width="600">
 </p>
 
-<p>
+<p align="center">
     <img src="./img/demo_placing_example_light.gif" width="600">
 </p>
 
