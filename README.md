@@ -103,7 +103,7 @@ python ./calib/calib.py
 
 
 *   Image HUB, the support group for imaging analysis:
-	**Edwardo Ando** (technician, hardware development, image analysis)
+	**Edwardo Ando** (scientist, hardware development, image analysis)
 
 
 Augmented Stacking was funded by the Cluster ENAC initiative 2021-2022.
