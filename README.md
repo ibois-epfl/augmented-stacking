@@ -108,6 +108,6 @@ python ./calib/calib.py
 
 Augmented Stacking was funded by the Cluster ENAC initiative 2021-2022.
 
-## How to cite (to come)
+## How to cite
 https://github.com/ibois-epfl/augmented-stacking/blob/d4f86ef8bea10cbb2a0d8512bf80d66c6115f324/CITATION.cff#L1-L10
 
