@@ -102,8 +102,8 @@ python ./calib/calib.py
 	**Katrin Beyer** (Lab head, supervision)
 
 
-*   Image HUB, the support group for imaging analysis:
-	**Edwardo Ando** (scientist, hardware development, image analysis)
+*   Image Analysis Hub, EPFL Center for Imaging:
+	**Edwardo Andò** (scientist, hardware development, image analysis)
 
 
 Augmented Stacking was funded by the Cluster ENAC initiative 2021-2022.
