@@ -1,5 +1,5 @@
 @software{settimistack2022,
-  author       = {Andrea Settimi and Qianqing Wang and Edward Andò and Julien Gamerro and Katrin Beyer and Yves Weinand},
+  author       = {Andrea Settimi and Qianqing Wang and David Rebiffé and Edward Andò and Julien Gamerro and Katrin Beyer and Yves Weinand},
   title        = {Augmented-stacking},
   month        = oct,
   year         = 2022,
