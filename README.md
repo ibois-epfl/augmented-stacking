@@ -50,7 +50,7 @@
 
 ![Alt](https://repobeats.axiom.co/api/embed/d8c1521749d2bb0caae0af25f47fd9810f148f71.svg "Repobeats analytics image")
 
-** 🪨🪨🪨!The publication with more documentation about the project is coming up!🪨🪨🪨***
+🪨🪨🪨**The publication with more documentation about the project is coming up!**🪨🪨🪨
 
 Development code for a dry-stone and -timber stacking technique in AR. Augmented Stacking is a CLI software developed and tested on Ubuntu 20.04 LTS.
 
