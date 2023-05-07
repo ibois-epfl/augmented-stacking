@@ -50,7 +50,8 @@
 
 ![Alt](https://repobeats.axiom.co/api/embed/d8c1521749d2bb0caae0af25f47fd9810f148f71.svg "Repobeats analytics image")
 
-🪨🪨🪨**The publication with more documentation about the project is coming up!**🪨🪨🪨
+🪨🪨🪨 For more detailed info, have a look at our [publication in Construction Robotics titled "Projector‑based augmented stacking framework for irregularly
+shaped objects"](https://link.springer.com/article/10.1007/s41693-023-00099-2) 🪨🪨🪨
 
 Development code for a dry-stone and -timber stacking technique in AR. Augmented Stacking is a CLI software developed and tested on Ubuntu 20.04 LTS.
 
@@ -110,6 +111,6 @@ python ./calib/calib.py
 
 Augmented Stacking was funded by the Cluster ENAC initiative 2021-2022.
 
-## How to cite the repository while waiting for the paper
-https://github.com/ibois-epfl/augmented-stacking/blob/8447edd6273fec2ae215ab38ce46c199ad572c04/CITATION.cff#L1-L10
+## How to cite the paper
+https://github.com/ibois-epfl/augmented-stacking/blob/559c97bfa7a4ee5a6d7cb7b635a400f79e21883d/CITATION_PAPER.cff#L1-L10
 
