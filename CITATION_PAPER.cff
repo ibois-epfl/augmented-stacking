@@ -1,0 +1,10 @@
+@article{Settimi2023,
+  doi = {10.1007/s41693-023-00099-2},
+  url = {https://doi.org/10.1007/s41693-023-00099-2},
+  year = {2023},
+  month = may,
+  publisher = {Springer Science and Business Media {LLC}},
+  author = {Andrea Settimi and Qianqing Wang and Edward And{\`{o}} and Julien Gamerro and Katrin Beyer and Yves Weinand},
+  title = {Projector-based augmented stacking framework for irregularly shaped objects},
+  journal = {Construction Robotics}
+}
