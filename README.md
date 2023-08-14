@@ -89,7 +89,7 @@ python ./calib/calib.py
 
 **[4]** Run augmented stacking:
 ```bash
-python ./calib/calib.py
+python ./augmented_stacking.py
 ```
 
 ## Credits
